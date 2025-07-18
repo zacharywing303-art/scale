@@ -1,6 +1,7 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
+import HRAlertModal from "@/app/dashboard/home/hr-alerts/HRAlertModal";
 
 interface Alert {
   id: string;
@@ -19,9 +20,23 @@ const sampleAlerts: Alert[] = [
 ];
 
 export default function HRAlerts() {
+  const [showAlerts, setAlerts] = useState(false);
+
+  const handleViewAll = () => {
+    setAlerts(true); // or your actual route
+  };
   return (
     <div className="bg-white dark:bg-card border border-border rounded-lg p-6 shadow-md">
-      <h3 className="text-lg font-semibold text-primary mb-4">HR Alerts</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold text-primary">HR Alerts</h3>
+        <button
+          onClick={handleViewAll}
+          className="text-sm text-secondary hover:underline"
+        >
+          View All
+        </button>
+      </div>
+      <HRAlertModal isOpen={showAlerts} onClose={() => setAlerts(false)} />
       <ul className="space-y-2 text-sm text-destructive font-medium">
         {sampleAlerts.map((alert) => (
           <li key={alert.id} className="leading-snug">

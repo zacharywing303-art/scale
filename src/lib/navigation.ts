@@ -1,61 +1,89 @@
-// lib/navigation.ts
+// // lib/navigation.ts
+import {
+  CalendarDays,
+  Users,
+  FileText,
+  HelpCircle,
+  Settings,
+  BarChart,
+  UserCog,
+  DollarSign,
+  Cog,
+} from "lucide-react";
+
 export const dashboardNavigation = [
   {
     label: "Dashboard",
     href: "/dashboard",
-    icon: "layout-dashboard",
+    icon: BarChart,
   },
   {
-    label: "EVV",
+    label: "Scheduling",
+    icon: CalendarDays,
+    children: [
+      { label: "View Schedule", href: "/dashboard/scheduling/schedule-view" },
+      {
+        label: "Create Schedule",
+        href: "/dashboard/scheduling/schedule-create",
+      },
+      { label: "Edit Schedule", href: "/dashboard/scheduling/schedule-edit" },
+    ],
+  },
+  {
+    label: "Visits",
+    icon: FileText,
+    href: "/dashboard/visits",
+  },
+  {
+    label: "Billing",
+    icon: DollarSign,
     children: [
       {
-        label: "Scheduling",
-        children: [
-          {
-            label: "View Schedule",
-            href: "/dashboard/scheduling/schedule-view",
-          },
-          {
-            label: "Edit Schedule",
-            href: "/dashboard/scheduling/schedule-edit",
-          },
-          {
-            label: "Create Schedule",
-            href: "/dashboard/scheduling/schedule-create",
-          },
-        ],
+        label: "Create Invoice",
+        href: "/dashboard/billing/create-invoice",
       },
       {
-        label: "Visits",
-        href: "/dashboard/visits",
+        label: "Submit Invoice",
+        href: "/dashboard/billing/submit-invoice",
       },
       {
-        label: "Billing",
-        href: "/dashboard/billing",
+        label: "Submitted",
+        href: "/dashboard/billing/submitted",
       },
       {
-        label: "Reports",
-        href: "/dashboard/reports",
-      },
-      {
-        label: "Training",
-        href: "/dashboard/training",
+        label: "Payers",
+        href: "/dashboard/billing/payers",
       },
     ],
   },
   {
-    label: "HR",
-    children: [
-      { label: "Clients", href: "/dashboard/hr/clients" },
-      { label: "Employees", href: "/dashboard/hr/employees" },
-      { label: "Manage Users", href: "/dashboard/hr/users" },
-    ],
+    label: "Clients",
+    icon: Users,
+    href: "/dashboard/hr/clients",
   },
   {
-    label: "Help",
-    children: [
-      { label: "Contact Support", href: "/dashboard/help/contact" },
-      { label: "Manual", href: "/dashboard/help/manual" },
-    ],
+    label: "Employees",
+    icon: UserCog,
+    href: "/dashboard/hr/employees",
+  },
+  {
+    label: "Reports",
+    icon: FileText,
+    href: "/dashboard/reports",
+  },
+  {
+    label: "Training",
+    icon: Settings,
+    href: "/dashboard/training",
+  },
+  {
+    label: "Manage Users",
+    icon: Cog,
+    href: "/dashboard/hr/users",
+  },
+  {
+    label: "Contact Support",
+    icon: HelpCircle,
+    href: "/support/contact",
   },
 ];

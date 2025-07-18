@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import TaskModal from "@/app/dashboard/home/tasks/TaskModal";
 
 const tasks = [
   "Review Exceptions",
@@ -13,9 +14,10 @@ const tasks = [
 
 export default function TaskList() {
   const router = useRouter();
+  const [showTasks, setShowTasks] = useState(false);
 
   const handleViewAll = () => {
-    router.push("/tasks"); // or your actual route
+    setShowTasks(true); // or your actual route
   };
 
   return (
@@ -29,6 +31,7 @@ export default function TaskList() {
           View All
         </button>
       </div>
+      <TaskModal isOpen={showTasks} onClose={() => setShowTasks(false)} />
 
       <ul className="space-y-2 text-sm">
         {tasks.slice(0, 4).map((task, i) => (

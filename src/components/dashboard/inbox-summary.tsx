@@ -10,7 +10,7 @@ export default function InboxSummary() {
 
   return (
     <div
-      onClick={() => router.push("/inbox")}
+      onClick={() => router.push("/dashboard/home/inbox")}
       className="bg-white dark:bg-card border border-border rounded-lg p-6 shadow-md cursor-pointer hover:shadow-lg transition"
     >
       <h3 className="text-lg font-semibold text-primary mb-2">Inbox</h3>

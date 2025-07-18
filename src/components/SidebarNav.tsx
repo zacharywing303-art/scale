@@ -1,11 +1,13 @@
 "use client";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { dashboardNavigation } from "@/lib/navigation";
 import clsx from "clsx";
+import { ChevronDownIcon } from "lucide-react";
 
-export default function SidebarNav() {
+export default function SidebarNav({ collapsed }: { collapsed: boolean }) {
   const pathname = usePathname();
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({});
 
@@ -16,56 +18,64 @@ export default function SidebarNav() {
     }));
   };
 
-  const isActive = (href?: string) => {
-    return href && pathname.startsWith(href);
+  const isExactActive = (href?: string) => {
+    return href && pathname === href;
   };
 
   return (
-    <aside className="w-64 bg-white dark:bg-gray-900 border-r h-full p-4 space-y-2">
+    <nav className="bg-[#007AFF] flex-1 p-2 space-y-2 overflow-y-auto text-white">
       {dashboardNavigation.map((item) => (
         <div key={item.label}>
           {item.children ? (
-            <>
-              <button
-                onClick={() => toggleSection(item.label)}
+            <div className="w-full">
+              <div
                 className={clsx(
-                  "w-full text-left font-semibold px-2 py-2 rounded transition",
+                  "flex items-center justify-between px-2 py-2 font-semibold rounded transition cursor-pointer",
                   {
-                    "bg-[#007AFF] text-white": item.children.some((child) =>
-                      isActive(child.href ?? "")
-                    ),
-                    "hover:bg-gray-100 dark:hover:bg-gray-800":
-                      !item.children.some((child) =>
-                        isActive(child.href ?? "")
-                      ),
+                    "bg-[#007AFF] text-white": true,
+                    "hover:bg-[#005FCC]": true,
                   }
                 )}
+                onClick={() => toggleSection(item.label)}
               >
-                {item.label}
-              </button>
+                <div className="flex items-center gap-2">
+                  {item.icon && <item.icon className="w-4 h-4 text-white" />}
+                  {!collapsed && <span>{item.label}</span>}
+                </div>
+                {!collapsed && (
+                  <ChevronDownIcon
+                    className={clsx(
+                      "w-4 h-4 transition-transform text-white",
+                      openSections[item.label] ? "rotate-180" : "rotate-0"
+                    )}
+                  />
+                )}
+              </div>
 
-              {openSections[item.label] && (
+              {!collapsed && openSections[item.label] && (
                 <div className="ml-4 mt-1 space-y-1">
                   {item.children.map((sub) =>
-                    sub.children ? (
+                    "children" in sub && Array.isArray(sub.children) ? (
                       <div key={sub.label}>
-                        <button
-                          onClick={() => toggleSection(sub.label)}
+                        <div
                           className={clsx(
-                            "w-full text-left text-sm font-medium px-2 py-1 rounded transition",
+                            "flex items-center justify-between px-2 py-1 text-sm font-medium rounded transition cursor-pointer",
                             {
-                              "bg-[#007AFF] text-white": sub.children.some(
-                                (link) => isActive(link.href)
-                              ),
-                              "hover:bg-gray-100 dark:hover:bg-gray-800":
-                                !sub.children.some((link) =>
-                                  isActive(link.href)
-                                ),
+                              "hover:bg-[#005FCC]": true,
                             }
                           )}
+                          onClick={() => toggleSection(sub.label)}
                         >
-                          {sub.label}
-                        </button>
+                          <span>{sub.label}</span>
+                          <ChevronDownIcon
+                            className={clsx(
+                              "w-4 h-4 transition-transform text-white",
+                              openSections[sub.label]
+                                ? "rotate-180"
+                                : "rotate-0"
+                            )}
+                          />
+                        </div>
                         {openSections[sub.label] && (
                           <div className="ml-4 mt-1 space-y-1">
                             {sub.children.map((link) => (
@@ -75,11 +85,11 @@ export default function SidebarNav() {
                                 className={clsx(
                                   "block text-sm px-2 py-1 rounded transition",
                                   {
-                                    "bg-[#007AFF] text-white": isActive(
+                                    "bg-[#32D74B] text-white": isExactActive(
                                       link.href
                                     ),
-                                    "text-gray-600 dark:text-gray-300 hover:underline":
-                                      !isActive(link.href),
+                                    "hover:underline text-white":
+                                      !isExactActive(link.href),
                                   }
                                 )}
                               >
@@ -96,9 +106,10 @@ export default function SidebarNav() {
                         className={clsx(
                           "block text-sm px-2 py-1 rounded transition",
                           {
-                            "bg-[#007AFF] text-white": isActive(sub.href),
-                            "text-gray-700 dark:text-gray-300 hover:underline":
-                              !isActive(sub.href),
+                            "bg-[#32D74B] text-white": isExactActive(sub.href),
+                            "hover:underline text-white": !isExactActive(
+                              sub.href
+                            ),
                           }
                         )}
                       >
@@ -108,25 +119,24 @@ export default function SidebarNav() {
                   )}
                 </div>
               )}
-            </>
+            </div>
           ) : (
             <Link
-              href={item.href}
+              href={item.href ?? "#"}
               className={clsx(
-                "block font-semibold px-2 py-2 rounded transition",
+                "flex items-center gap-2 font-semibold px-2 py-2 rounded transition",
                 {
-                  "bg-[#007AFF] text-white": isActive(item.href),
-                  "hover:bg-gray-100 dark:hover:bg-gray-800": !isActive(
-                    item.href
-                  ),
+                  "bg-[#32D74B] text-white": isExactActive(item.href),
+                  "hover:bg-[#005FCC] text-white": !isExactActive(item.href),
                 }
               )}
             >
-              {item.label}
+              {item.icon && <item.icon className="w-4 h-4 text-white" />}
+              {!collapsed && <span>{item.label}</span>}
             </Link>
           )}
         </div>
       ))}
-    </aside>
+    </nav>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface ScheduleItem {
   id: string;
@@ -30,6 +31,7 @@ const fakeVisits: ScheduleItem[] = [
 ];
 
 export default function DailySchedule() {
+  const router = useRouter();
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const changeDate = (days: number) => {
@@ -84,6 +86,14 @@ export default function DailySchedule() {
             </li>
           ))}
         </ul>
+      </div>
+      <div className="flex items-center p-4">
+        <button
+          onClick={() => router.push("/dashboard/scheduling/schedule-view")}
+          className="flex items-center text-sm text-muted-foreground hover:text-primary"
+        >
+          View Full Schedule
+        </button>
       </div>
     </div>
   );
