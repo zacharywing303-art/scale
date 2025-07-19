@@ -1,10 +1,18 @@
 "use client";
 import React from "react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
-const services = ["Nursing", "Therapy", "Daily Living"];
-const employees = ["Alice", "Bob", "Carlos"];
-const clients = ["John Doe", "Jane Smith"];
-const roles = ["Supervisor", "Manager", "Nurse", "Caregiver"];
+const services = ["All Services", "Nursing", "Therapy", "Daily Living"];
+const employees = ["All Employees", "Alice", "Bob", "Carlos"];
+const clients = ["All Clients", "John Doe", "Jane Smith"];
+const roles = ["All Roles", "Supervisor", "Manager", "Nurse", "Caregiver"];
 
 type ScheduleFiltersProps = {
   filters: {
@@ -29,68 +37,109 @@ export default function ScheduleFilters({
 }: ScheduleFiltersProps) {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-      <select
-        className="border rounded p-2"
-        value={filters.type}
-        onChange={(e) => onChange({ ...filters, type: e.target.value })}
-      >
-        <option value="office">Office</option>
-        <option value="home">Home Care</option>
-      </select>
+      <div>
+        <Label htmlFor="type" className="mb-1 block">
+          Type
+        </Label>
+        <Select
+          value={filters.type}
+          onValueChange={(value) => onChange({ ...filters, type: value })}
+        >
+          <SelectTrigger id="type">
+            <SelectValue placeholder="Select Type" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="office">Office</SelectItem>
+            <SelectItem value="home">Home Care</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
       {filters.type === "home" && (
-        <select
-          className="border rounded p-2"
-          value={filters.service}
-          onChange={(e) => onChange({ ...filters, service: e.target.value })}
-        >
-          <option value="">All Services</option>
-          {services.map((s) => (
-            <option key={s} value={s}>
-              {s}
-            </option>
-          ))}
-        </select>
+        <div>
+          <Label htmlFor="service" className="mb-1 block">
+            Service
+          </Label>
+          <Select
+            value={filters.service || ""}
+            onValueChange={(value) => onChange({ ...filters, service: value })}
+          >
+            <SelectTrigger id="service">
+              <SelectValue placeholder="All Services" />
+            </SelectTrigger>
+            <SelectContent>
+              {services.map((s) => (
+                <SelectItem key={s} value={s}>
+                  {s}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       )}
 
-      <select
-        className="border rounded p-2"
-        value={filters.employee}
-        onChange={(e) => onChange({ ...filters, employee: e.target.value })}
-      >
-        <option value="">All Employees</option>
-        {employees.map((e) => (
-          <option key={e} value={e}>
-            {e}
-          </option>
-        ))}
-      </select>
+      <div>
+        <Label htmlFor="employee" className="mb-1 block">
+          Employee
+        </Label>
+        <Select
+          value={filters.employee || ""}
+          onValueChange={(value) => onChange({ ...filters, employee: value })}
+        >
+          <SelectTrigger id="employee">
+            <SelectValue placeholder="All Employees" />
+          </SelectTrigger>
+          <SelectContent>
+            {employees.map((e) => (
+              <SelectItem key={e} value={e}>
+                {e}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      <select
-        className="border rounded p-2"
-        value={filters.client}
-        onChange={(e) => onChange({ ...filters, client: e.target.value })}
-      >
-        <option value="">All Clients</option>
-        {clients.map((c) => (
-          <option key={c} value={c}>
-            {c}
-          </option>
-        ))}
-      </select>
+      <div>
+        <Label htmlFor="client" className="mb-1 block">
+          Client
+        </Label>
+        <Select
+          value={filters.client || ""}
+          onValueChange={(value) => onChange({ ...filters, client: value })}
+        >
+          <SelectTrigger id="client">
+            <SelectValue placeholder="All Clients" />
+          </SelectTrigger>
+          <SelectContent>
+            {clients.map((c) => (
+              <SelectItem key={c} value={c}>
+                {c}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      <select
-        className="border rounded p-2"
-        value={filters.role}
-        onChange={(e) => onChange({ ...filters, role: e.target.value })}
-      >
-        <option value="">All Roles</option>
-        {roles.map((r) => (
-          <option key={r} value={r}>
-            {r}
-          </option>
-        ))}
-      </select>
+      <div>
+        <Label htmlFor="role" className="mb-1 block">
+          Role
+        </Label>
+        <Select
+          value={filters.role || ""}
+          onValueChange={(value) => onChange({ ...filters, role: value })}
+        >
+          <SelectTrigger id="role">
+            <SelectValue placeholder="All Roles" />
+          </SelectTrigger>
+          <SelectContent>
+            {roles.map((r) => (
+              <SelectItem key={r} value={r}>
+                {r}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 }

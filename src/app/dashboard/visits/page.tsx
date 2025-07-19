@@ -391,7 +391,7 @@ export default function VisitsPage() {
       {/* Filters */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         <div>
-          <Label>Date From</Label>
+          <Label className="mb-1 block">Date From</Label>
           <Input
             type="date"
             value={filters.dateFrom}
@@ -401,7 +401,7 @@ export default function VisitsPage() {
           />
         </div>
         <div>
-          <Label>Date To</Label>
+          <Label className="mb-1 block">Date To</Label>
           <Input
             type="date"
             value={filters.dateTo}
@@ -411,7 +411,7 @@ export default function VisitsPage() {
           />
         </div>
         <div>
-          <Label>Employee</Label>
+          <Label className="mb-1 block">Employee</Label>
           <Input
             value={filters.employee}
             onChange={(e) =>
@@ -421,7 +421,7 @@ export default function VisitsPage() {
           />
         </div>
         <div>
-          <Label>Client</Label>
+          <Label className="mb-1 block">Client</Label>
           <Input
             value={filters.client}
             onChange={(e) =>
@@ -431,7 +431,7 @@ export default function VisitsPage() {
           />
         </div>
         <div>
-          <Label>Service</Label>
+          <Label className="mb-1 block">Service</Label>
           <Input
             value={filters.service}
             onChange={(e) =>
@@ -441,7 +441,7 @@ export default function VisitsPage() {
           />
         </div>
         <div>
-          <Label>Status</Label>
+          <Label className="mb-1 block">Status</Label>
           <Select
             onValueChange={(val) => setFilters((f) => ({ ...f, status: val }))}
             value={filters.status}
@@ -457,7 +457,7 @@ export default function VisitsPage() {
           </Select>
         </div>
         <div>
-          <Label>Payer</Label>
+          <Label className="mb-1 block">Payer</Label>
           <Input
             value={filters.payer}
             onChange={(e) =>
@@ -466,7 +466,7 @@ export default function VisitsPage() {
           />
         </div>
         <div>
-          <Label>Medicaid ID</Label>
+          <Label className="mb-1 block">Medicaid ID</Label>
           <Input
             value={filters.medicaidId}
             onChange={(e) =>

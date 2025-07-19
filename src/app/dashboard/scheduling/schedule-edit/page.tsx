@@ -11,7 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Calendar } from "@/components/ui/calendar";
+import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
+import EditScheduleModal from "./EditScheduleModal";
 
 const mockSchedules = [
   {
@@ -85,14 +86,6 @@ export default function EditSchedulePage() {
           placeholder="Job Role (e.g., caregiver, nurse)"
           onChange={(e) => setFilters({ ...filters, job: e.target.value })}
         />
-
-        <Calendar
-          mode="single"
-          selected={filters.date}
-          onSelect={(date) =>
-            setFilters({ ...filters, date: date ?? filters.date })
-          }
-        />
       </div>
 
       {/* Schedule Table */}
@@ -127,9 +120,14 @@ export default function EditSchedulePage() {
                 <td className="p-3">{s.dateTo}</td>
                 <td className="p-3">{s.recurring ? "Yes" : "No"}</td>
                 <td className="p-3 text-right">
-                  <Button size="sm" variant="outline">
-                    Edit Schedule
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="outline">
+                        Edit Schedule
+                      </Button>
+                    </DialogTrigger>
+                    <EditScheduleModal schedule={s} onClose={() => {}} />
+                  </Dialog>
                 </td>
               </tr>
             ))}
