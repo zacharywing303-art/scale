@@ -15,6 +15,7 @@ const config: Config = {
         "secondary-foreground": "#FFFFFF",
         background: "var(--color-background)",
         foreground: "var(--color-foreground)",
+        unityred: "#FF3B30", // Unity Red
       },
     },
   },

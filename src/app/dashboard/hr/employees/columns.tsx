@@ -3,16 +3,14 @@
 import { ColumnDef } from "@tanstack/react-table";
 import { Employee } from "./employee";
 import { Button } from "@/components/ui/button";
+import { EditButton } from "./EditButton";
 
 export const employeeColumns: ColumnDef<Employee>[] = [
   {
     accessorKey: "edit",
     header: "",
-    cell: () => (
-      <Button variant="link" className="text-blue-600">
-        Edit
-      </Button>
-    ),
+    cell: ({ row }) => <EditButton employeeId={row.original.id} />,
+    enableSorting: false,
   },
   {
     accessorKey: "viewSchedule",

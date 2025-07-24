@@ -1,6 +1,8 @@
+"use client";
+
 import { ColumnDef } from "@tanstack/react-table";
 import { format } from "date-fns";
-
+import { EditButton } from "./EditButton";
 // Example client type (adjust fields if needed)
 export type Client = {
   id: string;
@@ -8,29 +10,25 @@ export type Client = {
   middleInitial?: string;
   lastName: string;
   status: "pending" | "active" | "inactive";
-  supervisor: string;
+  supervisor: "Nina Lewis" | "Tom Reid" | "all";
   medicaidId: string;
   payerId: string;
   serviceStartDate: string;
   serviceEndDate: string;
   services: string[]; // Example: ['IHCS', 'PAS']
+  program: string;
 };
 
 export const columns: ColumnDef<Client>[] = [
   {
     id: "edit",
     header: "Edit",
-    cell: ({ row }) => (
-      <button className="text-blue-600 underline">Edit</button>
-    ),
+    cell: ({ row }) => <EditButton clientId={row.original.id} />,
     enableSorting: false,
   },
   {
-    id: "addProgram",
-    header: "Add Program",
-    cell: ({ row }) => (
-      <button className="text-green-600 underline">Add</button>
-    ),
+    id: "program",
+    header: "Program",
     enableSorting: false,
   },
   {
@@ -63,6 +61,12 @@ export const columns: ColumnDef<Client>[] = [
   {
     accessorKey: "supervisor",
     header: "Supervisor",
+    cell: ({ getValue }) => {
+      const supervisor = getValue() as string;
+      return (
+        <span>{supervisor === "all" ? "All Supervisors" : supervisor}</span>
+      );
+    },
   },
   {
     accessorKey: "medicaidId",

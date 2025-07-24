@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,25 @@ import { Calendar } from "@/components/ui/calendar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 
+import { CalendarIcon } from "lucide-react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import SystemAutoHRReports from "./SystemAutoHRReports";
+import SavedReportsModal from "./SavedReportsModal";
+import { useRouter } from "next/navigation";
+
+const quarters = ["Q1", "Q2", "Q3", "Q4"];
+const years = Array.from(
+  { length: 20 },
+  (_, i) => new Date().getFullYear() - i
+);
+const months = Array.from({ length: 12 }, (_, i) =>
+  format(new Date(0, i), "MMMM")
+);
+
 const reportTypes = {
   review: ["Employee Review", "Client Review"],
-  evv: [
+  EVV: [
     "Auto Verification Report Detail",
     "Auto Verification Report Summary",
     "Detail Visit Status",
@@ -33,7 +49,7 @@ const reportTypes = {
     "GPS Exceptions",
     "Visit Listing",
   ],
-  employee: [
+  Employee: [
     "Hours Worked Summary",
     "Visit Log",
     "Office Hours",
@@ -41,8 +57,8 @@ const reportTypes = {
     "Schedules",
     "Attributes",
   ],
-  fvv: ["Assignment", "Call Listing", "Active Employees"],
-  client: [
+  FVV: ["Assignment", "Call Listing", "Active Employees"],
+  Client: [
     "Schedules",
     "Visit Log",
     "Hours Worked",
@@ -51,8 +67,8 @@ const reportTypes = {
     "Active Clients",
     "Client Address Listing",
   ],
-  billing: ["Visit Verification Status"],
-  authorization: [
+  Billing: ["Visit Verification Status"],
+  Authorization: [
     "Authorization vs Actual Used by Client",
     "Authorizations",
     "Clients without Authorizations",
@@ -74,6 +90,17 @@ export default function ReportsPage() {
   const [reportName, setReportName] = useState("");
   const [reportDateType, setReportDateType] = useState("");
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [showModal, setShowModal] = useState(false);
+  const router = useRouter();
+
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const calendarRef = useRef<any>(null);
+
+  const openCalendar = () => {
+    if (calendarRef.current) {
+      calendarRef.current.setOpen(true);
+    }
+  };
 
   return (
     <div className="p-6 space-y-6">
@@ -86,7 +113,31 @@ export default function ReportsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Saved Reports Button */}
-          <Button variant="outline">View Saved Reports</Button>
+          <Button variant="outline" onClick={() => setShowModal(true)}>
+            View Saved Reports
+          </Button>
+
+          <SavedReportsModal
+            open={showModal}
+            onClose={() => setShowModal(false)}
+            reports={[
+              {
+                id: "1",
+                fileName: "Client_Visit_Summary.pdf",
+                reportType: "Client",
+                savedDate: "07/21/2025",
+              },
+              {
+                id: "2",
+                fileName: "EVV_Status_Export.csv",
+                reportType: "EVV",
+                savedDate: "07/19/2025",
+              },
+            ]}
+            onView={(id) => console.log("View", id)}
+            onDownload={(id) => console.log("Download", id)}
+            onDelete={(id) => console.log("Delete", id)}
+          />
 
           {/* Filters */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -142,32 +193,201 @@ export default function ReportsPage() {
             </div>
           </div>
 
-          {/* Date Picker */}
+          {/* Dynamic Date Filters */}
           {reportDateType === "daily" && (
-            <div className="mt-4">
+            <div>
               <label className="block text-sm font-medium">Date</label>
-              <Calendar mode="single" selected={date} onSelect={setDate} />
+              <div className="flex items-center gap-2">
+                <DatePicker
+                  selected={startDate}
+                  onChange={(date) => setStartDate(date)}
+                  customInput={<Input readOnly />}
+                  dateFormat="MM/dd/yyyy"
+                />
+                <Button variant="ghost" type="button" onClick={openCalendar}>
+                  <CalendarIcon className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {reportDateType === "weekly" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium">Start Date</label>
+                <DatePicker
+                  selected={startDate}
+                  onChange={(date) => setStartDate(date)}
+                  customInput={<Input readOnly />}
+                  dateFormat="MM/dd/yyyy"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">End Date</label>
+                <Input
+                  readOnly
+                  value={
+                    startDate
+                      ? format(
+                          new Date(startDate.getTime() + 6 * 86400000),
+                          "MM/dd/yyyy"
+                        )
+                      : ""
+                  }
+                />
+              </div>
+            </div>
+          )}
+
+          {reportDateType === "monthly" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium">Month</label>
+                <Select
+                  onValueChange={(month) =>
+                    setStartDate(
+                      new Date(new Date().getFullYear(), months.indexOf(month))
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select month" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {months.map((month) => (
+                      <SelectItem key={month} value={month}>
+                        {month}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Year</label>
+                <Select
+                  onValueChange={(year) =>
+                    setStartDate(
+                      new Date(Number(year), startDate?.getMonth() ?? 0)
+                    )
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {reportDateType === "quarterly" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium">Quarter</label>
+                <Select onValueChange={(q) => setReportName(q)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select quarter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {quarters.map((q) => (
+                      <SelectItem key={q} value={q}>
+                        {q}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium">Year</label>
+                <Select
+                  onValueChange={(year) =>
+                    setStartDate(new Date(Number(year), 0))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {years.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        {year}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+
+          {reportDateType === "yearly" && (
+            <div>
+              <label className="block text-sm font-medium">Year</label>
+              <Select
+                onValueChange={(year) =>
+                  setStartDate(new Date(Number(year), 0))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {reportDateType === "specific date range" && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium">From</label>
+                <DatePicker
+                  selected={startDate}
+                  onChange={(date) => setStartDate(date)}
+                  customInput={<Input readOnly />}
+                  dateFormat="MM/dd/yyyy"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium">To</label>
+                <DatePicker
+                  selected={date}
+                  onChange={(date) => setDate(date!)}
+                  customInput={<Input readOnly />}
+                  dateFormat="MM/dd/yyyy"
+                />
+              </div>
             </div>
           )}
 
           {/* Additional Filters Based on Report Type */}
-          {(reportType === "employee" ||
-            reportType === "client" ||
-            reportType === "evv") && (
+          {(reportType === "Employee" ||
+            reportType === "Client" ||
+            reportType === "EVV") && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              {(reportType === "employee" || reportType === "evv") && (
+              {(reportType === "Employee" || reportType === "EVV") && (
                 <Input placeholder="Search Employee Name or ID" />
               )}
-              {(reportType === "client" || reportType === "evv") && (
+              {(reportType === "Client" || reportType === "EVV") && (
                 <Input placeholder="Search Client Name or ID" />
               )}
             </div>
           )}
 
-          {(reportType === "client" ||
-            reportType === "fvv" ||
-            reportType === "authorization" ||
-            reportType === "evv") && (
+          {(reportType === "Client" ||
+            reportType === "FVV" ||
+            reportType === "Authorization" ||
+            reportType === "EVV") && (
             <div className="mt-4">
               <Input placeholder="Enter Medicaid ID (if applicable)" />
             </div>
@@ -182,12 +402,16 @@ export default function ReportsPage() {
           {/* Buttons */}
           <div className="flex justify-end gap-4 mt-6">
             <Button variant="outline">Cancel</Button>
-            <Button className="bg-blue-600 text-white hover:bg-blue-700">
+            <Button
+              className="bg-blue-600 text-white hover:bg-blue-700"
+              onClick={() => router.push("/dashboard/reports/generated_report")}
+            >
               Run Report
             </Button>
           </div>
         </CardContent>
       </Card>
+      <SystemAutoHRReports />
     </div>
   );
 }

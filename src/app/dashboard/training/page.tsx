@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 const mockModules = [
   {
@@ -45,6 +46,7 @@ const mockModules = [
 ];
 
 export default function TrainingPage() {
+  const router = useRouter();
   const overallProgress =
     mockModules.reduce((sum, m) => sum + m.progress, 0) / mockModules.length;
 
@@ -67,6 +69,24 @@ export default function TrainingPage() {
               {Math.round(overallProgress)}% completed
             </p>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card className="cursor-pointer hover:shadow-lg transition-all">
+        <CardHeader>
+          <CardTitle className="text-base">Manage Employee Trainings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-gray-600">
+            View and assign training progress for your employees.
+          </p>
+          <Button
+            className="w-full"
+            variant="secondary"
+            onClick={() => router.push("/dashboard/training/employee_training")}
+          >
+            Open Tracker
+          </Button>
         </CardContent>
       </Card>
 

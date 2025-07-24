@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { employeeColumns } from "./columns";
 import { Employee } from "./employee";
 import { DataTable } from "@/components/data-table";
+import CreateEmployeeModal from "./CreateEmployeeModal";
 
 const mockEmployees: Employee[] = [
   {
@@ -89,7 +90,7 @@ export default function EmployeesPage() {
     <div className="p-6 space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Employees</h2>
-        <Button>Add Employee</Button>
+        <CreateEmployeeModal />
       </div>
 
       {/* Filters */}

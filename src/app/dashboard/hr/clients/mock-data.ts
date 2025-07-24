@@ -1,5 +1,8 @@
+import { id } from "date-fns/locale";
+
 export const clientsData = [
   {
+    id: "1",
     fullName: "John D. Smith",
     status: "active",
     supervisor: "Nina Lewis",
@@ -11,10 +14,12 @@ export const clientsData = [
     services: "SVC100, SVC200",
     firstName: "John",
     lastName: "Smith",
+    middleInitial: "D",
     language: "English",
     program: "HHA",
   },
   {
+    id: "2",
     fullName: "Maria L. Garcia",
     status: "pending",
     supervisor: "Tom Reid",
@@ -25,6 +30,7 @@ export const clientsData = [
     serviceEnd: "2024-12-01",
     services: "SVC100",
     firstName: "Maria",
+    middleInitial: "L",
     lastName: "Garcia",
     language: "Spanish",
     program: "IHCS",

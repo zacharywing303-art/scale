@@ -59,6 +59,8 @@
   --secondary: #34c759; /* Unity Green */
   --secondary-foreground: #ffffff;
 
+  --unityred: #ff3b30; /* Unity Red */
+
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
   --accent: oklch(0.97 0 0);
@@ -96,6 +98,8 @@
 
   --secondary: #34c759;
   --secondary-foreground: #ffffff;
+
+  --unityred: #ff3b30; /* Unity Red */
 
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);

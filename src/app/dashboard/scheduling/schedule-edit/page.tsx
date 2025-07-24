@@ -13,6 +13,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogTrigger, DialogContent } from "@/components/ui/dialog";
 import EditScheduleModal from "./EditScheduleModal";
+import { Label } from "@/components/ui/label";
 
 const mockSchedules = [
   {
@@ -50,6 +51,16 @@ export default function EditSchedulePage() {
     job: "",
     date: new Date(),
   });
+
+  const [perPage, setPerPage] = useState("25");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const paginatedSchedules = mockSchedules.slice(
+    (currentPage - 1) * parseInt(perPage),
+    currentPage * parseInt(perPage)
+  );
+
+  const totalPages = Math.ceil(mockSchedules.length / parseInt(perPage));
 
   return (
     <div className="p-6">
@@ -134,6 +145,51 @@ export default function EditSchedulePage() {
           </tbody>
         </table>
       </ScrollArea>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between mt-4">
+        <div className="flex items-center space-x-2">
+          <Label>Clients per page:</Label>
+          <Select
+            onValueChange={(val) => {
+              setPerPage(val);
+              setCurrentPage(1);
+            }}
+            value={perPage}
+          >
+            <SelectTrigger className="w-20">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10</SelectItem>
+              <SelectItem value="25">25</SelectItem>
+              <SelectItem value="50">50</SelectItem>
+              <SelectItem value="100">100</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+            disabled={currentPage === 1}
+          >
+            ← Prev
+          </Button>
+          <span className="text-sm text-muted-foreground">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant="ghost"
+            onClick={() =>
+              setCurrentPage((prev) => (prev < totalPages ? prev + 1 : prev))
+            }
+            disabled={currentPage >= totalPages}
+          >
+            Next →
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }
