@@ -9,6 +9,12 @@ import {
   UserCog,
   DollarSign,
   Cog,
+  Building2,
+  LifeBuoy,
+  ShieldCheck,
+  BarChart2,
+  Plus,
+  RefreshCcw,
 } from "lucide-react";
 
 export const dashboardNavigation = [
@@ -85,5 +91,48 @@ export const dashboardNavigation = [
     label: "Contact Support",
     icon: HelpCircle,
     href: "/support/contact",
+  },
+];
+
+export const systemAdminNavigation = [
+  {
+    label: "Agencies",
+    icon: Building2,
+    href: "/system_admin/agencies",
+  },
+  {
+    label: "Add Agency",
+    icon: Plus,
+    href: "/system_admin/add_agency",
+  },
+  {
+    label: "Support Requests",
+    icon: LifeBuoy,
+    href: "/system_admin/support_requests",
+  },
+  {
+    label: "Reset Passwords",
+    icon: RefreshCcw,
+    href: "/system_admin/reset_passwords",
+  },
+  {
+    label: "Agency Settings",
+    icon: Settings,
+    href: "/system_admin/agency_settings",
+  },
+  {
+    label: "Agency Statistics",
+    icon: BarChart2,
+    href: "/system_admin/statistics",
+  },
+  {
+    label: "System Users",
+    icon: Users,
+    href: "/system_admin/users",
+  },
+  {
+    label: "Permissions",
+    icon: ShieldCheck,
+    href: "/system_admin/permissions",
   },
 ];

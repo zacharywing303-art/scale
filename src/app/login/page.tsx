@@ -21,6 +21,11 @@ export default function LoginPage() {
       setError("Email and password are required.");
       return;
     }
+    if (email === "admin" && password === "admin") {
+      // Simulate admin login
+      router.push("/system_admin");
+      return;
+    }
     // Simulate login logic
     setError("");
     router.push("/dashboard");

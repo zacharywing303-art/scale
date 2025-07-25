@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import GoBackButton from "@/components/custom/GoBackButton";
 
 const mockEmployees = [
   {
@@ -33,6 +34,7 @@ export default function EmployeeTrainingPage() {
 
   return (
     <div className="p-6 space-y-6">
+      <GoBackButton />
       <div>
         <h2 className="text-2xl font-semibold">Employee Training Tracker</h2>
         <p className="text-sm text-muted-foreground">

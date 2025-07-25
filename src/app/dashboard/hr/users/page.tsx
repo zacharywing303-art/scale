@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { UserRole } from "./user";
+import AddUserModal from "./AddUserModal";
+import CreateNewUserModal from "./CreateNewUserModal";
 
 const mockRoles: UserRole[] = [
   {
@@ -48,6 +50,8 @@ const mockRoles: UserRole[] = [
 
 export default function ManageUserRolesPage() {
   const [expandedRoles, setExpandedRoles] = useState<string[]>([]);
+  const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
 
   const toggleRole = (role: string) => {
     setExpandedRoles((prev) =>
@@ -120,10 +124,30 @@ export default function ManageUserRolesPage() {
 
       {/* Buttons */}
       <div className="flex flex-col md:flex-row gap-4 pt-4">
-        <Button className="w-full md:w-auto">Add User to Role</Button>
-        <Button className="w-full md:w-auto" variant="outline">
+        <Button
+          className="w-full md:w-auto"
+          onClick={() => setShowAddUserModal(true)}
+        >
+          Add User to Role
+        </Button>
+        <AddUserModal
+          open={showAddUserModal}
+          onClose={() => setShowAddUserModal(false)}
+          onSubmit={() => {}}
+          existingEmployees={[]}
+        />
+        <Button
+          className="w-full md:w-auto"
+          variant="outline"
+          onClick={() => setShowCreateUserModal(true)}
+        >
           Add New Type of User
         </Button>
+        <CreateNewUserModal
+          open={showCreateUserModal}
+          onClose={() => setShowCreateUserModal(false)}
+          onSave={() => {}}
+        />
       </div>
     </div>
   );

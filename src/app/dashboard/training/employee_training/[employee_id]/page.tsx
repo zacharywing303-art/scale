@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import GoBackButton from "@/components/custom/GoBackButton";
 
 const mockModules = [
   {
@@ -52,6 +53,7 @@ export default function EmployeeTrainingPage() {
 
   return (
     <div className="p-6 space-y-6">
+      <GoBackButton />
       <Card>
         <CardHeader>
           <CardTitle>Training for Employee #{employee_id}</CardTitle>
