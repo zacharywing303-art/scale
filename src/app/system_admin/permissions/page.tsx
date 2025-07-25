@@ -7,6 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Agency } from "../agencies/Agency"; // Assumes shared Agency type
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getLoggedInUser } from "@/lib/auth/authHelpers";
 
 const dummyAgencies: Agency[] = [
   {
@@ -67,6 +70,17 @@ export default function PermissionsPage() {
     console.log(`Saving permissions for ${agencyId}:`, permissions[agencyId]);
     // TODO: Submit to backend
   };
+
+  const router = useRouter();
+  const user = getLoggedInUser();
+
+  useEffect(() => {
+    if (!user || user.isMainAdmin !== true) {
+      router.replace("/login");
+    }
+  }, []);
+
+  if (!user || user.role !== "system_admin") return null;
 
   return (
     <div className="p-6 space-y-6">

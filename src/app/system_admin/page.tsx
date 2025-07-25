@@ -1,7 +1,21 @@
+"use client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { getLoggedInUser } from "@/lib/auth/authHelpers";
 
 export default function SystemAdminDashboardPage() {
+  const router = useRouter();
+  // const user = getLoggedInUser();
+
+  // useEffect(() => {
+  //   if (!user || user.role !== "system_admin") {
+  //     router.replace("/login");
+  //   }
+  // }, []);
+
+  // if (!user || user.role !== "system_admin") return null;
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-800">Dashboard</h1>

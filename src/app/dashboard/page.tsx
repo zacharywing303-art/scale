@@ -7,36 +7,52 @@ import TaskList from "@/components/dashboard/tasks";
 import ExceptionsSummary from "@/components/dashboard/exceptions";
 import Alerts from "@/components/dashboard/alerts";
 import DailySchedule from "@/components/dashboard/daily-schedule";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { getLoggedInUser } from "@/lib/auth/authHelpers";
 
 export default function DashboardPage() {
+  const router = useRouter();
+  // const user = getLoggedInUser();
+
+  // useEffect(() => {
+  //   if (!user || user.role !== "agency_admin") {
+  //     router.replace("/login");
+  //   }
+  // }, []);
+
+  // if (!user || user.role !== "agency_admin") return null;
   return (
-    <div className="min-h-screen flex bg-gray-50">
-      {/* Main content */}
-      <main className="flex-1 p-6 space-y-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-          Dashboard
-        </h2>
-        <p className="mt-2 text-gray-600 dark:text-gray-300">
-          Welcome to your dashboard. Select a module from the sidebar.
-        </p>
+    <ProtectedRoute>
+      <div className="min-h-screen flex bg-gray-50">
+        {/* Main content */}
+        <main className="flex-1 p-6 space-y-6">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
+            Dashboard
+          </h2>
+          <p className="mt-2 text-gray-600 dark:text-gray-300">
+            Welcome to your dashboard. Select a module from the sidebar.
+          </p>
 
-        {/* Top Section: Exceptions + Daily Schedule */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-1">
-            <ExceptionsSummary />
+          {/* Top Section: Exceptions + Daily Schedule */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1">
+              <ExceptionsSummary />
+            </div>
+            <div className="lg:col-span-2">
+              <DailySchedule />
+            </div>
           </div>
-          <div className="lg:col-span-2">
-            <DailySchedule />
-          </div>
-        </div>
 
-        {/* Middle Section: Inbox + Tasks + Alerts */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <InboxSummary />
-          <TaskList />
-          <Alerts />
-        </div>
-      </main>
-    </div>
+          {/* Middle Section: Inbox + Tasks + Alerts */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <InboxSummary />
+            <TaskList />
+            <Alerts />
+          </div>
+        </main>
+      </div>
+    </ProtectedRoute>
   );
 }

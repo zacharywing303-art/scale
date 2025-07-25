@@ -16,6 +16,7 @@ import { PencilIcon, TrashIcon, UserCogIcon } from "lucide-react";
 import AddSystemUserModal from "@/components/system-admin/AddSystemUserModal";
 import DeleteSystemUserModal from "@/components/system-admin/DeleteUserModal";
 import { useRouter } from "next/navigation";
+import { getLoggedInUser } from "@/lib/auth/authHelpers";
 
 type User = {
   id: string;
@@ -57,13 +58,15 @@ const dummyUsers: User[] = [
 
 export default function SystemUsersPage() {
   // TODO: Replace this with real auth logic
-  const isMainAdmin = true; // assume the logged-in user is main system admin
 
   const [search, setSearch] = useState("");
 
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
+  const loggedInUser = getLoggedInUser();
+  const isMainAdmin =
+    loggedInUser?.role === "system_admin" && loggedInUser.isMainAdmin;
   const router = useRouter();
 
   const filteredUsers = dummyUsers

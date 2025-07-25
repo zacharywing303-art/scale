@@ -2,13 +2,15 @@
 
 import { FaSignOutAlt, FaCog } from "react-icons/fa";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
 
 export default function Topbar() {
   const router = useRouter();
 
+  const { logout } = useAuth();
+
   const handleSignOut = () => {
-    // TODO: Add actual auth sign-out logic
-    router.push("/login");
+    logout();
   };
 
   return (
