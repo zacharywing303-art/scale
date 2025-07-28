@@ -1,4 +1,6 @@
+"use client";
 import { Button } from "@/components/ui/button";
+import GoBackButton from "@/components/custom/GoBackButton";
 
 interface Visit {
   date?: string;
@@ -16,8 +18,9 @@ interface VisitDetailHeaderProps {
 export default function VisitDetailHeader({ visit }: VisitDetailHeaderProps) {
   return (
     <div className="flex justify-between items-start">
-      <div>
-        <h2 className="text-lg font-semibold">Visit Detail</h2>
+      <div className="mb-4">
+        <GoBackButton />
+        <h2 className="text-lg font-semibold mt-4">Visit Detail</h2>
         <div className="text-sm text-muted-foreground space-y-1 mt-1">
           <p>
             <strong>Date:</strong> {visit?.date || "—"}

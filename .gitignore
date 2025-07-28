@@ -18,7 +18,10 @@
 /out/
 
 # production
-/build
+dist/
+build/
+out/
+*.tsbuildinfo
 
 # misc
 .DS_Store
@@ -39,3 +42,29 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# Node modules
+backend/node_modules
+
+# Prisma
+/prisma/dev.db
+/prisma/dev.db-journal
+/prisma/.DS_Store
+/prisma/migrations/*/README.md
+
+
+# OS & IDE files
+.DS_Store
+*.log
+*.swp
+*.swo
+*.tmp
+
+# VSCode
+.vscode/
+
+# Mac system files
+Icon?
+

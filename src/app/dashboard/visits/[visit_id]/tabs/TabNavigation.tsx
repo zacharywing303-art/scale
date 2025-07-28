@@ -14,8 +14,8 @@ import HistoryTab from "./HistoryTab";
 
 export default function TabNavigation({ visit }: { visit: any }) {
   return (
-    <Tabs defaultValue="general" className="flex-1 flex flex-col">
-      <TabsList className="grid grid-cols-5 mb-4">
+    <Tabs defaultValue="general" className="w-full">
+      <TabsList className="mb-4">
         <TabsTrigger value="general">General</TabsTrigger>
         <TabsTrigger value="client">Client</TabsTrigger>
         <TabsTrigger value="employee">Employee</TabsTrigger>
@@ -28,38 +28,36 @@ export default function TabNavigation({ visit }: { visit: any }) {
         <TabsTrigger value="history">History</TabsTrigger>
       </TabsList>
 
-      <div className="overflow-y-auto pr-2 flex-1">
-        <TabsContent value="general">
-          <GeneralTab visit={visit} />
-        </TabsContent>
-        <TabsContent value="client">
-          <ClientTab visit={visit} />
-        </TabsContent>
-        <TabsContent value="employee">
-          <EmployeeTab visit={visit} />
-        </TabsContent>
-        <TabsContent value="authorizations">
-          <AuthorizationsTab visit={visit} />
-        </TabsContent>
-        <TabsContent value="callLog">
-          <CallLogTab visit={visit} />
-        </TabsContent>
-        <TabsContent value="exceptions">
-          <ExceptionsTab visit={visit} />
-        </TabsContent>
-        <TabsContent value="gps">
-          <GPSTab visit={visit} />
-        </TabsContent>
-        <TabsContent value="notes">
-          <NotesTab visit={visit} />
-        </TabsContent>
-        <TabsContent value="claims">
-          <ClaimsTab visit={visit} />
-        </TabsContent>
-        <TabsContent value="history">
-          <HistoryTab visit={visit} />
-        </TabsContent>
-      </div>
+      <TabsContent value="general">
+        <GeneralTab visit={visit} />
+      </TabsContent>
+      <TabsContent value="client">
+        <ClientTab visit={visit} />
+      </TabsContent>
+      <TabsContent value="employee">
+        <EmployeeTab visit={visit} />
+      </TabsContent>
+      <TabsContent value="authorizations">
+        <AuthorizationsTab visit={visit} />
+      </TabsContent>
+      <TabsContent value="callLog">
+        <CallLogTab visit={visit} />
+      </TabsContent>
+      <TabsContent value="exceptions">
+        <ExceptionsTab visit={visit} />
+      </TabsContent>
+      <TabsContent value="gps">
+        <GPSTab visit={visit} />
+      </TabsContent>
+      <TabsContent value="notes">
+        <NotesTab visit={visit} />
+      </TabsContent>
+      <TabsContent value="claims">
+        <ClaimsTab visit={visit} />
+      </TabsContent>
+      <TabsContent value="history">
+        <HistoryTab visit={visit} />
+      </TabsContent>
     </Tabs>
   );
 }

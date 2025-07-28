@@ -19,6 +19,7 @@ import {
 import { useSearchParams } from "next/navigation";
 import CreateVisitModal from "./CreateVisitModal";
 import VisitDetailModal from "./[visit_id]/VisitDetailModal";
+import { useRouter } from "next/navigation";
 
 // Default display columns
 const defaultDisplayColumns = [
@@ -51,6 +52,8 @@ export default function VisitsPage() {
     dateFrom: "",
     dateTo: "",
   });
+
+  const router = useRouter();
 
   const [perPage, setPerPage] = useState("25");
   const [displayColumns, setDisplayColumns] = useState(defaultDisplayColumns);
@@ -286,10 +289,13 @@ export default function VisitsPage() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => {
-                            setSelectedVisit(visit);
-                            setModalOpen(true);
-                          }}
+                          // onClick={() => {
+                          //   setSelectedVisit(visit);
+                          //   setModalOpen(true);
+                          // }}
+                          onClick={() =>
+                            router.push(`/dashboard/visits/${visit.id}`)
+                          }
                         >
                           <Pencil className="w-4 h-4" />
                         </Button>
