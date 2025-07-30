@@ -131,6 +131,11 @@ export const systemAdminNavigation = [
     href: "/system_admin/users",
   },
   {
+    label: "Billing Agencies",
+    icon: DollarSign,
+    href: "/system_admin/billing_agencies",
+  },
+  {
     label: "Permissions",
     icon: ShieldCheck,
     href: "/system_admin/permissions",

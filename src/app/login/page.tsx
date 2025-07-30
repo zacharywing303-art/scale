@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { mockUsers } from "@/lib/auth/mockUsers";
 import { useAuth } from "../context/AuthContext";
 import { User } from "@/lib/auth";
 
@@ -17,33 +16,76 @@ export default function LoginPage() {
   const [agencyCode, setAgencyCode] = useState("");
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const { login } = useAuth();
 
-  const handleLogin = () => {
+  const handleLogin = async () => {
+    setError("");
+
     if (!email || !password) {
       setError("Email and password are required.");
       return;
     }
 
-    const user = mockUsers.find(
-      (u) =>
-        u.email.toLowerCase() === email.toLowerCase() &&
-        u.password === password &&
-        (u.role === "system_admin" || u.agencyCode === agencyCode)
-    );
-
-    if (!user) {
-      setError("Invalid credentials or agency code.");
-      return;
+    // If agencyCode is filled, require it to be non-empty (means agency user)
+    if (agencyCode.trim() === "") {
+      // No agency code — assuming admin login
+      // No agencyCode sent in POST
     }
 
-    login(user as unknown as User); // Sets the context and handles session
+    setLoading(true);
 
-    if (user.role === "system_admin") {
-      router.push("/system_admin");
-    } else {
-      router.push("/dashboard");
+    try {
+      const bodyPayload: any = { email, password };
+      if (agencyCode.trim() !== "") {
+        bodyPayload.agencyCode = agencyCode.trim();
+      }
+
+      const res = await fetch("http://localhost:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyPayload),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
+      const user: User = {
+        id: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        role: data.user.role,
+        agencyCode: data.user.agency?.code || "",
+      };
+
+      login(user);
+
+      if (
+        (user.role === "AGENCY_USER" || user.role === "AGENCY_ADMIN") &&
+        !bodyPayload.agencyCode
+      ) {
+        setError("Agency code is required for agency users.");
+        setLoading(false);
+        return;
+      }
+
+      if (user.role === "SYSTEM_ADMIN" || user.role === "MAIN_ADMIN") {
+        router.push("/system_admin");
+      } else if (user.role === "AGENCY_USER" || user.role === "AGENCY_ADMIN") {
+        router.push("/dashboard");
+      } else {
+        setError("Unknown user role.");
+        setLoading(false);
+        return;
+      }
+    } catch (err: any) {
+      setError(err.message || "An unexpected error occurred.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,7 +103,7 @@ export default function LoginPage() {
         <CardContent>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="agency-code" className="mb-2">
+              <Label htmlFor="agency-code" className="mb-1">
                 Agency Code
               </Label>
               <Input
@@ -73,7 +115,7 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <Label htmlFor="email" className="mb-2">
+              <Label htmlFor="email" className="mb-1">
                 Email
               </Label>
               <Input
@@ -85,7 +127,7 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <Label htmlFor="password" className="mb-2">
+              <Label htmlFor="password" className="mb-1">
                 Password
               </Label>
               <div className="relative">
@@ -111,9 +153,10 @@ export default function LoginPage() {
 
             <Button
               onClick={handleLogin}
+              disabled={loading}
               className="w-full bg-gray-700 hover:bg-green-600 text-white font-semibold"
             >
-              Login
+              {loading ? "Logging in..." : "Login"}
             </Button>
           </div>
         </CardContent>

@@ -4,7 +4,7 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: "system_admin" | "agency_user" | "main_admin";
+  role: "MAIN_ADMIN" | "SYSTEM_ADMIN" | "AGENCY_USER" | "AGENCY_ADMIN";
   agencyCode?: string;
 };
 

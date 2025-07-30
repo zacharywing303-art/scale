@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Agency" ADD COLUMN     "numClients" INTEGER NOT NULL DEFAULT 0,
+ADD COLUMN     "numVisits" INTEGER NOT NULL DEFAULT 0;

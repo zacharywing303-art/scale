@@ -10,72 +10,69 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusIcon, SettingsIcon, EyeIcon, RefreshCcwDot } from "lucide-react";
 import AddAgencyModal from "@/components/system-admin/AddAgencyModal";
-import { ro } from "date-fns/locale";
 import { useRouter } from "next/navigation";
 import ResetPasswordModal from "@/components/system-admin/ResetPasswordModal";
 import { Agency } from "@/app/system_admin/agencies/Agency";
 import SystemSettingsModal from "@/components/system-admin/SystemSettingsModal";
-
-const mockAgencies: Agency[] = [
-  {
-    id: "AG001",
-    name: "Sunrise Health Services",
-    email: "contact@sunrisehealth.com",
-    phone: "(555) 123-4567",
-    createdAt: "2024-02-10",
-    allowEvv: true,
-    status: "Active",
-    state: "California",
-    subscriptionPlan: "Premium",
-    paymentMethod: "Credit Card",
-    numberOfUsers: 50,
-    timeSpent: "120 hours",
-    address: "123 Sunrise St, Los Angeles, CA 90001",
-  },
-  {
-    id: "AG002",
-    name: "CareBridge Agency",
-    email: "info@carebridge.org",
-    phone: "(555) 987-6543",
-    createdAt: "2023-11-03",
-    allowEvv: false,
-    status: "Inactive",
-    state: "Texas",
-    subscriptionPlan: "Basic",
-    paymentMethod: "PayPal",
-    numberOfUsers: 30,
-    timeSpent: "80 hours",
-    address: "456 CareBridge Rd, Austin, TX 73301",
-  },
-  // Add more dummy rows as needed
-];
+import { format } from "date-fns";
+import {
+  Select,
+  SelectContent,
+  SelectTrigger,
+  SelectValue,
+  SelectItem,
+} from "@/components/ui/select";
 
 export default function AgenciesPage() {
   const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<"recent" | "oldest">("recent");
+  const [showActiveOnly, setShowActiveOnly] = useState(false);
   const [showAddAgencyModal, setShowAddAgencyModal] = useState(false);
   const [showResetPasswordModal, setShowResetPasswordModal] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedAgency, setSelectedAgency] = useState<Agency | null>(null);
 
   const router = useRouter();
-  const handleResetPassword = (agency: Agency) => {
-    setSelectedAgency(agency);
-    setShowResetPasswordModal(true);
-  };
 
-  const handleSettings = (agency: Agency) => {
-    setSelectedAgency(agency);
-    setSettingsOpen(true);
-  };
+  const [agencies, setAgencies] = useState<Agency[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const filteredAgencies = mockAgencies.filter(
-    (agency) =>
-      agency.name.toLowerCase().includes(search.toLowerCase()) ||
-      agency.id.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    const fetchAgencies = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/agencies");
+        if (!res.ok) throw new Error("Failed to fetch agencies");
+        const data = await res.json();
+        setAgencies(data);
+      } catch (err: any) {
+        setError(err.message || "Error fetching agencies");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAgencies();
+  }, []);
+
+  const filteredAgencies = agencies
+    .filter((agency) => {
+      const matchesSearch =
+        agency.name.toLowerCase().includes(search.toLowerCase()) ||
+        agency.id.toLowerCase().includes(search.toLowerCase());
+
+      const matchesActive = showActiveOnly ? agency.allowEvv : true;
+
+      return matchesSearch && matchesActive;
+    })
+    .sort((a, b) => {
+      const aDate = new Date(a.createdAt ?? "").getTime();
+      const bDate = new Date(b.createdAt ?? "").getTime();
+      return sortBy === "recent" ? bDate - aDate : aDate - bDate;
+    });
 
   return (
     <div className="space-y-6">
@@ -91,20 +88,43 @@ export default function AgenciesPage() {
         />
       </div>
 
-      <div className="w-full max-w-md">
+      {/* Filters */}
+      <div className="flex flex-wrap gap-4 items-center">
         <Input
           type="text"
           placeholder="Search agencies..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          className="max-w-xs"
         />
+
+        <Select
+          value={sortBy}
+          onValueChange={(value) => setSortBy(value as "recent" | "oldest")}
+        >
+          <SelectTrigger className="max-w-xs">
+            <SelectValue placeholder="Sort by" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="recent">Most Recent</SelectItem>
+            <SelectItem value="oldest">Oldest</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <label className="flex items-center space-x-2 text-sm">
+          <input
+            type="checkbox"
+            checked={showActiveOnly}
+            onChange={(e) => setShowActiveOnly(e.target.checked)}
+          />
+          <span>Active Only</span>
+        </label>
       </div>
 
       <div className="border rounded-md overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>ID</TableHead>
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Phone</TableHead>
@@ -116,11 +136,14 @@ export default function AgenciesPage() {
           <TableBody>
             {filteredAgencies.map((agency) => (
               <TableRow key={agency.id}>
-                <TableCell>{agency.id}</TableCell>
                 <TableCell>{agency.name}</TableCell>
-                <TableCell>{agency.email}</TableCell>
-                <TableCell>{agency.phone}</TableCell>
-                <TableCell>{agency.createdAt}</TableCell>
+                <TableCell>{agency.email || "N/A"}</TableCell>
+                <TableCell>{agency.phone || "N/A"}</TableCell>
+                <TableCell>
+                  {agency.createdAt
+                    ? format(new Date(agency.createdAt), "MMMM d, yyyy HH:mm")
+                    : "N/A"}
+                </TableCell>
                 <TableCell>
                   <span
                     className={`px-2 py-1 rounded text-sm font-medium ${
@@ -139,20 +162,29 @@ export default function AgenciesPage() {
                     onClick={() =>
                       router.push(`/system_admin/agencies/${agency.id}`)
                     }
+                    title="View/Edit Agency"
                   >
                     <EyeIcon className="w-4 h-4" />
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleResetPassword(agency)}
+                    onClick={() => {
+                      setSelectedAgency(agency);
+                      setShowResetPasswordModal(true);
+                    }}
+                    title="Reset Password"
                   >
                     <RefreshCcwDot className="w-4 h-4" />
                   </Button>
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleSettings(agency)}
+                    onClick={() => {
+                      setSelectedAgency(agency);
+                      setSettingsOpen(true);
+                    }}
+                    title="Agency Settings"
                   >
                     <SettingsIcon className="w-4 h-4" />
                   </Button>

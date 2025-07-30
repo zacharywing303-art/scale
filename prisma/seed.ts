@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../src/generated/prisma";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -34,8 +34,8 @@ async function main() {
     data: {
       name: "Main Admin",
       email: "mainadmin@unitycare.com",
-      password: mainAdminPassword,
-      role: "main_admin",
+      passwordHash: mainAdminPassword,
+      role: "MAIN_ADMIN",
     },
   });
 
@@ -43,8 +43,8 @@ async function main() {
     data: {
       name: "System Admin",
       email: "sysadmin@unitycare.com",
-      password: sysAdminPassword,
-      role: "system_admin",
+      passwordHash: sysAdminPassword,
+      role: "SYSTEM_ADMIN",
       agencyId: agency1.id, // Assign to Unity Homecare
     },
   });

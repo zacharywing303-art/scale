@@ -2,16 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-export type Role = "main_admin" | "system_admin" | "agency_user";
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  role: Role;
-  agencyCode?: string;
-};
+import { User } from "@/lib/auth";
 
 type AuthContextType = {
   user: User | null;

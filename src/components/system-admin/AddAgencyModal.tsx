@@ -23,7 +23,7 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
     phone: "",
     contactPerson: "",
     address: "",
-    agencyId: "",
+    santraxId: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,20 +47,20 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4">
             <div>
-              <Label htmlFor="agencyId" className="mb-1">
-                Agency ID
+              <Label htmlFor="santraxId" className="mb-2">
+                Sandata Agency ID
               </Label>
               <Input
-                id="agencyId"
-                name="agencyId"
+                id="santraxId"
+                name="santraxId"
                 placeholder="AG123"
-                value={form.agencyId}
+                value={form.santraxId}
                 onChange={handleChange}
                 required
               />
             </div>
             <div>
-              <Label htmlFor="name" className="mb-1">
+              <Label htmlFor="name" className="mb-2">
                 Agency Name
               </Label>
               <Input
@@ -73,7 +73,7 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
               />
             </div>
             <div>
-              <Label htmlFor="email" className="mb-1">
+              <Label htmlFor="email" className="mb-2">
                 Email
               </Label>
               <Input
@@ -86,7 +86,7 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
               />
             </div>
             <div>
-              <Label htmlFor="phone" className="mb-1">
+              <Label htmlFor="phone" className="mb-2">
                 Phone
               </Label>
               <Input
@@ -98,7 +98,7 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
               />
             </div>
             <div>
-              <Label htmlFor="contactPerson" className="mb-1">
+              <Label htmlFor="contactPerson" className="mb-2">
                 Contact Person
               </Label>
               <Input
@@ -110,7 +110,7 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
               />
             </div>
             <div>
-              <Label htmlFor="address" className="mb-1">
+              <Label htmlFor="address" className="mb-2">
                 Address
               </Label>
               <Input

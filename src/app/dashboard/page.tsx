@@ -14,15 +14,6 @@ import { getLoggedInUser } from "@/lib/auth/authHelpers";
 
 export default function DashboardPage() {
   const router = useRouter();
-  // const user = getLoggedInUser();
-
-  // useEffect(() => {
-  //   if (!user || user.role !== "agency_admin") {
-  //     router.replace("/login");
-  //   }
-  // }, []);
-
-  // if (!user || user.role !== "agency_admin") return null;
   return (
     <ProtectedRoute>
       <div className="min-h-screen flex bg-gray-50">

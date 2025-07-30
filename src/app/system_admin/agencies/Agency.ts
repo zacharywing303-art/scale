@@ -1,3 +1,5 @@
+import { User } from "@/lib/auth";
+
 export interface Agency {
   id: string;
   name: string;
@@ -12,5 +14,19 @@ export interface Agency {
   timeSpent?: string;
   email?: string;
   phone?: string;
-  address?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  addressLine3?: string;
+  city?: string;
+  zipCode?: string;
+  addressState?: string;
+  code?: string; // Added for agency code
+  numEmployees?: number; // Added for number of employees
+  users?: User[]; // Optional: List of users associated with the agency
+  santraxId?: string; // Optional: Santrax ID for integration
+  billingEmail?: string; // Optional: Billing contact email
+  billingPhone?: string; // Optional: Billing contact phone
+  numVisits?: number; // Optional: Number of visits
+  numClients?: number; // Optional: Number of clients
+  paymentStatus?: "Paid" | "Pending" | "Failed" | "Not Required"; // Optional: Payment status
 }

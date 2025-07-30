@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Agency" ALTER COLUMN "email" DROP NOT NULL,
+ALTER COLUMN "email" DROP DEFAULT;
