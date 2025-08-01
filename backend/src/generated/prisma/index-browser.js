@@ -142,6 +142,7 @@ exports.Prisma.AgencyScalarFieldEnum = {
   numClients: 'numClients',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
+  agencyAdminId: 'agencyAdminId',
   santraxID: 'santraxID',
   billingEmail: 'billingEmail',
   billingPhone: 'billingPhone',

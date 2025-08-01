@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -12,6 +11,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Agency } from "@/app/system_admin/agencies/Agency";
+import StateSelect from "../StateSelect";
+import { Label } from "../ui/label";
 
 interface SettingsFormProps {
   agency: Agency;
@@ -28,21 +29,42 @@ export default function SystemSettingsForm({
   const [subscriptionPlan, setSubscriptionPlan] = useState(
     agency.subscriptionPlan ?? ""
   );
-  const [paymentMethod, setPaymentMethod] = useState(
-    agency.paymentMethod ?? ""
-  );
 
-  const handleSave = () => {
-    // TODO: Submit updated settings to backend
-    console.log("Saving agency settings:", {
-      id: agency.id,
-      allowEvv,
-      status,
-      state,
-      subscriptionPlan,
-      paymentMethod,
-    });
-    onClose();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSave = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/agencies/${agency.id}/settings`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            allowEvv,
+            status,
+            state,
+            subscriptionPlan,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to save settings");
+      }
+
+      onClose();
+    } catch (err: any) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -63,15 +85,15 @@ export default function SystemSettingsForm({
           checked={allowEvv}
           onCheckedChange={(val) => setAllowEvv(Boolean(val))}
         />
-        <label htmlFor="allow-evv" className="text-sm font-medium">
+        <Label htmlFor="allow-evv" className="text-sm font-medium">
           Allow EVV
-        </label>
+        </Label>
       </div>
 
       <div>
-        <label htmlFor="status" className="block text-sm font-medium mb-1">
+        <Label htmlFor="status" className="block text-sm font-medium mb-1">
           Status
-        </label>
+        </Label>
         <Select
           value={status}
           onValueChange={(val) =>
@@ -79,7 +101,7 @@ export default function SystemSettingsForm({
           }
         >
           <SelectTrigger>
-            <SelectValue placeholder="Select status" />
+            <SelectValue placeholder={agency.status || "Select status"} />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="Active">Active</SelectItem>
@@ -90,49 +112,55 @@ export default function SystemSettingsForm({
       </div>
 
       <div>
-        <label htmlFor="state" className="block text-sm font-medium mb-1">
+        <Label htmlFor="state" className="block text-sm font-medium mb-1">
           State
-        </label>
-        <Input
-          id="state"
-          value={state}
-          onChange={(e) => setState(e.target.value)}
-        />
+        </Label>
+        <Select value={state} onValueChange={(val) => setState(val)}>
+          <SelectTrigger>
+            <SelectValue placeholder={agency.state || "Select state"} />
+          </SelectTrigger>
+          <SelectContent>
+            <StateSelect />
+          </SelectContent>
+        </Select>
       </div>
 
       <div>
-        <label
+        <Label
           htmlFor="subscription-plan"
           className="block text-sm font-medium mb-1"
         >
           Subscription Plan
-        </label>
-        <Input
-          id="subscription-plan"
+        </Label>
+        <Select
           value={subscriptionPlan}
-          onChange={(e) => setSubscriptionPlan(e.target.value)}
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="payment-method"
-          className="block text-sm font-medium mb-1"
+          onValueChange={(val) =>
+            setSubscriptionPlan(
+              val as "Standard" | "Premium" | "Calculated" | "Exclusive"
+            )
+          }
         >
-          Payment Method
-        </label>
-        <Input
-          id="payment-method"
-          value={paymentMethod}
-          onChange={(e) => setPaymentMethod(e.target.value)}
-        />
+          <SelectTrigger>
+            <SelectValue placeholder="Select subscription plan" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Standard">Standard</SelectItem>
+            <SelectItem value="Premium">Premium</SelectItem>
+            <SelectItem value="Calculated">Calculated</SelectItem>
+            <SelectItem value="Exclusive">Exclusive</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
-      <div className="flex justify-end gap-2">
+      {error && <div className="text-sm text-red-500 mt-2">⚠️ {error}</div>}
+
+      <div className="flex justify-end gap-2 pt-4">
         <Button variant="outline" type="button" onClick={onClose}>
           Cancel
         </Button>
-        <Button type="submit">Save Settings</Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? "Saving..." : "Save Settings"}
+        </Button>
       </div>
     </form>
   );

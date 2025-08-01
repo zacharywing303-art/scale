@@ -1068,6 +1068,7 @@ export namespace Prisma {
     numClients: number | null
     createdAt: Date | null
     updatedAt: Date | null
+    agencyAdminId: string | null
     santraxID: string | null
     billingEmail: string | null
     billingPhone: string | null
@@ -1096,6 +1097,7 @@ export namespace Prisma {
     numClients: number | null
     createdAt: Date | null
     updatedAt: Date | null
+    agencyAdminId: string | null
     santraxID: string | null
     billingEmail: string | null
     billingPhone: string | null
@@ -1124,6 +1126,7 @@ export namespace Prisma {
     numClients: number
     createdAt: number
     updatedAt: number
+    agencyAdminId: number
     santraxID: number
     billingEmail: number
     billingPhone: number
@@ -1166,6 +1169,7 @@ export namespace Prisma {
     numClients?: true
     createdAt?: true
     updatedAt?: true
+    agencyAdminId?: true
     santraxID?: true
     billingEmail?: true
     billingPhone?: true
@@ -1194,6 +1198,7 @@ export namespace Prisma {
     numClients?: true
     createdAt?: true
     updatedAt?: true
+    agencyAdminId?: true
     santraxID?: true
     billingEmail?: true
     billingPhone?: true
@@ -1222,6 +1227,7 @@ export namespace Prisma {
     numClients?: true
     createdAt?: true
     updatedAt?: true
+    agencyAdminId?: true
     santraxID?: true
     billingEmail?: true
     billingPhone?: true
@@ -1337,6 +1343,7 @@ export namespace Prisma {
     numClients: number
     createdAt: Date
     updatedAt: Date
+    agencyAdminId: string | null
     santraxID: string | null
     billingEmail: string | null
     billingPhone: string | null
@@ -1384,11 +1391,13 @@ export namespace Prisma {
     numClients?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    agencyAdminId?: boolean
     santraxID?: boolean
     billingEmail?: boolean
     billingPhone?: boolean
     paymentStatus?: boolean
     users?: boolean | Agency$usersArgs<ExtArgs>
+    agencyAdmin?: boolean | Agency$agencyAdminArgs<ExtArgs>
     _count?: boolean | AgencyCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["agency"]>
 
@@ -1414,10 +1423,12 @@ export namespace Prisma {
     numClients?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    agencyAdminId?: boolean
     santraxID?: boolean
     billingEmail?: boolean
     billingPhone?: boolean
     paymentStatus?: boolean
+    agencyAdmin?: boolean | Agency$agencyAdminArgs<ExtArgs>
   }, ExtArgs["result"]["agency"]>
 
   export type AgencySelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -1442,10 +1453,12 @@ export namespace Prisma {
     numClients?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    agencyAdminId?: boolean
     santraxID?: boolean
     billingEmail?: boolean
     billingPhone?: boolean
     paymentStatus?: boolean
+    agencyAdmin?: boolean | Agency$agencyAdminArgs<ExtArgs>
   }, ExtArgs["result"]["agency"]>
 
   export type AgencySelectScalar = {
@@ -1470,24 +1483,31 @@ export namespace Prisma {
     numClients?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    agencyAdminId?: boolean
     santraxID?: boolean
     billingEmail?: boolean
     billingPhone?: boolean
     paymentStatus?: boolean
   }
 
-  export type AgencyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "code" | "state" | "allowEvv" | "status" | "subscriptionPlan" | "paymentMethod" | "email" | "phone" | "addressLine1" | "addressLine2" | "addressLine3" | "city" | "zipCode" | "addressState" | "numEmployees" | "numVisits" | "numClients" | "createdAt" | "updatedAt" | "santraxID" | "billingEmail" | "billingPhone" | "paymentStatus", ExtArgs["result"]["agency"]>
+  export type AgencyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "code" | "state" | "allowEvv" | "status" | "subscriptionPlan" | "paymentMethod" | "email" | "phone" | "addressLine1" | "addressLine2" | "addressLine3" | "city" | "zipCode" | "addressState" | "numEmployees" | "numVisits" | "numClients" | "createdAt" | "updatedAt" | "agencyAdminId" | "santraxID" | "billingEmail" | "billingPhone" | "paymentStatus", ExtArgs["result"]["agency"]>
   export type AgencyInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     users?: boolean | Agency$usersArgs<ExtArgs>
+    agencyAdmin?: boolean | Agency$agencyAdminArgs<ExtArgs>
     _count?: boolean | AgencyCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type AgencyIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
-  export type AgencyIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type AgencyIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    agencyAdmin?: boolean | Agency$agencyAdminArgs<ExtArgs>
+  }
+  export type AgencyIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    agencyAdmin?: boolean | Agency$agencyAdminArgs<ExtArgs>
+  }
 
   export type $AgencyPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Agency"
     objects: {
       users: Prisma.$UserPayload<ExtArgs>[]
+      agencyAdmin: Prisma.$UserPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -1511,6 +1531,7 @@ export namespace Prisma {
       numClients: number
       createdAt: Date
       updatedAt: Date
+      agencyAdminId: string | null
       santraxID: string | null
       billingEmail: string | null
       billingPhone: string | null
@@ -1910,6 +1931,7 @@ export namespace Prisma {
   export interface Prisma__AgencyClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     users<T extends Agency$usersArgs<ExtArgs> = {}>(args?: Subset<T, Agency$usersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    agencyAdmin<T extends Agency$agencyAdminArgs<ExtArgs> = {}>(args?: Subset<T, Agency$agencyAdminArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -1960,6 +1982,7 @@ export namespace Prisma {
     readonly numClients: FieldRef<"Agency", 'Int'>
     readonly createdAt: FieldRef<"Agency", 'DateTime'>
     readonly updatedAt: FieldRef<"Agency", 'DateTime'>
+    readonly agencyAdminId: FieldRef<"Agency", 'String'>
     readonly santraxID: FieldRef<"Agency", 'String'>
     readonly billingEmail: FieldRef<"Agency", 'String'>
     readonly billingPhone: FieldRef<"Agency", 'String'>
@@ -2213,6 +2236,10 @@ export namespace Prisma {
      */
     data: AgencyCreateManyInput | AgencyCreateManyInput[]
     skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgencyIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -2283,6 +2310,10 @@ export namespace Prisma {
      * Limit how many Agencies to update.
      */
     limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgencyIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -2373,6 +2404,25 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: UserScalarFieldEnum | UserScalarFieldEnum[]
+  }
+
+  /**
+   * Agency.agencyAdmin
+   */
+  export type Agency$agencyAdminArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the User
+     */
+    select?: UserSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the User
+     */
+    omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    where?: UserWhereInput
   }
 
   /**
@@ -2607,6 +2657,7 @@ export namespace Prisma {
     role?: boolean
     isActive?: boolean
     agency?: boolean | User$agencyArgs<ExtArgs>
+    adminOfAgency?: boolean | User$adminOfAgencyArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -2656,6 +2707,7 @@ export namespace Prisma {
   export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "phone" | "createdAt" | "updatedAt" | "agencyId" | "lastLogin" | "passwordHash" | "role" | "isActive", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     agency?: boolean | User$agencyArgs<ExtArgs>
+    adminOfAgency?: boolean | User$adminOfAgencyArgs<ExtArgs>
   }
   export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     agency?: boolean | User$agencyArgs<ExtArgs>
@@ -2668,6 +2720,7 @@ export namespace Prisma {
     name: "User"
     objects: {
       agency: Prisma.$AgencyPayload<ExtArgs> | null
+      adminOfAgency: Prisma.$AgencyPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -3076,6 +3129,7 @@ export namespace Prisma {
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     agency<T extends User$agencyArgs<ExtArgs> = {}>(args?: Subset<T, User$agencyArgs<ExtArgs>>): Prisma__AgencyClient<$Result.GetResult<Prisma.$AgencyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    adminOfAgency<T extends User$adminOfAgencyArgs<ExtArgs> = {}>(args?: Subset<T, User$adminOfAgencyArgs<ExtArgs>>): Prisma__AgencyClient<$Result.GetResult<Prisma.$AgencyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -3531,6 +3585,25 @@ export namespace Prisma {
   }
 
   /**
+   * User.adminOfAgency
+   */
+  export type User$adminOfAgencyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Agency
+     */
+    select?: AgencySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Agency
+     */
+    omit?: AgencyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: AgencyInclude<ExtArgs> | null
+    where?: AgencyWhereInput
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -3585,6 +3658,7 @@ export namespace Prisma {
     numClients: 'numClients',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
+    agencyAdminId: 'agencyAdminId',
     santraxID: 'santraxID',
     billingEmail: 'billingEmail',
     billingPhone: 'billingPhone',
@@ -3745,11 +3819,13 @@ export namespace Prisma {
     numClients?: IntFilter<"Agency"> | number
     createdAt?: DateTimeFilter<"Agency"> | Date | string
     updatedAt?: DateTimeFilter<"Agency"> | Date | string
+    agencyAdminId?: StringNullableFilter<"Agency"> | string | null
     santraxID?: StringNullableFilter<"Agency"> | string | null
     billingEmail?: StringNullableFilter<"Agency"> | string | null
     billingPhone?: StringNullableFilter<"Agency"> | string | null
     paymentStatus?: StringFilter<"Agency"> | string
     users?: UserListRelationFilter
+    agencyAdmin?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
   }
 
   export type AgencyOrderByWithRelationInput = {
@@ -3774,16 +3850,19 @@ export namespace Prisma {
     numClients?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    agencyAdminId?: SortOrderInput | SortOrder
     santraxID?: SortOrderInput | SortOrder
     billingEmail?: SortOrderInput | SortOrder
     billingPhone?: SortOrderInput | SortOrder
     paymentStatus?: SortOrder
     users?: UserOrderByRelationAggregateInput
+    agencyAdmin?: UserOrderByWithRelationInput
   }
 
   export type AgencyWhereUniqueInput = Prisma.AtLeast<{
     id?: string
     code?: string
+    agencyAdminId?: string
     AND?: AgencyWhereInput | AgencyWhereInput[]
     OR?: AgencyWhereInput[]
     NOT?: AgencyWhereInput | AgencyWhereInput[]
@@ -3811,7 +3890,8 @@ export namespace Prisma {
     billingPhone?: StringNullableFilter<"Agency"> | string | null
     paymentStatus?: StringFilter<"Agency"> | string
     users?: UserListRelationFilter
-  }, "id" | "code">
+    agencyAdmin?: XOR<UserNullableScalarRelationFilter, UserWhereInput> | null
+  }, "id" | "code" | "agencyAdminId">
 
   export type AgencyOrderByWithAggregationInput = {
     id?: SortOrder
@@ -3835,6 +3915,7 @@ export namespace Prisma {
     numClients?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    agencyAdminId?: SortOrderInput | SortOrder
     santraxID?: SortOrderInput | SortOrder
     billingEmail?: SortOrderInput | SortOrder
     billingPhone?: SortOrderInput | SortOrder
@@ -3871,6 +3952,7 @@ export namespace Prisma {
     numClients?: IntWithAggregatesFilter<"Agency"> | number
     createdAt?: DateTimeWithAggregatesFilter<"Agency"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Agency"> | Date | string
+    agencyAdminId?: StringNullableWithAggregatesFilter<"Agency"> | string | null
     santraxID?: StringNullableWithAggregatesFilter<"Agency"> | string | null
     billingEmail?: StringNullableWithAggregatesFilter<"Agency"> | string | null
     billingPhone?: StringNullableWithAggregatesFilter<"Agency"> | string | null
@@ -3893,6 +3975,7 @@ export namespace Prisma {
     role?: EnumRoleFilter<"User"> | $Enums.Role
     isActive?: BoolFilter<"User"> | boolean
     agency?: XOR<AgencyNullableScalarRelationFilter, AgencyWhereInput> | null
+    adminOfAgency?: XOR<AgencyNullableScalarRelationFilter, AgencyWhereInput> | null
   }
 
   export type UserOrderByWithRelationInput = {
@@ -3908,6 +3991,7 @@ export namespace Prisma {
     role?: SortOrder
     isActive?: SortOrder
     agency?: AgencyOrderByWithRelationInput
+    adminOfAgency?: AgencyOrderByWithRelationInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -3926,6 +4010,7 @@ export namespace Prisma {
     role?: EnumRoleFilter<"User"> | $Enums.Role
     isActive?: BoolFilter<"User"> | boolean
     agency?: XOR<AgencyNullableScalarRelationFilter, AgencyWhereInput> | null
+    adminOfAgency?: XOR<AgencyNullableScalarRelationFilter, AgencyWhereInput> | null
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -3989,6 +4074,7 @@ export namespace Prisma {
     billingPhone?: string | null
     paymentStatus?: string
     users?: UserCreateNestedManyWithoutAgencyInput
+    agencyAdmin?: UserCreateNestedOneWithoutAdminOfAgencyInput
   }
 
   export type AgencyUncheckedCreateInput = {
@@ -4013,6 +4099,7 @@ export namespace Prisma {
     numClients?: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    agencyAdminId?: string | null
     santraxID?: string | null
     billingEmail?: string | null
     billingPhone?: string | null
@@ -4047,6 +4134,7 @@ export namespace Prisma {
     billingPhone?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
     users?: UserUpdateManyWithoutAgencyNestedInput
+    agencyAdmin?: UserUpdateOneWithoutAdminOfAgencyNestedInput
   }
 
   export type AgencyUncheckedUpdateInput = {
@@ -4071,6 +4159,7 @@ export namespace Prisma {
     numClients?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    agencyAdminId?: NullableStringFieldUpdateOperationsInput | string | null
     santraxID?: NullableStringFieldUpdateOperationsInput | string | null
     billingEmail?: NullableStringFieldUpdateOperationsInput | string | null
     billingPhone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -4100,6 +4189,7 @@ export namespace Prisma {
     numClients?: number
     createdAt?: Date | string
     updatedAt?: Date | string
+    agencyAdminId?: string | null
     santraxID?: string | null
     billingEmail?: string | null
     billingPhone?: string | null
@@ -4156,6 +4246,7 @@ export namespace Prisma {
     numClients?: IntFieldUpdateOperationsInput | number
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    agencyAdminId?: NullableStringFieldUpdateOperationsInput | string | null
     santraxID?: NullableStringFieldUpdateOperationsInput | string | null
     billingEmail?: NullableStringFieldUpdateOperationsInput | string | null
     billingPhone?: NullableStringFieldUpdateOperationsInput | string | null
@@ -4174,6 +4265,7 @@ export namespace Prisma {
     role?: $Enums.Role
     isActive?: boolean
     agency?: AgencyCreateNestedOneWithoutUsersInput
+    adminOfAgency?: AgencyCreateNestedOneWithoutAgencyAdminInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -4188,6 +4280,7 @@ export namespace Prisma {
     passwordHash: string
     role?: $Enums.Role
     isActive?: boolean
+    adminOfAgency?: AgencyUncheckedCreateNestedOneWithoutAgencyAdminInput
   }
 
   export type UserUpdateInput = {
@@ -4202,6 +4295,7 @@ export namespace Prisma {
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
     agency?: AgencyUpdateOneWithoutUsersNestedInput
+    adminOfAgency?: AgencyUpdateOneWithoutAgencyAdminNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -4216,6 +4310,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    adminOfAgency?: AgencyUncheckedUpdateOneWithoutAgencyAdminNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -4322,6 +4417,11 @@ export namespace Prisma {
     none?: UserWhereInput
   }
 
+  export type UserNullableScalarRelationFilter = {
+    is?: UserWhereInput | null
+    isNot?: UserWhereInput | null
+  }
+
   export type SortOrderInput = {
     sort: SortOrder
     nulls?: NullsOrder
@@ -4353,6 +4453,7 @@ export namespace Prisma {
     numClients?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    agencyAdminId?: SortOrder
     santraxID?: SortOrder
     billingEmail?: SortOrder
     billingPhone?: SortOrder
@@ -4387,6 +4488,7 @@ export namespace Prisma {
     numClients?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    agencyAdminId?: SortOrder
     santraxID?: SortOrder
     billingEmail?: SortOrder
     billingPhone?: SortOrder
@@ -4415,6 +4517,7 @@ export namespace Prisma {
     numClients?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    agencyAdminId?: SortOrder
     santraxID?: SortOrder
     billingEmail?: SortOrder
     billingPhone?: SortOrder
@@ -4597,6 +4700,12 @@ export namespace Prisma {
     connect?: UserWhereUniqueInput | UserWhereUniqueInput[]
   }
 
+  export type UserCreateNestedOneWithoutAdminOfAgencyInput = {
+    create?: XOR<UserCreateWithoutAdminOfAgencyInput, UserUncheckedCreateWithoutAdminOfAgencyInput>
+    connectOrCreate?: UserCreateOrConnectWithoutAdminOfAgencyInput
+    connect?: UserWhereUniqueInput
+  }
+
   export type UserUncheckedCreateNestedManyWithoutAgencyInput = {
     create?: XOR<UserCreateWithoutAgencyInput, UserUncheckedCreateWithoutAgencyInput> | UserCreateWithoutAgencyInput[] | UserUncheckedCreateWithoutAgencyInput[]
     connectOrCreate?: UserCreateOrConnectWithoutAgencyInput | UserCreateOrConnectWithoutAgencyInput[]
@@ -4642,6 +4751,16 @@ export namespace Prisma {
     deleteMany?: UserScalarWhereInput | UserScalarWhereInput[]
   }
 
+  export type UserUpdateOneWithoutAdminOfAgencyNestedInput = {
+    create?: XOR<UserCreateWithoutAdminOfAgencyInput, UserUncheckedCreateWithoutAdminOfAgencyInput>
+    connectOrCreate?: UserCreateOrConnectWithoutAdminOfAgencyInput
+    upsert?: UserUpsertWithoutAdminOfAgencyInput
+    disconnect?: UserWhereInput | boolean
+    delete?: UserWhereInput | boolean
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutAdminOfAgencyInput, UserUpdateWithoutAdminOfAgencyInput>, UserUncheckedUpdateWithoutAdminOfAgencyInput>
+  }
+
   export type UserUncheckedUpdateManyWithoutAgencyNestedInput = {
     create?: XOR<UserCreateWithoutAgencyInput, UserUncheckedCreateWithoutAgencyInput> | UserCreateWithoutAgencyInput[] | UserUncheckedCreateWithoutAgencyInput[]
     connectOrCreate?: UserCreateOrConnectWithoutAgencyInput | UserCreateOrConnectWithoutAgencyInput[]
@@ -4662,6 +4781,18 @@ export namespace Prisma {
     connect?: AgencyWhereUniqueInput
   }
 
+  export type AgencyCreateNestedOneWithoutAgencyAdminInput = {
+    create?: XOR<AgencyCreateWithoutAgencyAdminInput, AgencyUncheckedCreateWithoutAgencyAdminInput>
+    connectOrCreate?: AgencyCreateOrConnectWithoutAgencyAdminInput
+    connect?: AgencyWhereUniqueInput
+  }
+
+  export type AgencyUncheckedCreateNestedOneWithoutAgencyAdminInput = {
+    create?: XOR<AgencyCreateWithoutAgencyAdminInput, AgencyUncheckedCreateWithoutAgencyAdminInput>
+    connectOrCreate?: AgencyCreateOrConnectWithoutAgencyAdminInput
+    connect?: AgencyWhereUniqueInput
+  }
+
   export type NullableDateTimeFieldUpdateOperationsInput = {
     set?: Date | string | null
   }
@@ -4678,6 +4809,26 @@ export namespace Prisma {
     delete?: AgencyWhereInput | boolean
     connect?: AgencyWhereUniqueInput
     update?: XOR<XOR<AgencyUpdateToOneWithWhereWithoutUsersInput, AgencyUpdateWithoutUsersInput>, AgencyUncheckedUpdateWithoutUsersInput>
+  }
+
+  export type AgencyUpdateOneWithoutAgencyAdminNestedInput = {
+    create?: XOR<AgencyCreateWithoutAgencyAdminInput, AgencyUncheckedCreateWithoutAgencyAdminInput>
+    connectOrCreate?: AgencyCreateOrConnectWithoutAgencyAdminInput
+    upsert?: AgencyUpsertWithoutAgencyAdminInput
+    disconnect?: AgencyWhereInput | boolean
+    delete?: AgencyWhereInput | boolean
+    connect?: AgencyWhereUniqueInput
+    update?: XOR<XOR<AgencyUpdateToOneWithWhereWithoutAgencyAdminInput, AgencyUpdateWithoutAgencyAdminInput>, AgencyUncheckedUpdateWithoutAgencyAdminInput>
+  }
+
+  export type AgencyUncheckedUpdateOneWithoutAgencyAdminNestedInput = {
+    create?: XOR<AgencyCreateWithoutAgencyAdminInput, AgencyUncheckedCreateWithoutAgencyAdminInput>
+    connectOrCreate?: AgencyCreateOrConnectWithoutAgencyAdminInput
+    upsert?: AgencyUpsertWithoutAgencyAdminInput
+    disconnect?: AgencyWhereInput | boolean
+    delete?: AgencyWhereInput | boolean
+    connect?: AgencyWhereUniqueInput
+    update?: XOR<XOR<AgencyUpdateToOneWithWhereWithoutAgencyAdminInput, AgencyUpdateWithoutAgencyAdminInput>, AgencyUncheckedUpdateWithoutAgencyAdminInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -4882,6 +5033,7 @@ export namespace Prisma {
     passwordHash: string
     role?: $Enums.Role
     isActive?: boolean
+    adminOfAgency?: AgencyCreateNestedOneWithoutAgencyAdminInput
   }
 
   export type UserUncheckedCreateWithoutAgencyInput = {
@@ -4895,6 +5047,7 @@ export namespace Prisma {
     passwordHash: string
     role?: $Enums.Role
     isActive?: boolean
+    adminOfAgency?: AgencyUncheckedCreateNestedOneWithoutAgencyAdminInput
   }
 
   export type UserCreateOrConnectWithoutAgencyInput = {
@@ -4905,6 +5058,39 @@ export namespace Prisma {
   export type UserCreateManyAgencyInputEnvelope = {
     data: UserCreateManyAgencyInput | UserCreateManyAgencyInput[]
     skipDuplicates?: boolean
+  }
+
+  export type UserCreateWithoutAdminOfAgencyInput = {
+    id?: string
+    name: string
+    email: string
+    phone?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    lastLogin?: Date | string | null
+    passwordHash: string
+    role?: $Enums.Role
+    isActive?: boolean
+    agency?: AgencyCreateNestedOneWithoutUsersInput
+  }
+
+  export type UserUncheckedCreateWithoutAdminOfAgencyInput = {
+    id?: string
+    name: string
+    email: string
+    phone?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    agencyId?: string | null
+    lastLogin?: Date | string | null
+    passwordHash: string
+    role?: $Enums.Role
+    isActive?: boolean
+  }
+
+  export type UserCreateOrConnectWithoutAdminOfAgencyInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutAdminOfAgencyInput, UserUncheckedCreateWithoutAdminOfAgencyInput>
   }
 
   export type UserUpsertWithWhereUniqueWithoutAgencyInput = {
@@ -4940,6 +5126,45 @@ export namespace Prisma {
     isActive?: BoolFilter<"User"> | boolean
   }
 
+  export type UserUpsertWithoutAdminOfAgencyInput = {
+    update: XOR<UserUpdateWithoutAdminOfAgencyInput, UserUncheckedUpdateWithoutAdminOfAgencyInput>
+    create: XOR<UserCreateWithoutAdminOfAgencyInput, UserUncheckedCreateWithoutAdminOfAgencyInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutAdminOfAgencyInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutAdminOfAgencyInput, UserUncheckedUpdateWithoutAdminOfAgencyInput>
+  }
+
+  export type UserUpdateWithoutAdminOfAgencyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    agency?: AgencyUpdateOneWithoutUsersNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutAdminOfAgencyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    agencyId?: NullableStringFieldUpdateOperationsInput | string | null
+    lastLogin?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    passwordHash?: StringFieldUpdateOperationsInput | string
+    role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+  }
+
   export type AgencyCreateWithoutUsersInput = {
     id?: string
     name: string
@@ -4966,9 +5191,44 @@ export namespace Prisma {
     billingEmail?: string | null
     billingPhone?: string | null
     paymentStatus?: string
+    agencyAdmin?: UserCreateNestedOneWithoutAdminOfAgencyInput
   }
 
   export type AgencyUncheckedCreateWithoutUsersInput = {
+    id?: string
+    name: string
+    code: string
+    state: string
+    allowEvv?: boolean
+    status?: string
+    subscriptionPlan?: string | null
+    paymentMethod?: string | null
+    email?: string | null
+    phone?: string | null
+    addressLine1?: string
+    addressLine2?: string | null
+    addressLine3?: string | null
+    city?: string
+    zipCode?: string
+    addressState?: string
+    numEmployees?: number
+    numVisits?: number
+    numClients?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    agencyAdminId?: string | null
+    santraxID?: string | null
+    billingEmail?: string | null
+    billingPhone?: string | null
+    paymentStatus?: string
+  }
+
+  export type AgencyCreateOrConnectWithoutUsersInput = {
+    where: AgencyWhereUniqueInput
+    create: XOR<AgencyCreateWithoutUsersInput, AgencyUncheckedCreateWithoutUsersInput>
+  }
+
+  export type AgencyCreateWithoutAgencyAdminInput = {
     id?: string
     name: string
     code: string
@@ -4994,11 +5254,41 @@ export namespace Prisma {
     billingEmail?: string | null
     billingPhone?: string | null
     paymentStatus?: string
+    users?: UserCreateNestedManyWithoutAgencyInput
   }
 
-  export type AgencyCreateOrConnectWithoutUsersInput = {
+  export type AgencyUncheckedCreateWithoutAgencyAdminInput = {
+    id?: string
+    name: string
+    code: string
+    state: string
+    allowEvv?: boolean
+    status?: string
+    subscriptionPlan?: string | null
+    paymentMethod?: string | null
+    email?: string | null
+    phone?: string | null
+    addressLine1?: string
+    addressLine2?: string | null
+    addressLine3?: string | null
+    city?: string
+    zipCode?: string
+    addressState?: string
+    numEmployees?: number
+    numVisits?: number
+    numClients?: number
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    santraxID?: string | null
+    billingEmail?: string | null
+    billingPhone?: string | null
+    paymentStatus?: string
+    users?: UserUncheckedCreateNestedManyWithoutAgencyInput
+  }
+
+  export type AgencyCreateOrConnectWithoutAgencyAdminInput = {
     where: AgencyWhereUniqueInput
-    create: XOR<AgencyCreateWithoutUsersInput, AgencyUncheckedCreateWithoutUsersInput>
+    create: XOR<AgencyCreateWithoutAgencyAdminInput, AgencyUncheckedCreateWithoutAgencyAdminInput>
   }
 
   export type AgencyUpsertWithoutUsersInput = {
@@ -5038,9 +5328,50 @@ export namespace Prisma {
     billingEmail?: NullableStringFieldUpdateOperationsInput | string | null
     billingPhone?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
+    agencyAdmin?: UserUpdateOneWithoutAdminOfAgencyNestedInput
   }
 
   export type AgencyUncheckedUpdateWithoutUsersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    state?: StringFieldUpdateOperationsInput | string
+    allowEvv?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    subscriptionPlan?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    addressLine1?: StringFieldUpdateOperationsInput | string
+    addressLine2?: NullableStringFieldUpdateOperationsInput | string | null
+    addressLine3?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: StringFieldUpdateOperationsInput | string
+    zipCode?: StringFieldUpdateOperationsInput | string
+    addressState?: StringFieldUpdateOperationsInput | string
+    numEmployees?: IntFieldUpdateOperationsInput | number
+    numVisits?: IntFieldUpdateOperationsInput | number
+    numClients?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    agencyAdminId?: NullableStringFieldUpdateOperationsInput | string | null
+    santraxID?: NullableStringFieldUpdateOperationsInput | string | null
+    billingEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    billingPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentStatus?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type AgencyUpsertWithoutAgencyAdminInput = {
+    update: XOR<AgencyUpdateWithoutAgencyAdminInput, AgencyUncheckedUpdateWithoutAgencyAdminInput>
+    create: XOR<AgencyCreateWithoutAgencyAdminInput, AgencyUncheckedCreateWithoutAgencyAdminInput>
+    where?: AgencyWhereInput
+  }
+
+  export type AgencyUpdateToOneWithWhereWithoutAgencyAdminInput = {
+    where?: AgencyWhereInput
+    data: XOR<AgencyUpdateWithoutAgencyAdminInput, AgencyUncheckedUpdateWithoutAgencyAdminInput>
+  }
+
+  export type AgencyUpdateWithoutAgencyAdminInput = {
     id?: StringFieldUpdateOperationsInput | string
     name?: StringFieldUpdateOperationsInput | string
     code?: StringFieldUpdateOperationsInput | string
@@ -5066,6 +5397,36 @@ export namespace Prisma {
     billingEmail?: NullableStringFieldUpdateOperationsInput | string | null
     billingPhone?: NullableStringFieldUpdateOperationsInput | string | null
     paymentStatus?: StringFieldUpdateOperationsInput | string
+    users?: UserUpdateManyWithoutAgencyNestedInput
+  }
+
+  export type AgencyUncheckedUpdateWithoutAgencyAdminInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    name?: StringFieldUpdateOperationsInput | string
+    code?: StringFieldUpdateOperationsInput | string
+    state?: StringFieldUpdateOperationsInput | string
+    allowEvv?: BoolFieldUpdateOperationsInput | boolean
+    status?: StringFieldUpdateOperationsInput | string
+    subscriptionPlan?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentMethod?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    addressLine1?: StringFieldUpdateOperationsInput | string
+    addressLine2?: NullableStringFieldUpdateOperationsInput | string | null
+    addressLine3?: NullableStringFieldUpdateOperationsInput | string | null
+    city?: StringFieldUpdateOperationsInput | string
+    zipCode?: StringFieldUpdateOperationsInput | string
+    addressState?: StringFieldUpdateOperationsInput | string
+    numEmployees?: IntFieldUpdateOperationsInput | number
+    numVisits?: IntFieldUpdateOperationsInput | number
+    numClients?: IntFieldUpdateOperationsInput | number
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    santraxID?: NullableStringFieldUpdateOperationsInput | string | null
+    billingEmail?: NullableStringFieldUpdateOperationsInput | string | null
+    billingPhone?: NullableStringFieldUpdateOperationsInput | string | null
+    paymentStatus?: StringFieldUpdateOperationsInput | string
+    users?: UserUncheckedUpdateManyWithoutAgencyNestedInput
   }
 
   export type UserCreateManyAgencyInput = {
@@ -5092,6 +5453,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    adminOfAgency?: AgencyUpdateOneWithoutAgencyAdminNestedInput
   }
 
   export type UserUncheckedUpdateWithoutAgencyInput = {
@@ -5105,6 +5467,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    adminOfAgency?: AgencyUncheckedUpdateOneWithoutAgencyAdminNestedInput
   }
 
   export type UserUncheckedUpdateManyWithoutAgencyInput = {

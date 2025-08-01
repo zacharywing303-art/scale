@@ -8,20 +8,74 @@ export const getAgencyById = async (id: string) => {
   return prisma.agency.findUnique({ where: { id } });
 };
 
-export const createAgency = async (data: {
+export const createAgencyWithAdmin = async (data: {
   name: string;
-  code: string;
-  state: string;
-  allowEvv?: boolean;
-  status?: string;
-  subscriptionPlan?: string;
-  paymentMethod?: string;
-  email?: string;
-  phone?: string;
-  numOfEmployees?: number;
+  email: string;
+  phone: string;
+  contactPerson: string;
+  santraxID: string;
+  passwordHash: string;
 }) => {
-  return prisma.agency.create({ data });
+  const agencyCode = generateAgencyCode();
+
+  // 1. Create the agency first without agencyAdminId
+  const agency = await prisma.agency.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      phone: data.phone,
+      code: agencyCode,
+      state: "Unknown",
+      santraxID: data.santraxID,
+      status: "Active",
+      allowEvv: false,
+    },
+  });
+
+  // 2. Create the admin user linked to agency
+  const user = await prisma.user.create({
+    data: {
+      name: data.contactPerson,
+      email: data.email,
+      phone: data.phone,
+      role: "AGENCY_ADMIN",
+      passwordHash: data.passwordHash,
+      agencyId: agency.id,
+    },
+  });
+
+  // 3. Update agency to set agencyAdminId
+  const updatedCreatedAgency = await prisma.agency.update({
+    where: { id: agency.id },
+    data: {
+      agencyAdminId: user.id,
+    },
+  });
+
+  return updatedCreatedAgency;
 };
+
+export const updateAgencySettings = async (
+  agencyId: string,
+  allowEvv: boolean,
+  status: string,
+  state: string,
+  subscriptionPlan: string
+) => {
+  return prisma.agency.update({
+    where: { id: agencyId },
+    data: {
+      allowEvv,
+      status,
+      state,
+      subscriptionPlan,
+    },
+  });
+};
+
+function generateAgencyCode(): string {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
 
 export const updateAgency = async (id: string, data: Partial<any>) => {
   return prisma.agency.update({ where: { id }, data });

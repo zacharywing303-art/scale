@@ -10,6 +10,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface AddAgencyModalProps {
   open: boolean;
@@ -22,20 +24,55 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
     email: "",
     phone: "",
     contactPerson: "",
-    address: "",
-    santraxId: "",
+    santraxID: "",
   });
+
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Submit to backend
-    console.log("Submitting new agency:", form);
-    onClose();
+    setLoading(true);
+
+    try {
+      const res = await fetch(
+        "http://localhost:5000/api/agencies/create_with_admin",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.message || "Failed to create agency");
+      }
+
+      const data = await res.json();
+      toast.success("Agency created successfully");
+      onClose();
+
+      // Wait for agencyId to be available before navigating
+      let attempts = 0;
+      while (!data.agencyId && attempts < 10) {
+        await new Promise((resolve) => setTimeout(resolve, 200));
+        attempts++;
+      }
+      if (data.agencyId) {
+        router.push(`/system_admin/agencies/${data.agencyId}`);
+      }
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -51,10 +88,10 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
                 Sandata Agency ID
               </Label>
               <Input
-                id="santraxId"
-                name="santraxId"
-                placeholder="AG123"
-                value={form.santraxId}
+                id="santraxID"
+                name="santraxID"
+                placeholder="STX212345"
+                value={form.santraxID}
                 onChange={handleChange}
                 required
               />
@@ -66,7 +103,7 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
               <Input
                 id="name"
                 name="name"
-                placeholder="Sunrise Health Services"
+                placeholder="Agency Name in Full in here"
                 value={form.name}
                 onChange={handleChange}
                 required
@@ -83,6 +120,7 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
                 placeholder="contact@agency.com"
                 value={form.email}
                 onChange={handleChange}
+                required
               />
             </div>
             <div>
@@ -92,9 +130,10 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
               <Input
                 id="phone"
                 name="phone"
-                placeholder="(555) 123-4567"
+                placeholder="Format: 123-456-7890"
                 value={form.phone}
                 onChange={handleChange}
+                required
               />
             </div>
             <div>
@@ -107,18 +146,7 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
                 placeholder="Jane Doe"
                 value={form.contactPerson}
                 onChange={handleChange}
-              />
-            </div>
-            <div>
-              <Label htmlFor="address" className="mb-2">
-                Address
-              </Label>
-              <Input
-                id="address"
-                name="address"
-                placeholder="123 Main St, City, State"
-                value={form.address}
-                onChange={handleChange}
+                required
               />
             </div>
           </div>
@@ -127,8 +155,8 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" variant="secondary">
-              Save Agency
+            <Button type="submit" variant="secondary" disabled={loading}>
+              {loading ? "Saving..." : "Save Agency"}
             </Button>
           </div>
         </form>

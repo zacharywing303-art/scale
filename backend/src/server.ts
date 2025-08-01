@@ -17,7 +17,6 @@ app.use(morgan("dev"));
 
 // Routes
 app.use("/api/auth", authRoutes);
-
 app.use("/api/agencies", agencyRoutes);
 
 // Root endpoint
