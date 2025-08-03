@@ -99,3 +99,47 @@ export const updateAgencySettingsController = async (
     return res.status(500).json({ error: "Failed to update settings" });
   }
 };
+
+export const saveAgencyChangesSettingsController = async (
+  req: Request,
+  res: Response
+) => {
+  const agencyId = req.params.id;
+  const {
+    name,
+    allowEvv,
+    status,
+    addressLine1,
+    addressLine2,
+    addressLine3,
+    city,
+    addressState,
+    zipCode,
+  } = req.body;
+
+  const dataToUpdate: any = {};
+  if (name) dataToUpdate.name = name;
+  if (allowEvv !== undefined) dataToUpdate.allowEvv = allowEvv;
+  if (status) dataToUpdate.status = status;
+  if (addressLine1) dataToUpdate.addressLine1 = addressLine1;
+  if (addressLine2) dataToUpdate.addressLine2 = addressLine2;
+  if (addressLine3) dataToUpdate.addressLine3 = addressLine3;
+  if (city) dataToUpdate.city = city;
+  if (addressState) dataToUpdate.addressState = addressState;
+  if (zipCode) dataToUpdate.zipCode = zipCode;
+
+  try {
+    const updatedAgency = await prisma.agency.update({
+      where: { id: agencyId },
+      data: dataToUpdate,
+    });
+
+    return res.json({
+      message: "Agency settings saved",
+      agency: updatedAgency,
+    });
+  } catch (error) {
+    console.error("Failed to save agency settings:", error);
+    return res.status(500).json({ error: "Failed to save settings" });
+  }
+};

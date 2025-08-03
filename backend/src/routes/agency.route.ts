@@ -6,6 +6,7 @@ import {
   updateAgencyController,
   deleteAgencyController,
   updateAgencySettingsController,
+  saveAgencyChangesSettingsController,
 } from "../controllers/agency.controller";
 
 const router = Router();
@@ -16,6 +17,7 @@ router.post("/create_with_admin", createAgencyController);
 router.put("/:id", updateAgencyController);
 router.delete("/:id", deleteAgencyController);
 router.patch("/:id/settings", updateAgencySettingsController);
+router.patch("/:id/save_changes", saveAgencyChangesSettingsController);
 
 console.log("✔ agency routes loaded");
 

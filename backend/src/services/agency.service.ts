@@ -73,6 +73,34 @@ export const updateAgencySettings = async (
   });
 };
 
+export const saveAgencyChangesSettings = async (
+  name: string,
+  agencyId: string,
+  allowEvv: boolean,
+  status: string,
+  addressLine1: string,
+  addressLine2: string,
+  addressLine3: string,
+  city: string,
+  addressState: string,
+  zipCode: string
+) => {
+  return prisma.agency.update({
+    where: { id: agencyId },
+    data: {
+      name,
+      allowEvv,
+      status,
+      addressLine1,
+      addressLine2,
+      addressLine3,
+      city,
+      addressState,
+      zipCode,
+    },
+  });
+};
+
 function generateAgencyCode(): string {
   return Math.random().toString(36).substring(2, 8).toUpperCase();
 }

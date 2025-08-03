@@ -147,12 +147,19 @@ export default function AgenciesPage() {
                 <TableCell>
                   <span
                     className={`px-2 py-1 rounded text-sm font-medium ${
-                      agency.allowEvv
+                      agency.status === "Active"
                         ? "bg-green-100 text-green-700"
-                        : "bg-red-100 text-red-700"
+                        : agency.status === "Inactive"
+                        ? "bg-red-100 text-red-700"
+                        : agency.status === "Suspended"
+                        ? "bg-yellow-100 text-yellow-700"
+                        : "bg-gray-100 text-gray-700"
                     }`}
                   >
-                    {agency.allowEvv ? "Active" : "Inactive"}
+                    {agency.status
+                      ? agency.status.charAt(0).toUpperCase() +
+                        agency.status.slice(1)
+                      : "Unknown"}
                   </span>
                 </TableCell>
                 <TableCell className="text-right space-x-2">

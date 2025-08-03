@@ -1,13 +1,31 @@
+"use client";
+
 import { useRouter } from "next/navigation";
 import { Button } from "../ui/button";
 import { ArrowLeft } from "lucide-react";
 
-export default function GoBackButton() {
+interface GoBackButtonProps {
+  hasUnsavedChanges: boolean;
+  onTriggerModal: () => void;
+}
+
+export default function GoBackButton({
+  hasUnsavedChanges,
+  onTriggerModal,
+}: GoBackButtonProps) {
   const router = useRouter();
 
+  const handleClick = () => {
+    if (hasUnsavedChanges) {
+      onTriggerModal();
+    } else {
+      router.back();
+    }
+  };
+
   return (
-    <Button onClick={() => router.back()}>
-      <ArrowLeft className="w-4 h-4" />
+    <Button onClick={handleClick}>
+      <ArrowLeft className="w-4 h-4 mr-1" />
       Go Back
     </Button>
   );

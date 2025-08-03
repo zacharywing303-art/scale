@@ -100,21 +100,21 @@ export const systemAdminNavigation = [
     icon: Building2,
     href: "/system_admin/agencies",
   },
-  {
-    label: "Add Agency",
-    icon: Plus,
-    href: "/system_admin/add_agency",
-  },
+  // {
+  //   label: "Add Agency",
+  //   icon: Plus,
+  //   href: "/system_admin/add_agency",
+  // },
   {
     label: "Support Requests",
     icon: LifeBuoy,
     href: "/system_admin/support_requests",
   },
-  {
-    label: "Reset Passwords",
-    icon: RefreshCcw,
-    href: "/system_admin/reset_passwords",
-  },
+  // {
+  //   label: "Reset Passwords",
+  //   icon: RefreshCcw,
+  //   href: "/system_admin/reset_passwords",
+  // },
   {
     label: "Agency Settings",
     icon: Settings,

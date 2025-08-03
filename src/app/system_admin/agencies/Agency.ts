@@ -23,10 +23,12 @@ export interface Agency {
   code?: string; // Added for agency code
   numEmployees?: number; // Added for number of employees
   users?: User[]; // Optional: List of users associated with the agency
-  santraxId?: string; // Optional: Santrax ID for integration
   billingEmail?: string; // Optional: Billing contact email
   billingPhone?: string; // Optional: Billing contact phone
   numVisits?: number; // Optional: Number of visits
   numClients?: number; // Optional: Number of clients
   paymentStatus?: "Paid" | "Pending" | "Failed" | "Not Required"; // Optional: Payment status
+  agencyAdminId?: string; // Optional: ID of the agency admin
+  agencyAdmin?: User; // Optional: Agency admin user object
+  santraxID?: string; // Optional: Santrax ID for integration
 }

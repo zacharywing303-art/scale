@@ -17,14 +17,36 @@ import { useEffect, useState } from "react";
 import { Agency } from "@/app/system_admin/agencies/Agency";
 import StateSelect from "@/components/StateSelect";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import isEqual from "lodash.isequal";
+import UnsavedChangesModal from "@/components/custom/UnsavedChangesModal";
+import { useRouter } from "next/navigation";
 
 import { time } from "console";
+import { stat } from "fs";
 
 export default function AgencyDetailPage() {
   const [agency, setAgency] = useState<Agency | null>(null);
+  const [name, setName] = useState(agency?.name ?? "");
+  const [status, setStatus] = useState("");
+  const [allowEvv, setAllowEvv] = useState(false);
+
+  // This runs when agency is loaded
+  useEffect(() => {
+    if (agency) {
+      setStatus(agency.status || ""); // or use agency.status?.toLowerCase() if your options are lowercase
+      setAllowEvv(agency.allowEvv ?? false);
+    }
+  }, [agency]);
+  const [addressLine1, setAddressLine1] = useState(agency?.addressLine1 ?? "");
+  const [addressLine2, setAddressLine2] = useState(agency?.addressLine2 ?? "");
+  const [addressLine3, setAddressLine3] = useState(agency?.addressLine3 ?? "");
+  const [city, setCity] = useState(agency?.city ?? "");
+  const [addressState, setAddressState] = useState(agency?.addressState ?? "");
+  const [zipCode, setZipCode] = useState(agency?.zipCode ?? "");
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const { agency_id } = useParams();
+  const router = useRouter();
 
   useEffect(() => {
     const fetchAgency = async () => {
@@ -71,6 +93,93 @@ export default function AgencyDetailPage() {
 
   const numUsers = agency?.users?.length || 0;
 
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
+  const [showUnsavedChangesModal, setShowUnsavedChangesModal] = useState(false);
+
+  useEffect(() => {
+    if (!agency) return;
+
+    const original = {
+      name: agency.name,
+      allowEvv: agency.allowEvv,
+      status: agency.status,
+      addressLine1: agency.addressLine1,
+      addressLine2: agency.addressLine2,
+      addressLine3: agency.addressLine3,
+      city: agency.city,
+      addressState: agency.addressState,
+      zipCode: agency.zipCode,
+    };
+
+    const current = {
+      name,
+      allowEvv,
+      status,
+      addressLine1,
+      addressLine2,
+      addressLine3,
+      city,
+      addressState,
+      zipCode,
+    };
+
+    setUnsavedChanges(!isEqual(original, current));
+  }, [
+    agency,
+    name,
+    allowEvv,
+    status,
+    addressLine1,
+    addressLine2,
+    addressLine3,
+    city,
+    addressState,
+    zipCode,
+  ]);
+
+  const handleAgencyInfoSaveChanges = async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/agencies/${agency_id}/save_changes`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name,
+            allowEvv,
+            status,
+            addressLine1,
+            addressLine2,
+            addressLine3,
+            city,
+            addressState,
+            zipCode,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(
+          err.error || "Failed to save changes: " + (err.message || "")
+        );
+      }
+      const data = await res.json();
+      alert("Changes saved successfully!");
+      setAgency(data); // Refresh state with saved data
+    } catch (err: any) {
+      alert("Error saving changes: " + (err.message || ""));
+    } finally {
+      setLoading(false);
+      window.location.reload();
+    }
+  };
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="info" className="w-full">
@@ -81,8 +190,30 @@ export default function AgencyDetailPage() {
             <TabsTrigger value="invoices">Invoices</TabsTrigger>
           </TabsList>
           <div className="flex items-center gap-4">
-            <GoBackButton />
-            <Button variant="secondary">Save Changes</Button>
+            <GoBackButton
+              hasUnsavedChanges={unsavedChanges}
+              onTriggerModal={() => setShowUnsavedChangesModal(true)}
+            />
+            <UnsavedChangesModal
+              open={showUnsavedChangesModal}
+              onDiscard={() => {
+                setShowUnsavedChangesModal(false);
+                router.back();
+              }}
+              onStay={() => setShowUnsavedChangesModal(false)}
+              onSave={async () => {
+                await handleAgencyInfoSaveChanges();
+                setShowUnsavedChangesModal(false);
+                router.back();
+              }}
+            />
+            <Button
+              variant="secondary"
+              onClick={handleAgencyInfoSaveChanges}
+              disabled={loading}
+            >
+              {loading ? "Saving..." : "Save Changes"}
+            </Button>
           </div>
         </div>
 
@@ -91,6 +222,9 @@ export default function AgencyDetailPage() {
           <Card>
             <CardHeader>
               <CardTitle>Agency Information</CardTitle>
+              {error && (
+                <div className="text-sm text-red-500 mt-2">⚠️ {error}</div>
+              )}
             </CardHeader>
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -99,25 +233,31 @@ export default function AgencyDetailPage() {
               </div>
               <div>
                 <Label className="mb-1">Agency Name</Label>
-                <Input value={agency?.name || ""} onChange={() => {}} />
+                <Input
+                  placeholder={agency?.name || "No Agency Name"}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
               </div>
               <div>
                 <Label className="mb-1">Status</Label>
-                <Select disabled>
+                <Select value={status} onValueChange={(val) => setStatus(val)}>
                   <SelectTrigger>
-                    <SelectValue
-                      placeholder={agency?.status || "Select Status"}
-                    />
+                    <SelectValue placeholder="Select Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                    <SelectItem value="Suspended">Suspended</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               <div>
                 <Label className="mb-1">Allow EVV</Label>
-                <Select>
+                <Select
+                  value={allowEvv ? "yes" : "no"}
+                  onValueChange={(val) => setAllowEvv(val === "yes")}
+                >
                   <SelectTrigger>
                     <SelectValue
                       placeholder={agency?.allowEvv ? "Yes" : "No"}
@@ -172,7 +312,8 @@ export default function AgencyDetailPage() {
               <div>
                 <Label className="mb-1">Sandata ID</Label>
                 <Input
-                  value={agency?.santraxId || "N/A"}
+                  placeholder={agency?.santraxID || "N/A"}
+                  value={agency?.santraxID || ""}
                   onChange={() => {}}
                   disabled
                 />
@@ -184,27 +325,40 @@ export default function AgencyDetailPage() {
               <div>
                 <Label className="mb-1">Address Line 1</Label>
                 <Input
-                  value={agency?.addressLine1 || "N/A"}
-                  onChange={() => {}}
+                  placeholder={agency?.addressLine1 || "N/A"}
+                  value={addressLine1}
+                  onChange={(e) => setAddressLine1(e.target.value)}
                 />
               </div>
               <div>
                 <Label className="mb-1">Address Line 2</Label>
-                <Input value={agency?.addressLine2 || ""} onChange={() => {}} />
+                <Input
+                  placeholder={agency?.addressLine2 || "N/A"}
+                  value={addressLine2}
+                  onChange={(e) => setAddressLine2(e.target.value)}
+                />
               </div>
               <div>
                 <Label className="mb-1">Address Line 3</Label>
-                <Input value={agency?.addressLine3 || ""} onChange={() => {}} />
+                <Input
+                  placeholder={agency?.addressLine3 || "N/A"}
+                  value={addressLine3}
+                  onChange={(e) => setAddressLine3(e.target.value)}
+                />
               </div>
               <div>
                 <Label className="mb-1">City</Label>
-                <Input value={agency?.city || "N/A"} onChange={() => {}} />
+                <Input
+                  placeholder={agency?.city || "N/A"}
+                  value={city}
+                  onChange={(e) => setCity(e.target.value)}
+                />
               </div>
               <div>
                 <Label className="mb-1">State</Label>
                 <Select
-                  value={agency?.addressState || ""}
-                  onValueChange={() => {}}
+                  value={addressState}
+                  onValueChange={(value) => setAddressState(value)}
                 >
                   <SelectTrigger>
                     <SelectValue
@@ -216,7 +370,11 @@ export default function AgencyDetailPage() {
               </div>
               <div>
                 <Label className="mb-1">Zip Code</Label>
-                <Input value={agency?.zipCode || "N/A"} onChange={() => {}} />
+                <Input
+                  placeholder={agency?.zipCode || "N/A"}
+                  value={zipCode}
+                  onChange={(e) => setZipCode(e.target.value)}
+                />
               </div>
               {/* Additional fields when needed */}
             </CardContent>
