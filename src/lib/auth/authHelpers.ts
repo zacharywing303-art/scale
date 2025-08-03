@@ -1,9 +1,9 @@
-import { MockUser } from "./mockUsers";
+import { User } from "@/lib/auth";
 
-export function getLoggedInUser(): MockUser | null {
+export function getLoggedInUser(): User | null {
   if (typeof window === "undefined") return null;
   const stored = localStorage.getItem("loggedInUser");
-  return stored ? JSON.parse(stored) : null;
+  return stored ? (JSON.parse(stored) as User) : null;
 }
 
 export function logout() {

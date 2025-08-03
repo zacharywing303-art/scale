@@ -20,6 +20,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [lastActivity, setLastActivity] = useState<number>(Date.now());
   const router = useRouter();
 
+  // Load user on mount
   useEffect(() => {
     const storedUser = localStorage.getItem("unity_user");
     if (storedUser) {
@@ -27,14 +28,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  // Monitor session timeout
+  // Reset session timeout on user activity
+  useEffect(() => {
+    const handleActivity = () => setLastActivity(Date.now());
+
+    window.addEventListener("mousemove", handleActivity);
+    window.addEventListener("keydown", handleActivity);
+    window.addEventListener("click", handleActivity);
+
+    return () => {
+      window.removeEventListener("mousemove", handleActivity);
+      window.removeEventListener("keydown", handleActivity);
+      window.removeEventListener("click", handleActivity);
+    };
+  }, []);
+
+  // Check for inactivity logout
   useEffect(() => {
     const checkTimeout = () => {
       if (Date.now() - lastActivity > SESSION_TIMEOUT) {
         logout();
       }
     };
-    const interval = setInterval(checkTimeout, 60_000);
+
+    const interval = setInterval(checkTimeout, 60_000); // check every minute
     return () => clearInterval(interval);
   }, [lastActivity]);
 

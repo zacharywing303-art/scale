@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 const dummyAgencies: Agency[] = [
   {
@@ -72,52 +73,48 @@ export default function PermissionsPage() {
   };
 
   const router = useRouter();
-  const user = getLoggedInUser();
-
-  useEffect(() => {
-    if (!user || user.isMainAdmin !== true) {
-      router.replace("/login");
-    }
-  }, []);
-
-  if (!user || user.role !== "system_admin") return null;
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Agency Permissions</h1>
+    <ProtectedRoute allowedRoles={["MAIN_ADMIN"]}>
+      <div className="p-6 space-y-6">
+        <h1 className="text-2xl font-bold">Agency Permissions</h1>
 
-      <ScrollArea className="space-y-4 max-h-[80vh] pr-4">
-        {dummyAgencies.map((agency) => (
-          <Card key={agency.id}>
-            <CardContent className="p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-lg font-semibold">{agency.name}</h2>
-                <Button variant="outline" onClick={() => handleSave(agency.id)}>
-                  Save Changes
-                </Button>
-              </div>
+        <ScrollArea className="space-y-4 max-h-[80vh] pr-4">
+          {dummyAgencies.map((agency) => (
+            <Card key={agency.id}>
+              <CardContent className="p-4">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-semibold">{agency.name}</h2>
+                  <Button
+                    variant="outline"
+                    onClick={() => handleSave(agency.id)}
+                  >
+                    Save Changes
+                  </Button>
+                </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                {featureList.map((feature) => (
-                  <div key={feature} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`${agency.id}-${feature}`}
-                      checked={permissions[agency.id]?.[feature]}
-                      onCheckedChange={() => handleToggle(agency.id, feature)}
-                    />
-                    <Label
-                      htmlFor={`${agency.id}-${feature}`}
-                      className="text-sm"
-                    >
-                      {feature}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </ScrollArea>
-    </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {featureList.map((feature) => (
+                    <div key={feature} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`${agency.id}-${feature}`}
+                        checked={permissions[agency.id]?.[feature]}
+                        onCheckedChange={() => handleToggle(agency.id, feature)}
+                      />
+                      <Label
+                        htmlFor={`${agency.id}-${feature}`}
+                        className="text-sm"
+                      >
+                        {feature}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </ScrollArea>
+      </div>
+    </ProtectedRoute>
   );
 }

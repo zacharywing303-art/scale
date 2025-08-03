@@ -78,7 +78,12 @@ export default function SupportRequestPage() {
         Support Request: {mockSupportRequest.subject}
       </h1>
 
-      <GoBackButton />
+      <GoBackButton
+        hasUnsavedChanges={false}
+        onTriggerModal={function (): void {
+          throw new Error("Function not implemented.");
+        }}
+      />
 
       <Card>
         <CardContent className="space-y-4 py-6">

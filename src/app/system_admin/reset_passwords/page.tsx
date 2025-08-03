@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import AgencyPasswordResetModal from "@/components/system-admin/AgencyPasswordResetModal";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 interface UserAccount {
   id: string;
@@ -65,51 +66,55 @@ export default function ResetPasswordsPage() {
   );
 
   return (
-    <div className="max-w-5xl mx-auto p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Reset Passwords</h1>
+    <ProtectedRoute allowedRoles={["MAIN_ADMIN"]}>
+      <div className="max-w-5xl mx-auto p-6 space-y-6">
+        <h1 className="text-2xl font-bold">Reset Passwords</h1>
 
-      <AgencyPasswordResetModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        onConfirm={confirmReset}
-        user={{
-          ...selectedUser!,
-          lastPasswordReset: "2024-06-10T14:30:00Z", // replace with real data
-        }}
-      />
-
-      <div className="max-w-md">
-        <Label htmlFor="search" className="mb-2">
-          Search by name or email
-        </Label>
-        <Input
-          id="search"
-          placeholder="Enter user name or email"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+        <AgencyPasswordResetModal
+          isOpen={modalOpen}
+          onClose={() => setModalOpen(false)}
+          onConfirm={confirmReset}
+          user={{
+            ...selectedUser!,
+            lastPasswordReset: "2024-06-10T14:30:00Z", // replace with real data
+          }}
         />
-      </div>
 
-      <div className="grid gap-4">
-        {filteredUsers.map((user) => (
-          <Card key={user.id}>
-            <CardContent className="flex items-center justify-between py-4 px-6">
-              <div>
-                <p className="font-semibold">{user.name}</p>
-                <p className="text-sm text-muted-foreground">{user.email}</p>
-                <p className="text-sm text-muted-foreground">
-                  {user.agency} – {user.role}
-                </p>
-              </div>
-              <Button onClick={() => handleReset(user)}>Reset Password</Button>
-            </CardContent>
-          </Card>
-        ))}
+        <div className="max-w-md">
+          <Label htmlFor="search" className="mb-2">
+            Search by name or email
+          </Label>
+          <Input
+            id="search"
+            placeholder="Enter user name or email"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
-        {filteredUsers.length === 0 && (
-          <p className="text-muted-foreground">No users found.</p>
-        )}
+        <div className="grid gap-4">
+          {filteredUsers.map((user) => (
+            <Card key={user.id}>
+              <CardContent className="flex items-center justify-between py-4 px-6">
+                <div>
+                  <p className="font-semibold">{user.name}</p>
+                  <p className="text-sm text-muted-foreground">{user.email}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {user.agency} – {user.role}
+                  </p>
+                </div>
+                <Button onClick={() => handleReset(user)}>
+                  Reset Password
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
+
+          {filteredUsers.length === 0 && (
+            <p className="text-muted-foreground">No users found.</p>
+          )}
+        </div>
       </div>
-    </div>
+    </ProtectedRoute>
   );
 }

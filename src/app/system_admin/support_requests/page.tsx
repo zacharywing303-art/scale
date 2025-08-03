@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/table";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 type SupportRequest = {
   id: string;
@@ -77,75 +78,77 @@ export default function SupportRequestsPage() {
   };
 
   return (
-    <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold">Support Requests</h1>
-        <div className="w-full max-w-sm flex items-center gap-2">
-          <Label htmlFor="search" className="sr-only">
-            Search
-          </Label>
-          <Input
-            id="search"
-            placeholder="Search by agency or subject..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+    <ProtectedRoute allowedRoles={["MAIN_ADMIN", "SYSTEM_ADMIN"]}>
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-semibold">Support Requests</h1>
+          <div className="w-full max-w-sm flex items-center gap-2">
+            <Label htmlFor="search" className="sr-only">
+              Search
+            </Label>
+            <Input
+              id="search"
+              placeholder="Search by agency or subject..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="rounded-lg border bg-white shadow overflow-auto">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Agency</TableHead>
+                <TableHead>Subject</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Submitted At</TableHead>
+                <TableHead className="text-right">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredRequests.map((req) => (
+                <TableRow key={req.id}>
+                  <TableCell>
+                    <div className="font-medium">{req.agencyName}</div>
+                    <div className="text-xs text-muted-foreground">
+                      ID: {req.agencyId}
+                    </div>
+                  </TableCell>
+                  <TableCell>{req.subject}</TableCell>
+                  <TableCell>
+                    <Badge className={getStatusColor(req.status)}>
+                      {req.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>{req.submittedAt}</TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        router.push(`/system_admin/support_requests/${req.id}`)
+                      }
+                    >
+                      View
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {filteredRequests.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={5}
+                    className="text-center text-muted-foreground"
+                  >
+                    No matching support requests found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
       </div>
-
-      <div className="rounded-lg border bg-white shadow overflow-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Agency</TableHead>
-              <TableHead>Subject</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Submitted At</TableHead>
-              <TableHead className="text-right">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredRequests.map((req) => (
-              <TableRow key={req.id}>
-                <TableCell>
-                  <div className="font-medium">{req.agencyName}</div>
-                  <div className="text-xs text-muted-foreground">
-                    ID: {req.agencyId}
-                  </div>
-                </TableCell>
-                <TableCell>{req.subject}</TableCell>
-                <TableCell>
-                  <Badge className={getStatusColor(req.status)}>
-                    {req.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>{req.submittedAt}</TableCell>
-                <TableCell className="text-right">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      router.push(`/system_admin/support_requests/${req.id}`)
-                    }
-                  >
-                    View
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-            {filteredRequests.length === 0 && (
-              <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="text-center text-muted-foreground"
-                >
-                  No matching support requests found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </div>
+    </ProtectedRoute>
   );
 }

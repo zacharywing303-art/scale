@@ -17,6 +17,7 @@ import AddSystemUserModal from "@/components/system-admin/AddSystemUserModal";
 import DeleteSystemUserModal from "@/components/system-admin/DeleteUserModal";
 import { useRouter } from "next/navigation";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 type User = {
   id: string;
@@ -65,8 +66,8 @@ export default function SystemUsersPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const loggedInUser = getLoggedInUser();
-  const isMainAdmin =
-    loggedInUser?.role === "system_admin" && loggedInUser.isMainAdmin;
+  // const isMainAdmin = loggedInUser?.role === "MAIN_ADMIN";
+  const isMainAdmin = true;
   const router = useRouter();
 
   const filteredUsers = dummyUsers
@@ -80,100 +81,102 @@ export default function SystemUsersPage() {
     });
 
   return (
-    <div className="p-6 space-y-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">System Users</h1>
-        {isMainAdmin && (
-          <Button onClick={() => setAddModalOpen(true)}>
-            <UserCogIcon className="w-4 h-4 mr-2" />
-            Add System User
-          </Button>
-        )}
-        <AddSystemUserModal
-          open={addModalOpen}
-          onClose={() => setAddModalOpen(false)}
-          onSubmit={(newUser) => {
-            console.log("New user:", newUser);
-            // TODO: Call backend API
-          }}
-        />
-      </div>
-
-      <Card>
-        <CardContent className="p-4 space-y-4">
-          <Input
-            placeholder="Search by name or email"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full md:w-1/2"
+    <ProtectedRoute allowedRoles={["MAIN_ADMIN", "SYSTEM_ADMIN"]}>
+      <div className="p-6 space-y-6 max-w-6xl mx-auto">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-semibold">System Users</h1>
+          {isMainAdmin && (
+            <Button onClick={() => setAddModalOpen(true)}>
+              <UserCogIcon className="w-4 h-4 mr-2" />
+              Add System User
+            </Button>
+          )}
+          <AddSystemUserModal
+            open={addModalOpen}
+            onClose={() => setAddModalOpen(false)}
+            onSubmit={(newUser) => {
+              console.log("New user:", newUser);
+              // TODO: Call backend API
+            }}
           />
+        </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Login</TableHead>
-                {isMainAdmin && (
-                  <TableHead className="text-right">Actions</TableHead>
-                )}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>{user.name}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.status}</TableCell>
-                  <TableCell>{user.lastLogin}</TableCell>
+        <Card>
+          <CardContent className="p-4 space-y-4">
+            <Input
+              placeholder="Search by name or email"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full md:w-1/2"
+            />
+
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last Login</TableHead>
                   {isMainAdmin && (
-                    <TableCell className="flex justify-end gap-2">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => {
-                          // TODO: Implement edit user functionality
-                          router.push(`/system_admin/users/${user.id}`);
-                        }}
-                      >
-                        <PencilIcon className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => setShowDeleteModal(true)}
-                      >
-                        <TrashIcon className="w-4 h-4 text-red-500" />
-                      </Button>
-                      <DeleteSystemUserModal
-                        open={showDeleteModal}
-                        onClose={() => setShowDeleteModal(false)}
-                        userName={user.name}
-                        userId={user.id}
-                        onConfirm={() => {
-                          // Refetch or navigate after delete
-                          router.push("/system_admin/users");
-                        }}
-                      />
-                    </TableCell>
+                    <TableHead className="text-right">Actions</TableHead>
                   )}
                 </TableRow>
-              ))}
-              {filteredUsers.length === 0 && (
-                <TableRow>
-                  <TableCell
-                    colSpan={isMainAdmin ? 5 : 4}
-                    className="text-center text-muted-foreground"
-                  >
-                    No system users found.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </div>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.status}</TableCell>
+                    <TableCell>{user.lastLogin}</TableCell>
+                    {isMainAdmin && (
+                      <TableCell className="flex justify-end gap-2">
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => {
+                            // TODO: Implement edit user functionality
+                            router.push(`/system_admin/users/${user.id}`);
+                          }}
+                        >
+                          <PencilIcon className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          onClick={() => setShowDeleteModal(true)}
+                        >
+                          <TrashIcon className="w-4 h-4 text-red-500" />
+                        </Button>
+                        <DeleteSystemUserModal
+                          open={showDeleteModal}
+                          onClose={() => setShowDeleteModal(false)}
+                          userName={user.name}
+                          userId={user.id}
+                          onConfirm={() => {
+                            // Refetch or navigate after delete
+                            router.push("/system_admin/users");
+                          }}
+                        />
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+                {filteredUsers.length === 0 && (
+                  <TableRow>
+                    <TableCell
+                      colSpan={isMainAdmin ? 5 : 4}
+                      className="text-center text-muted-foreground"
+                    >
+                      No system users found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+    </ProtectedRoute>
   );
 }
