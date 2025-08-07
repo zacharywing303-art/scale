@@ -2466,6 +2466,7 @@ export namespace Prisma {
     passwordHash: string | null
     role: $Enums.Role | null
     isActive: boolean | null
+    systemAdminUser: boolean | null
   }
 
   export type UserMaxAggregateOutputType = {
@@ -2480,6 +2481,7 @@ export namespace Prisma {
     passwordHash: string | null
     role: $Enums.Role | null
     isActive: boolean | null
+    systemAdminUser: boolean | null
   }
 
   export type UserCountAggregateOutputType = {
@@ -2494,6 +2496,7 @@ export namespace Prisma {
     passwordHash: number
     role: number
     isActive: number
+    systemAdminUser: number
     _all: number
   }
 
@@ -2510,6 +2513,7 @@ export namespace Prisma {
     passwordHash?: true
     role?: true
     isActive?: true
+    systemAdminUser?: true
   }
 
   export type UserMaxAggregateInputType = {
@@ -2524,6 +2528,7 @@ export namespace Prisma {
     passwordHash?: true
     role?: true
     isActive?: true
+    systemAdminUser?: true
   }
 
   export type UserCountAggregateInputType = {
@@ -2538,6 +2543,7 @@ export namespace Prisma {
     passwordHash?: true
     role?: true
     isActive?: true
+    systemAdminUser?: true
     _all?: true
   }
 
@@ -2625,6 +2631,7 @@ export namespace Prisma {
     passwordHash: string
     role: $Enums.Role
     isActive: boolean
+    systemAdminUser: boolean
     _count: UserCountAggregateOutputType | null
     _min: UserMinAggregateOutputType | null
     _max: UserMaxAggregateOutputType | null
@@ -2656,6 +2663,7 @@ export namespace Prisma {
     passwordHash?: boolean
     role?: boolean
     isActive?: boolean
+    systemAdminUser?: boolean
     agency?: boolean | User$agencyArgs<ExtArgs>
     adminOfAgency?: boolean | User$adminOfAgencyArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
@@ -2672,6 +2680,7 @@ export namespace Prisma {
     passwordHash?: boolean
     role?: boolean
     isActive?: boolean
+    systemAdminUser?: boolean
     agency?: boolean | User$agencyArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -2687,6 +2696,7 @@ export namespace Prisma {
     passwordHash?: boolean
     role?: boolean
     isActive?: boolean
+    systemAdminUser?: boolean
     agency?: boolean | User$agencyArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
@@ -2702,9 +2712,10 @@ export namespace Prisma {
     passwordHash?: boolean
     role?: boolean
     isActive?: boolean
+    systemAdminUser?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "phone" | "createdAt" | "updatedAt" | "agencyId" | "lastLogin" | "passwordHash" | "role" | "isActive", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "phone" | "createdAt" | "updatedAt" | "agencyId" | "lastLogin" | "passwordHash" | "role" | "isActive" | "systemAdminUser", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     agency?: boolean | User$agencyArgs<ExtArgs>
     adminOfAgency?: boolean | User$adminOfAgencyArgs<ExtArgs>
@@ -2734,6 +2745,7 @@ export namespace Prisma {
       passwordHash: string
       role: $Enums.Role
       isActive: boolean
+      systemAdminUser: boolean
     }, ExtArgs["result"]["user"]>
     composites: {}
   }
@@ -3170,6 +3182,7 @@ export namespace Prisma {
     readonly passwordHash: FieldRef<"User", 'String'>
     readonly role: FieldRef<"User", 'Role'>
     readonly isActive: FieldRef<"User", 'Boolean'>
+    readonly systemAdminUser: FieldRef<"User", 'Boolean'>
   }
     
 
@@ -3679,7 +3692,8 @@ export namespace Prisma {
     lastLogin: 'lastLogin',
     passwordHash: 'passwordHash',
     role: 'role',
-    isActive: 'isActive'
+    isActive: 'isActive',
+    systemAdminUser: 'systemAdminUser'
   };
 
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
@@ -3974,6 +3988,7 @@ export namespace Prisma {
     passwordHash?: StringFilter<"User"> | string
     role?: EnumRoleFilter<"User"> | $Enums.Role
     isActive?: BoolFilter<"User"> | boolean
+    systemAdminUser?: BoolFilter<"User"> | boolean
     agency?: XOR<AgencyNullableScalarRelationFilter, AgencyWhereInput> | null
     adminOfAgency?: XOR<AgencyNullableScalarRelationFilter, AgencyWhereInput> | null
   }
@@ -3990,6 +4005,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    systemAdminUser?: SortOrder
     agency?: AgencyOrderByWithRelationInput
     adminOfAgency?: AgencyOrderByWithRelationInput
   }
@@ -4009,6 +4025,7 @@ export namespace Prisma {
     passwordHash?: StringFilter<"User"> | string
     role?: EnumRoleFilter<"User"> | $Enums.Role
     isActive?: BoolFilter<"User"> | boolean
+    systemAdminUser?: BoolFilter<"User"> | boolean
     agency?: XOR<AgencyNullableScalarRelationFilter, AgencyWhereInput> | null
     adminOfAgency?: XOR<AgencyNullableScalarRelationFilter, AgencyWhereInput> | null
   }, "id" | "email">
@@ -4025,6 +4042,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    systemAdminUser?: SortOrder
     _count?: UserCountOrderByAggregateInput
     _max?: UserMaxOrderByAggregateInput
     _min?: UserMinOrderByAggregateInput
@@ -4045,6 +4063,7 @@ export namespace Prisma {
     passwordHash?: StringWithAggregatesFilter<"User"> | string
     role?: EnumRoleWithAggregatesFilter<"User"> | $Enums.Role
     isActive?: BoolWithAggregatesFilter<"User"> | boolean
+    systemAdminUser?: BoolWithAggregatesFilter<"User"> | boolean
   }
 
   export type AgencyCreateInput = {
@@ -4264,6 +4283,7 @@ export namespace Prisma {
     passwordHash: string
     role?: $Enums.Role
     isActive?: boolean
+    systemAdminUser?: boolean
     agency?: AgencyCreateNestedOneWithoutUsersInput
     adminOfAgency?: AgencyCreateNestedOneWithoutAgencyAdminInput
   }
@@ -4280,6 +4300,7 @@ export namespace Prisma {
     passwordHash: string
     role?: $Enums.Role
     isActive?: boolean
+    systemAdminUser?: boolean
     adminOfAgency?: AgencyUncheckedCreateNestedOneWithoutAgencyAdminInput
   }
 
@@ -4294,6 +4315,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    systemAdminUser?: BoolFieldUpdateOperationsInput | boolean
     agency?: AgencyUpdateOneWithoutUsersNestedInput
     adminOfAgency?: AgencyUpdateOneWithoutAgencyAdminNestedInput
   }
@@ -4310,6 +4332,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    systemAdminUser?: BoolFieldUpdateOperationsInput | boolean
     adminOfAgency?: AgencyUncheckedUpdateOneWithoutAgencyAdminNestedInput
   }
 
@@ -4325,6 +4348,7 @@ export namespace Prisma {
     passwordHash: string
     role?: $Enums.Role
     isActive?: boolean
+    systemAdminUser?: boolean
   }
 
   export type UserUpdateManyMutationInput = {
@@ -4338,6 +4362,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    systemAdminUser?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type UserUncheckedUpdateManyInput = {
@@ -4352,6 +4377,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    systemAdminUser?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -4639,6 +4665,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    systemAdminUser?: SortOrder
   }
 
   export type UserMaxOrderByAggregateInput = {
@@ -4653,6 +4680,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    systemAdminUser?: SortOrder
   }
 
   export type UserMinOrderByAggregateInput = {
@@ -4667,6 +4695,7 @@ export namespace Prisma {
     passwordHash?: SortOrder
     role?: SortOrder
     isActive?: SortOrder
+    systemAdminUser?: SortOrder
   }
 
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -5033,6 +5062,7 @@ export namespace Prisma {
     passwordHash: string
     role?: $Enums.Role
     isActive?: boolean
+    systemAdminUser?: boolean
     adminOfAgency?: AgencyCreateNestedOneWithoutAgencyAdminInput
   }
 
@@ -5047,6 +5077,7 @@ export namespace Prisma {
     passwordHash: string
     role?: $Enums.Role
     isActive?: boolean
+    systemAdminUser?: boolean
     adminOfAgency?: AgencyUncheckedCreateNestedOneWithoutAgencyAdminInput
   }
 
@@ -5071,6 +5102,7 @@ export namespace Prisma {
     passwordHash: string
     role?: $Enums.Role
     isActive?: boolean
+    systemAdminUser?: boolean
     agency?: AgencyCreateNestedOneWithoutUsersInput
   }
 
@@ -5086,6 +5118,7 @@ export namespace Prisma {
     passwordHash: string
     role?: $Enums.Role
     isActive?: boolean
+    systemAdminUser?: boolean
   }
 
   export type UserCreateOrConnectWithoutAdminOfAgencyInput = {
@@ -5124,6 +5157,7 @@ export namespace Prisma {
     passwordHash?: StringFilter<"User"> | string
     role?: EnumRoleFilter<"User"> | $Enums.Role
     isActive?: BoolFilter<"User"> | boolean
+    systemAdminUser?: BoolFilter<"User"> | boolean
   }
 
   export type UserUpsertWithoutAdminOfAgencyInput = {
@@ -5148,6 +5182,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    systemAdminUser?: BoolFieldUpdateOperationsInput | boolean
     agency?: AgencyUpdateOneWithoutUsersNestedInput
   }
 
@@ -5163,6 +5198,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    systemAdminUser?: BoolFieldUpdateOperationsInput | boolean
   }
 
   export type AgencyCreateWithoutUsersInput = {
@@ -5440,6 +5476,7 @@ export namespace Prisma {
     passwordHash: string
     role?: $Enums.Role
     isActive?: boolean
+    systemAdminUser?: boolean
   }
 
   export type UserUpdateWithoutAgencyInput = {
@@ -5453,6 +5490,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    systemAdminUser?: BoolFieldUpdateOperationsInput | boolean
     adminOfAgency?: AgencyUpdateOneWithoutAgencyAdminNestedInput
   }
 
@@ -5467,6 +5505,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    systemAdminUser?: BoolFieldUpdateOperationsInput | boolean
     adminOfAgency?: AgencyUncheckedUpdateOneWithoutAgencyAdminNestedInput
   }
 
@@ -5481,6 +5520,7 @@ export namespace Prisma {
     passwordHash?: StringFieldUpdateOperationsInput | string
     role?: EnumRoleFieldUpdateOperationsInput | $Enums.Role
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    systemAdminUser?: BoolFieldUpdateOperationsInput | boolean
   }
 
 

@@ -4,6 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 import authRoutes from "./routes/auth.routes";
 import agencyRoutes from "./routes/agency.route";
+import statsRoutes from "./routes/agency.stats.route";
 
 // Load env variables
 dotenv.config();
@@ -18,6 +19,7 @@ app.use(morgan("dev"));
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/agencies", agencyRoutes);
+app.use("/api/system", statsRoutes);
 
 // Root endpoint
 app.get("/", (_req, res) => {

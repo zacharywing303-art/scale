@@ -40,19 +40,20 @@ model Agency {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  phone         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  agencyId      String?
-  lastLogin     DateTime?
-  passwordHash  String
-  role          Role      @default(AGENCY_USER)
-  agency        Agency?   @relation(fields: [agencyId], references: [id])
-  adminOfAgency Agency?   @relation("AgencyAdminRelation")
-  isActive      Boolean   @default(true)
+  id              String    @id @default(cuid())
+  name            String
+  email           String    @unique
+  phone           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  agencyId        String?
+  lastLogin       DateTime?
+  passwordHash    String
+  role            Role      @default(AGENCY_USER)
+  agency          Agency?   @relation(fields: [agencyId], references: [id])
+  adminOfAgency   Agency?   @relation("AgencyAdminRelation")
+  isActive        Boolean   @default(true)
+  systemAdminUser Boolean   @default(false)
 }
 
 enum Role {

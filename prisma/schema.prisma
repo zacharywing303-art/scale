@@ -53,6 +53,7 @@ model User {
   agency        Agency?   @relation(fields: [agencyId], references: [id])
   adminOfAgency Agency?   @relation("AgencyAdminRelation")
   isActive      Boolean   @default(true)
+  systemAdminUser Boolean @default(false)
 }
 
 enum Role {

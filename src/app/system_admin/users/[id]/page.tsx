@@ -17,6 +17,8 @@ import { toast } from "sonner";
 
 // Mocked data fetching (replace with real API call)
 const fetchUserById = async (id: string) => {
+  console.log("Fetching user:", id);
+  await new Promise((resolve) => setTimeout(resolve, 500)); // simulate delay
   return {
     id,
     name: "John Doe",
@@ -31,7 +33,7 @@ const fetchUserById = async (id: string) => {
 const isMainAdmin = true; // TODO: replace with actual auth check
 
 export default function SystemUserDetailPage() {
-  const { user_id } = useParams();
+  const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<any>(null);
 
@@ -42,8 +44,8 @@ export default function SystemUserDetailPage() {
   );
 
   useEffect(() => {
-    if (user_id) {
-      fetchUserById(String(user_id)).then((data) => {
+    if (id) {
+      fetchUserById(String(id)).then((data) => {
         setUser(data);
         setName(data.name);
         setEmail(data.email);
@@ -51,16 +53,20 @@ export default function SystemUserDetailPage() {
         setLoading(false);
       });
     }
-  }, [user_id]);
+  }, [id]);
 
   const handleSave = () => {
     // TODO: send updated data to backend
     toast.success("User updated successfully");
-    console.log("Updated User:", { id: user_id, name, email, status });
+    console.log("Updated User:", { id: id, name, email, status });
   };
 
-  if (loading) return <div className="p-6">Loading user details...</div>;
-  if (!user) return <div className="p-6">User not found.</div>;
+  if (loading) {
+    return <div className="p-6">Loading user data...</div>;
+  }
+  if (!user) {
+    return <div className="p-6">User not found.</div>; // only shown if loading is false AND user is still null
+  }
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
@@ -68,7 +74,9 @@ export default function SystemUserDetailPage() {
 
       <Card className="p-6 space-y-4">
         <div>
-          <Label htmlFor="name">Full Name</Label>
+          <Label htmlFor="name" className="mb-2">
+            Full Name
+          </Label>
           <Input
             id="name"
             value={name}
@@ -78,7 +86,9 @@ export default function SystemUserDetailPage() {
         </div>
 
         <div>
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email" className="mb-2">
+            Email
+          </Label>
           <Input
             id="email"
             type="email"
@@ -89,7 +99,9 @@ export default function SystemUserDetailPage() {
         </div>
 
         <div>
-          <Label>Status</Label>
+          <Label htmlFor="status" className="mb-2">
+            Status
+          </Label>
           <Select
             value={status}
             onValueChange={(val) => setStatus(val as any)}

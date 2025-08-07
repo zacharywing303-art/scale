@@ -160,7 +160,8 @@ exports.Prisma.UserScalarFieldEnum = {
   lastLogin: 'lastLogin',
   passwordHash: 'passwordHash',
   role: 'role',
-  isActive: 'isActive'
+  isActive: 'isActive',
+  systemAdminUser: 'systemAdminUser'
 };
 
 exports.Prisma.SortOrder = {
