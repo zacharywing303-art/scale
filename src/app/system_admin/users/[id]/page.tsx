@@ -14,130 +14,154 @@ import {
 } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
+import { getLoggedInUser } from "@/lib/auth/authHelpers";
+import { format } from "date-fns";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { ro } from "date-fns/locale";
+import { useRouter } from "next/navigation";
 
-// Mocked data fetching (replace with real API call)
-const fetchUserById = async (id: string) => {
-  console.log("Fetching user:", id);
-  await new Promise((resolve) => setTimeout(resolve, 500)); // simulate delay
-  return {
-    id,
-    name: "John Doe",
-    email: "john.doe@example.com",
-    status: "Active" as "Active" | "Inactive" | "Suspended",
-    createdAt: "2023-01-01T12:00:00Z",
-    lastLogin: "2024-12-01T10:20:00Z",
-  };
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  isActive: boolean;
+  lastLogin: string;
+  createdAt: string;
 };
 
-// Mock for checking if the current user is the main admin
-const isMainAdmin = true; // TODO: replace with actual auth check
+const loggedInUser = getLoggedInUser();
+const isMainAdmin = loggedInUser?.role === "MAIN_ADMIN";
 
 export default function SystemUserDetailPage() {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"Active" | "Inactive" | "Suspended">(
-    "Active"
-  );
+  const [isActive, setIsActive] = useState(true);
+  const [error, setError] = useState("");
+
+  const router = useRouter();
 
   useEffect(() => {
-    if (id) {
-      fetchUserById(String(id)).then((data) => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch(`http://localhost:5000/api/users/${id}`);
+        if (!res.ok) throw new Error("Failed to fetch user");
+        const data = await res.json();
         setUser(data);
-        setName(data.name);
-        setEmail(data.email);
-        setStatus(data.status);
+        setName(data.name || "No Name");
+        setEmail(data.email || "No Email");
+        setIsActive(data.isActive ?? true);
+      } catch (err: any) {
+        setError(err.message || "Error loading user");
+      } finally {
         setLoading(false);
-      });
-    }
+      }
+    };
+
+    if (id) fetchUser();
   }, [id]);
 
-  const handleSave = () => {
-    // TODO: send updated data to backend
-    toast.success("User updated successfully");
-    console.log("Updated User:", { id: id, name, email, status });
+  const handleSave = async () => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/users/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, isActive }),
+      });
+
+      if (!res.ok) throw new Error("Failed to update user");
+
+      const updatedUser = await res.json();
+      setUser(updatedUser);
+      toast.success("User updated successfully");
+      router.push("/system_admin/users");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to save changes");
+    }
+    console.log("Updated User:", { id: id, name, email, isActive });
   };
 
   if (loading) {
     return <div className="p-6">Loading user data...</div>;
   }
   if (!user) {
-    return <div className="p-6">User not found.</div>; // only shown if loading is false AND user is still null
+    return <div className="p-6">User not found.</div>;
   }
 
   return (
-    <div className="p-6 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-4">System User Details</h1>
+    <ProtectedRoute allowedRoles={["MAIN_ADMIN"]}>
+      <div className="p-6 max-w-2xl mx-auto">
+        <h1 className="text-2xl font-bold mb-4">System User Details</h1>
 
-      <Card className="p-6 space-y-4">
-        <div>
-          <Label htmlFor="name" className="mb-2">
-            Full Name
-          </Label>
-          <Input
-            id="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            disabled={!isMainAdmin}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="email" className="mb-2">
-            Email
-          </Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={!isMainAdmin}
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="status" className="mb-2">
-            Status
-          </Label>
-          <Select
-            value={status}
-            onValueChange={(val) => setStatus(val as any)}
-            disabled={!isMainAdmin}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
-              <SelectItem value="Suspended">Suspended</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="text-sm text-muted-foreground">
-          <p>
-            <strong>Created:</strong>{" "}
-            {new Date(user.createdAt).toLocaleString()}
-          </p>
-          <p>
-            <strong>Last Login:</strong>{" "}
-            {new Date(user.lastLogin).toLocaleString()}
-          </p>
-        </div>
-
-        {isMainAdmin && (
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={() => history.back()}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>Save Changes</Button>
+        <Card className="p-6 space-y-4">
+          <div>
+            <Label htmlFor="name" className="mb-2">
+              Full Name
+            </Label>
+            <Input
+              id="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              disabled={!isMainAdmin}
+            />
           </div>
-        )}
-      </Card>
-    </div>
+
+          <div>
+            <Label htmlFor="email" className="mb-2">
+              Email
+            </Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={!isMainAdmin}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="status" className="mb-2">
+              Status
+            </Label>
+            <Select
+              value={isActive ? "Active" : "Inactive"}
+              onValueChange={(val) => setIsActive(val === "Active")}
+              disabled={!isMainAdmin}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="text-sm text-muted-foreground">
+            <p>
+              <strong>Created:</strong>{" "}
+              {new Date(user.createdAt).toLocaleString()}
+            </p>
+            <p>
+              <strong>Last Login:</strong>{" "}
+              {new Date(user.lastLogin).toLocaleString()}
+            </p>
+          </div>
+
+          {isMainAdmin && (
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => history.back()}>
+                Cancel
+              </Button>
+              <Button onClick={handleSave}>Save Changes</Button>
+            </div>
+          )}
+        </Card>
+      </div>
+    </ProtectedRoute>
   );
 }

@@ -17,6 +17,8 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface AddSystemUserModalProps {
   open: boolean;
@@ -25,7 +27,7 @@ interface AddSystemUserModalProps {
     name: string;
     email: string;
     password: string;
-    status: "Active" | "Inactive" | "Suspended";
+    isActive: boolean;
   }) => void;
 }
 
@@ -38,12 +40,13 @@ export default function AddSystemUserModal({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [status, setStatus] = useState<"Active" | "Inactive" | "Suspended">(
-    "Active"
-  );
+  const [isActive, setIsActive] = useState(true);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
+  const router = useRouter();
+
+  const handleSubmit = async () => {
     if (!name || !email || !password || !confirmPassword) {
       setError("All fields are required.");
       return;
@@ -55,8 +58,44 @@ export default function AddSystemUserModal({
     }
 
     setError("");
-    onSubmit({ name, email, password, status });
-    onClose();
+    setLoading(true);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          isActive,
+        }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || "Failed to create user");
+      }
+
+      toast.success("User created successfully!");
+
+      // Refresh users page
+      router.refresh();
+
+      // Close modal
+      onClose();
+
+      // Reset fields
+      setName("");
+      setEmail("");
+      setPassword("");
+      setConfirmPassword("");
+      setIsActive(true);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -119,8 +158,8 @@ export default function AddSystemUserModal({
               Status
             </Label>
             <Select
-              value={status}
-              onValueChange={(val) => setStatus(val as any)}
+              value={isActive ? "Active" : "Inactive"}
+              onValueChange={(val) => setIsActive(val === "Active")}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
@@ -128,7 +167,6 @@ export default function AddSystemUserModal({
               <SelectContent>
                 <SelectItem value="Active">Active</SelectItem>
                 <SelectItem value="Inactive">Inactive</SelectItem>
-                <SelectItem value="Suspended">Suspended</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -136,10 +174,12 @@ export default function AddSystemUserModal({
           {error && <p className="text-red-500 text-sm">{error}</p>}
 
           <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} disabled={loading}>
               Cancel
             </Button>
-            <Button onClick={handleSubmit}>Add User</Button>
+            <Button onClick={handleSubmit} disabled={loading}>
+              {loading ? "Adding..." : "Add User"}
+            </Button>
           </div>
         </div>
       </DialogContent>

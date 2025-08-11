@@ -54,15 +54,10 @@ export default function LoginPage() {
         throw new Error(data.message || "Login failed");
       }
 
-      const user: User = {
-        id: data.user.id,
-        name: data.user.name,
-        email: data.user.email,
-        role: data.user.role,
-        agencyCode: data.user.agency?.code || "",
-      };
+      const { user } = data;
 
       login(user);
+      localStorage.setItem("loggedInUser", JSON.stringify(user));
 
       if (
         (user.role === "AGENCY_USER" || user.role === "AGENCY_ADMIN") &&

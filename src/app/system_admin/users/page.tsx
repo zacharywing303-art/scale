@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +18,7 @@ import DeleteSystemUserModal from "@/components/system-admin/DeleteUserModal";
 import { useRouter } from "next/navigation";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { format } from "date-fns";
 
 type User = {
   id: string;
@@ -25,37 +26,9 @@ type User = {
   email: string;
   role: string;
   agency?: string;
-  status: "Active" | "Inactive" | "Suspended";
+  isActive: boolean;
   lastLogin: string;
 };
-
-const dummyUsers: User[] = [
-  {
-    id: "SA-001",
-    name: "Main Admin",
-    email: "admin@system.com",
-    role: "System Admin",
-    status: "Active",
-    lastLogin: "2025-07-23 09:14",
-  },
-  {
-    id: "SA-002",
-    name: "Support Admin",
-    email: "support@system.com",
-    role: "System Admin",
-    status: "Active",
-    lastLogin: "2025-07-22 10:30",
-  },
-  {
-    id: "U-003",
-    name: "Non Admin",
-    email: "employee@agency.com",
-    role: "Caregiver",
-    agency: "CarePlus",
-    status: "Active",
-    lastLogin: "2025-07-22 14:15",
-  },
-];
 
 export default function SystemUsersPage() {
   // TODO: Replace this with real auth logic
@@ -64,14 +37,39 @@ export default function SystemUsersPage() {
 
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedAgency, setSelectedAgency] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   const loggedInUser = getLoggedInUser();
-  // const isMainAdmin = loggedInUser?.role === "MAIN_ADMIN";
-  const isMainAdmin = true;
+  const isMainAdmin = loggedInUser?.role === "MAIN_ADMIN";
   const router = useRouter();
 
-  const filteredUsers = dummyUsers
-    .filter((user) => user.role === "System Admin")
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/users");
+        if (!res.ok) throw new Error("Failed to fetch users");
+        const data = await res.json();
+        setUsers(data);
+      } catch (err: any) {
+        setError(err.message || "Error fetching users");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  const filteredUsers = users
+    .filter(
+      (user) => user.role === "MAIN_ADMIN" || user.role === "SYSTEM_ADMIN"
+    )
     .filter((user) => {
       const query = search.toLowerCase();
       return (
@@ -127,24 +125,41 @@ export default function SystemUsersPage() {
                   <TableRow key={user.id}>
                     <TableCell>{user.name}</TableCell>
                     <TableCell>{user.email}</TableCell>
-                    <TableCell>{user.status}</TableCell>
-                    <TableCell>{user.lastLogin}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`px-2 py-1 rounded text-xs font-medium ${
+                          user.isActive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {user.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {user.lastLogin
+                        ? format(new Date(user.lastLogin), "MMMM d, yyyy HH:mm")
+                        : "N/A"}
+                    </TableCell>
                     {isMainAdmin && (
                       <TableCell className="flex justify-end gap-2">
                         <Button
                           size="icon"
                           variant="ghost"
                           onClick={() => {
-                            // TODO: Implement edit user functionality
                             router.push(`/system_admin/users/${user.id}`);
                           }}
+                          title="Edit User"
                         >
                           <PencilIcon className="w-4 h-4" />
                         </Button>
                         <Button
                           size="icon"
                           variant="ghost"
-                          onClick={() => setShowDeleteModal(true)}
+                          onClick={() => {
+                            setSelectedAgency({ id: user.id, name: user.name });
+                            setShowDeleteModal(true);
+                          }}
                         >
                           <TrashIcon className="w-4 h-4 text-red-500" />
                         </Button>
@@ -154,7 +169,6 @@ export default function SystemUsersPage() {
                           userName={user.name}
                           userId={user.id}
                           onConfirm={() => {
-                            // Refetch or navigate after delete
                             router.push("/system_admin/users");
                           }}
                         />

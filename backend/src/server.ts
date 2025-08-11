@@ -5,6 +5,7 @@ import morgan from "morgan";
 import authRoutes from "./routes/auth.routes";
 import agencyRoutes from "./routes/agency.route";
 import statsRoutes from "./routes/agency.stats.route";
+import userRoutes from "./routes/users.route";
 
 // Load env variables
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(morgan("dev"));
 app.use("/api/auth", authRoutes);
 app.use("/api/agencies", agencyRoutes);
 app.use("/api/system", statsRoutes);
+app.use("/api/users", userRoutes);
 
 // Root endpoint
 app.get("/", (_req, res) => {

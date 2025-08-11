@@ -27,6 +27,11 @@ export const loginService = async (
     }
   }
 
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { lastLogin: new Date() },
+  });
+
   const token = jwt.sign(
     { userId: user.id, role: user.role },
     process.env.JWT_SECRET || "secret",
@@ -41,7 +46,11 @@ export const loginService = async (
       role: user.role,
       email: user.email,
       agency: user.agency
-        ? { id: user.agency.id, code: user.agency.name }
+        ? {
+            id: user.agency.id,
+            code: user.agency.code,
+            name: user.agency.name,
+          }
         : null,
     },
   };

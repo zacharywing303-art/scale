@@ -3,6 +3,7 @@
 import { FaSignOutAlt, FaCog } from "react-icons/fa";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
+import { getLoggedInUser } from "@/lib/auth/authHelpers";
 
 export default function Topbar() {
   const router = useRouter();
@@ -17,7 +18,8 @@ export default function Topbar() {
     <header className="bg-[#111827] w-full h-16 border-b flex items-center justify-between px-6 shadow-sm">
       {/* Left side: Agency info */}
       <div className="text-lg font-semibold text-secondary">
-        Unity Homecare LLC :<span className="text-white"> Adam Warlock</span>
+        Unity Homecare LLC :
+        <span className="text-white"> {getLoggedInUser()?.name}</span>
       </div>
 
       {/* Right side: Settings + Sign Out */}

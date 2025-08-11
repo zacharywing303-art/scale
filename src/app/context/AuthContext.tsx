@@ -35,11 +35,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     window.addEventListener("mousemove", handleActivity);
     window.addEventListener("keydown", handleActivity);
     window.addEventListener("click", handleActivity);
+    window.addEventListener("scroll", handleActivity);
 
     return () => {
       window.removeEventListener("mousemove", handleActivity);
       window.removeEventListener("keydown", handleActivity);
       window.removeEventListener("click", handleActivity);
+      window.removeEventListener("scroll", handleActivity);
     };
   }, []);
 

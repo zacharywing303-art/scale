@@ -5,7 +5,11 @@ export type User = {
   name: string;
   email: string;
   role: "MAIN_ADMIN" | "SYSTEM_ADMIN" | "AGENCY_USER" | "AGENCY_ADMIN";
-  agencyCode?: string;
+  agency?: {
+    id: string;
+    code: string;
+    name: string;
+  } | null;
 };
 
 const SESSION_KEY = "unity_user";

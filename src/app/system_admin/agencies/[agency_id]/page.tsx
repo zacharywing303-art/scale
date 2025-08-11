@@ -31,10 +31,9 @@ export default function AgencyDetailPage() {
   const [status, setStatus] = useState("");
   const [allowEvv, setAllowEvv] = useState(false);
 
-  // This runs when agency is loaded
   useEffect(() => {
     if (agency) {
-      setStatus(agency.status || ""); // or use agency.status?.toLowerCase() if your options are lowercase
+      setStatus(agency.status || "");
       setAllowEvv(agency.allowEvv ?? false);
     }
   }, [agency]);

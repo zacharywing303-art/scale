@@ -14,31 +14,35 @@ import { toast } from "sonner";
 interface DeleteSystemUserModalProps {
   open: boolean;
   onClose: () => void;
-  onConfirm?: () => void; // Optional external handler
   userName: string;
   userId: string;
+  onConfirm?: () => void;
 }
 
 export default function DeleteSystemUserModal({
   open,
   onClose,
-  onConfirm,
   userName,
   userId,
+  onConfirm,
 }: DeleteSystemUserModalProps) {
   const [loading, setLoading] = useState(false);
 
   const handleDelete = async () => {
     setLoading(true);
-
     try {
-      // TODO: Replace with actual delete API call
-      console.log("Deleting user:", userId);
-      toast.success(`User "${userName}" deleted successfully.`);
-      if (onConfirm) onConfirm();
+      const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) throw new Error("Failed to delete agency");
+
+      toast.success(`Agency deleted successfully.`);
+      window.location.reload();
+      if (onConfirm) onConfirm(); // refetch list
       onClose();
     } catch (error) {
-      toast.error("Failed to delete user.");
+      toast.error("Failed to delete agency.");
     } finally {
       setLoading(false);
     }
