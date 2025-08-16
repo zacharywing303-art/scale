@@ -37,6 +37,7 @@ model Agency {
   billingEmail     String?
   billingPhone     String?
   paymentStatus    String   @default("Not Required")
+  invoices         Invoice[]
 }
 
 model User {
@@ -54,6 +55,434 @@ model User {
   adminOfAgency Agency?   @relation("AgencyAdminRelation")
   isActive      Boolean   @default(true)
   systemAdminUser Boolean @default(false)
+}
+
+model Visit {
+  id                          Int      @id @default(autoincrement())
+  agencyID                    String
+  adjustedHours               Float?
+  adjustedIn                  DateTime?
+  adjustedOut                 DateTime?
+  approved                    Boolean? @default(false)
+  clientSignature             String?    // could store a file URL or base64 string
+  employeeSignature           String?    // same as above
+  visitSource                 String?
+  mileage                     Float?
+  authorizationReferenceNumber String?
+  location                    String?    // Home / Community, etc.
+  latitudeIn                  Float?
+  longitudeIn                 Float?
+  latitudeOut                 Float?
+  longitudeOut                Float?
+  callType                    String?    // MVV, Manual, etc.
+  user                        String?    // user who entered the visit
+  exceptions                  VisitException[]
+  history                     VisitHistory[]
+  claimID                     String?
+  billHours                   Float?
+  callHours                   Float?
+  callIn                      DateTime?
+  callOut                     DateTime?
+  claimsVerificationStatus    String?
+  clientID                    Int?
+  clientMedicaidID            String?
+  clientName                  String?
+  clientPrimaryPhoneNumber    String?
+  clientVerified              Boolean? @default(false)
+  doNotBill                   Boolean? @default(false)
+  employeeContactPhoneNumber  String?
+  employeeID                  Int?
+  employeeName                String?
+  employeeOtherID             String?
+  exported                    Boolean? @default(false)
+  groupVisitCode              String?
+  inOutCallLocation           String?
+  memo                        String?
+  payHours                    Float?
+  payEqualsSch                Boolean? @default(false)
+  payer                       String?
+  program                     String?
+  santraxID                   String?
+  scheduledHours              Float?
+  scheduledTimeIn             DateTime?
+  scheduledTimeOut            DateTime?
+  service                     String?
+  supervisor                  String?
+  tasks                       String?
+  units                       Int?
+  visitFromDate               DateTime?
+  sandataAgencyID             String?
+  visitStatus                 String?
+  visitTimeZone               String?
+}
+
+model VisitException {
+  id             Int      @id @default(autoincrement())
+  visitId        Int
+  exceptionType  String
+  date           DateTime
+  createdAt      DateTime @default(now())
+  // Relation
+  visit          Visit    @relation(fields: [visitId], references: [id])
+}
+
+model VisitHistory {
+  id           Int      @id @default(autoincrement())
+  visitId      Int
+  title        String
+  reasonCode   String?
+  reason       String?
+  dateTime     DateTime
+  updatedBy    String
+  // Relation
+  visit        Visit    @relation(fields: [visitId], references: [id])
+}
+
+// ========================
+// Employees & Related Info
+// ========================
+model Employee {
+  id                  String        @id @default(cuid())
+  last5SSN            String
+  status              String        // Active, Vacation, Inactive
+  effectiveDate       DateTime      @updatedAt
+  employeeID          String
+  agencyID            String
+  position            String
+  hireDate            DateTime      @default(now())
+  supervisor          String?
+  supervisorCode      String?
+  nationalProviderID  String?
+  alternativeProviderID String?
+  registryID          String?
+  isSupervisor        Boolean       @default(false)
+  name                String
+  addresses           Address[]
+  dateOfBirth         DateTime
+  gender              String
+  languages           String[]
+  mainPhone           String
+  phone2              String?
+  phone3              String?
+  phone4              String?
+  email               String
+  mobileUser          Boolean       @default(false)
+  rehire              Boolean       @default(false)
+  contacts            Contact[]
+  schedules           Schedule[]    // will link later
+  certifications      Certification[]
+  employmentInfo      EmploymentInfo[]
+  assignedClients     Client[]      @relation("EmployeeClients")
+  medicalInfos        EmployeeMedicalInfo[]
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  mobileInfo          MobileEmployee? // One-to-one optional relation
+}
+
+model MobileEmployee {
+  id           String   @id @default(cuid())
+  employee     Employee @relation(fields: [employeeID], references: [id])
+  employeeID   String   @unique  // one-to-one relation with Employee
+  email        String   @unique
+  agencyCode   String
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+
+model EmploymentInfo {
+  id                       String   @id @default(cuid())
+  employee                 Employee @relation(fields: [employeeID], references: [id])
+  employeeID               String @unique
+  driversLicenseNumber     String   // **sensitive**
+  driversLicenseExpiration DateTime
+  insuranceStartDate       DateTime
+  insuranceEndDate         DateTime
+  insurancePolicyNumber    String   // **sensitive**
+  carModel                 String?
+  carMake                  String?
+  carYear                  Int?
+  carHandicapAccessible    Boolean  @default(false)
+  registrationStartDate    DateTime
+  registrationExpiration   DateTime
+  physicalExamDate         DateTime
+  tbShotDate               DateTime
+  cprCertificationDate     DateTime
+}
+
+model EmployeeMedicalInfo {
+  id               String   @id @default(cuid())
+  employee         Employee @relation(fields: [employeeID], references: [id])
+  employeeID       String
+  clearanceName    String
+  effectiveDate    DateTime
+}
+
+model Certification {
+  id           String   @id @default(cuid())
+  employee     Employee @relation(fields: [employeeID], references: [id])
+  employeeID   String
+  name         String
+  certificationID String?
+  dateObtained DateTime
+}
+
+// ========================
+// Contacts & Addresses
+// ========================
+model Contact {
+  id                     String   @id @default(cuid())
+  employee               Employee? @relation(fields: [employeeID], references: [id])
+  employeeID             String?
+  client                 Client?   @relation(fields: [clientID], references: [id])
+  clientID               String?
+  title                  String?
+  firstName              String
+  lastName               String
+  middleInitial          String?
+  suffix                 String?
+  gender                 String?
+  birthDate              DateTime?
+  languages              String[]
+  type                   String    // contact type
+  relation               String?
+  mainEmergencyContact   Boolean   @default(false)
+  addressLine1           String
+  addressLine2           String?
+  addressType            String
+  addressLabel           String?
+  zipcode                String
+  city                   String?
+  county                 String?
+  state                  String
+  phone1                 String?
+  phone2                 String?
+  phone3                 String?
+  phone4                 String?
+  email                  String?
+}
+
+model Address {
+  id           String   @id @default(cuid())
+  addressLabel String
+  addressLine1 String
+  addressLine2 String?
+  addressLine3 String?
+  addressType  String
+  zipcode      String
+  state        String
+  county       String?
+  employee     Employee? @relation(fields: [employeeID], references: [id])
+  employeeID   String?
+  client       Client?   @relation(fields: [clientID], references: [id])
+  clientID     String?
+}
+
+// ========================
+// Clients, Services, Program, Payer, Authorization
+// ========================
+model Client {
+  id                String      @id @default(cuid())
+  ssn               String
+  status            String
+  effectiveDate     DateTime    @updatedAt
+  clientID          String
+  startDate         DateTime    @default(now())
+  supervisor        String?
+  medicaidID        String
+  agencyID          String
+  contacts          Contact[]
+  name              String
+  dateOfBirth       DateTime
+  gender            String
+  languages         String[]
+  mainPhone         String
+  phone2            String?
+  phone3            String?
+  phone4            String?
+  email             String
+  schedules         Schedule[]   // will link later
+  assignedEmployees Employee[]  @relation("EmployeeClients")
+  services          Service[]   @relation("ClientServices")
+  program           Program? @relation(fields: [programID], references: [id])
+  programID         String?
+  payers            Payer[]
+  authorizations    Authorization[]
+  invoices          Invoice[]
+  addresses         Address[]
+}
+
+model Service {
+  id          String   @id @default(cuid())
+  name        String
+  code        String
+  startDate   DateTime
+  endDate     DateTime
+  assignedTo  Client[] @relation("ClientServices")
+  authorizations Authorization[]
+  schedule    Schedule[]
+}
+
+model Program {
+  id                   String   @id @default(cuid())
+  supervisor           String?
+  enrollmentDate        DateTime
+  statusEffectiveDate   DateTime
+  socDate               DateTime
+  eocDate               DateTime
+  eligibilityBeginDate  DateTime
+  eligibilityEndDate    DateTime
+  createdDate           DateTime @default(now())
+  reasonForChange       String?
+  clients               Client[]
+}
+
+model Payer {
+  id             String      @id @default(cuid())
+  assignedClients Client[]
+  payerName      String
+  medicaidID     String
+  rank           Int
+  clientPayerID  String
+  groupNo        String?
+  startDate      DateTime
+  endDate        DateTime
+  authorizations Authorization[]
+}
+
+model Invoice {
+  id            String   @id @default(cuid())
+  clientID      String
+  invoiceNumber String   @unique
+  amount        Float
+  status        String   @default("Pending") // Pending, Paid, Overdue
+  dueDate       DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  client Client @relation(fields: [clientID], references: [id])
+  agency Agency @relation(fields: [agencyId], references: [id])
+  agencyId      String
+}
+
+
+model Authorization {
+  id              String   @id @default(cuid())
+  assignedClients Client[]
+  payer           Payer?   @relation(fields: [payerID], references: [id])
+  payerID         String?
+  service         Service? @relation(fields: [serviceID], references: [id])
+  serviceID      String?
+  eventCode       String
+  authorizationNumber String
+  modifier1       String?
+  modifier2       String?
+  modifier3       String?
+  modifier4       String?
+  format          String
+  voided          Boolean   @default(false)
+  startDate       DateTime
+  endDate         DateTime
+  comments        String?
+  visitsAllowed   String   // unlimited / limited
+  limitations     Limitation[]
+}
+
+model Limitation {
+  id              String        @id @default(cuid())
+  authorization   Authorization @relation(fields: [authorizationID], references: [id])
+  authorizationID String
+  total           Int
+  limitBy         String        // day, week, month, year, none
+  count           Int
+}
+
+// ========================
+// Schedule
+// ========================
+model Schedule {
+  id                       String   @id @default(cuid())
+  scheduleType             String   // Office or Visit
+  clientID                 String
+  client                   Client   @relation(fields: [clientID], references: [id])
+  clientMedicaidId         String
+  authorizations           String?  // Can be a list of auth descriptions, could also be relation later
+  authorizationNumber      String?
+  serviceId                String?
+  service                  Service? @relation(fields: [serviceId], references: [id])
+  officeReason             String?
+  eventCode                String   // Required
+  authorizationBillUnitType String  // Hourly, Unit, Visit
+  eventStatus              String   // Hold, Confirmed, Pending
+  eventDate                DateTime
+  startTime                DateTime
+  endTime                  DateTime
+  employeeID               String?
+  employee                 Employee? @relation(fields: [employeeID], references: [id])
+  repeatedEvent            Boolean  @default(false)
+  dates                    String[] // Array of ISO strings for repeated dates
+  comments                 String?
+  billingOverride          Boolean  @default(false)
+  rate                     Float?
+  copay                    Float?
+  billAmount               Float?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  agencyID                 String   @default("UNITY124")
+}
+
+model ChatThread {
+  id          String       @id @default(cuid())
+  agencyCode  String
+  title       String?
+  type        ChatType     // "user", "employee", "systemAdmin"
+  status      ChatStatus   @default(active) // "pending", "active", "closed"
+  startedAt   DateTime     @default(now())
+  endedAt     DateTime?
+  participants ChatParticipant[]
+  messages    ChatMessage[]
+
+  @@index([agencyCode, status, type])
+}
+
+model ChatParticipant {
+  id        String    @id @default(cuid())
+  threadId  String
+  participantId String
+  participantType ParticpantType
+  displayName String
+  userId    String?
+  mobileEmployeeId String?
+  thread    ChatThread @relation(fields: [threadId], references: [id])
+
+  @@index([threadId])
+}
+
+model ChatMessage {
+  id        String    @id @default(cuid())
+  threadId  String
+  senderId  String
+  content   String
+  createdAt DateTime  @default(now())
+  thread    ChatThread @relation(fields: [threadId], references: [id])
+}
+
+enum ChatType {
+  user
+  systemAdmin
+}
+
+enum ChatStatus {
+  pending
+  active
+  closed
+}
+
+enum ParticpantType {
+  USER
+  MOBILE_EMPLOYEE
+  SYSTEM_ADMIN
 }
 
 enum Role {

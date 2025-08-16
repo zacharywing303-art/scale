@@ -1,4 +1,8 @@
 import express from "express";
+import prisma from "./lib/db";
+import http from "http";
+import { Server } from "socket.io";
+import { registerChatNamespace } from "./sockets/chat.socket";
 import dotenv from "dotenv";
 import cors from "cors";
 import morgan from "morgan";
@@ -6,6 +10,8 @@ import authRoutes from "./routes/auth.routes";
 import agencyRoutes from "./routes/agency.route";
 import statsRoutes from "./routes/agency.stats.route";
 import userRoutes from "./routes/users.route";
+import dashboardRoutes from "./routes/dashboard.route";
+import chatRoutes from "./routes/chat.route";
 
 // Load env variables
 dotenv.config();
@@ -13,7 +19,7 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
 app.use(express.json());
 app.use(morgan("dev"));
 
@@ -22,6 +28,22 @@ app.use("/api/auth", authRoutes);
 app.use("/api/agencies", agencyRoutes);
 app.use("/api/system", statsRoutes);
 app.use("/api/users", userRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/chat", chatRoutes);
+
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: ["http://localhost:3000"],
+    credentials: true,
+  },
+});
+
+// sockets
+registerChatNamespace;
+
+// Register socket.io namespaces
+registerChatNamespace(io);
 
 // Root endpoint
 app.get("/", (_req, res) => {
@@ -35,6 +57,19 @@ app.use((_req, res) => {
 
 // Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
+
+setInterval(async () => {
+  const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
+  // delete messages for threads closed >= 48h ago
+  const threads = await prisma.chatThread.findMany({
+    where: { status: "closed", endedAt: { lte: cutoff } },
+    select: { id: true },
+  });
+  const ids = threads.map((t) => t.id);
+  if (ids.length) {
+    await prisma.chatMessage.deleteMany({ where: { threadId: { in: ids } } });
+  }
+}, 60 * 60 * 1000); // every hour

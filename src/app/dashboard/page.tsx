@@ -4,13 +4,13 @@ import { useState } from "react";
 import React from "react";
 import InboxSummary from "@/components/dashboard/inbox-summary";
 import TaskList from "@/components/dashboard/tasks";
-import ExceptionsSummary from "@/components/dashboard/exceptions";
 import Alerts from "@/components/dashboard/alerts";
 import DailySchedule from "@/components/dashboard/daily-schedule";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
+import SummaryCard from "@/components/dashboard/exceptionsAndStatuses";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -29,7 +29,7 @@ export default function DashboardPage() {
           {/* Top Section: Exceptions + Daily Schedule */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-1">
-              <ExceptionsSummary />
+              <SummaryCard />
             </div>
             <div className="lg:col-span-2">
               <DailySchedule />

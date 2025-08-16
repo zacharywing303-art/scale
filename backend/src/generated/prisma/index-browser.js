@@ -164,6 +164,347 @@ exports.Prisma.UserScalarFieldEnum = {
   systemAdminUser: 'systemAdminUser'
 };
 
+exports.Prisma.VisitScalarFieldEnum = {
+  id: 'id',
+  agencyID: 'agencyID',
+  adjustedHours: 'adjustedHours',
+  adjustedIn: 'adjustedIn',
+  adjustedOut: 'adjustedOut',
+  approved: 'approved',
+  clientSignature: 'clientSignature',
+  employeeSignature: 'employeeSignature',
+  visitSource: 'visitSource',
+  mileage: 'mileage',
+  authorizationReferenceNumber: 'authorizationReferenceNumber',
+  location: 'location',
+  latitudeIn: 'latitudeIn',
+  longitudeIn: 'longitudeIn',
+  latitudeOut: 'latitudeOut',
+  longitudeOut: 'longitudeOut',
+  callType: 'callType',
+  user: 'user',
+  claimID: 'claimID',
+  billHours: 'billHours',
+  callHours: 'callHours',
+  callIn: 'callIn',
+  callOut: 'callOut',
+  claimsVerificationStatus: 'claimsVerificationStatus',
+  clientID: 'clientID',
+  clientMedicaidID: 'clientMedicaidID',
+  clientName: 'clientName',
+  clientPrimaryPhoneNumber: 'clientPrimaryPhoneNumber',
+  clientVerified: 'clientVerified',
+  doNotBill: 'doNotBill',
+  employeeContactPhoneNumber: 'employeeContactPhoneNumber',
+  employeeID: 'employeeID',
+  employeeName: 'employeeName',
+  employeeOtherID: 'employeeOtherID',
+  exported: 'exported',
+  groupVisitCode: 'groupVisitCode',
+  inOutCallLocation: 'inOutCallLocation',
+  memo: 'memo',
+  payHours: 'payHours',
+  payEqualsSch: 'payEqualsSch',
+  payer: 'payer',
+  program: 'program',
+  santraxID: 'santraxID',
+  scheduledHours: 'scheduledHours',
+  scheduledTimeIn: 'scheduledTimeIn',
+  scheduledTimeOut: 'scheduledTimeOut',
+  service: 'service',
+  supervisor: 'supervisor',
+  tasks: 'tasks',
+  units: 'units',
+  visitFromDate: 'visitFromDate',
+  sandataAgencyID: 'sandataAgencyID',
+  visitStatus: 'visitStatus',
+  visitTimeZone: 'visitTimeZone'
+};
+
+exports.Prisma.VisitExceptionScalarFieldEnum = {
+  id: 'id',
+  visitId: 'visitId',
+  exceptionType: 'exceptionType',
+  date: 'date',
+  createdAt: 'createdAt'
+};
+
+exports.Prisma.VisitHistoryScalarFieldEnum = {
+  id: 'id',
+  visitId: 'visitId',
+  title: 'title',
+  reasonCode: 'reasonCode',
+  reason: 'reason',
+  dateTime: 'dateTime',
+  updatedBy: 'updatedBy'
+};
+
+exports.Prisma.EmployeeScalarFieldEnum = {
+  id: 'id',
+  last5SSN: 'last5SSN',
+  status: 'status',
+  effectiveDate: 'effectiveDate',
+  employeeID: 'employeeID',
+  agencyID: 'agencyID',
+  position: 'position',
+  hireDate: 'hireDate',
+  supervisor: 'supervisor',
+  supervisorCode: 'supervisorCode',
+  nationalProviderID: 'nationalProviderID',
+  alternativeProviderID: 'alternativeProviderID',
+  registryID: 'registryID',
+  isSupervisor: 'isSupervisor',
+  name: 'name',
+  dateOfBirth: 'dateOfBirth',
+  gender: 'gender',
+  languages: 'languages',
+  mainPhone: 'mainPhone',
+  phone2: 'phone2',
+  phone3: 'phone3',
+  phone4: 'phone4',
+  email: 'email',
+  mobileUser: 'mobileUser',
+  rehire: 'rehire',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.MobileEmployeeScalarFieldEnum = {
+  id: 'id',
+  employeeID: 'employeeID',
+  email: 'email',
+  agencyCode: 'agencyCode',
+  passwordHash: 'passwordHash',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
+exports.Prisma.EmploymentInfoScalarFieldEnum = {
+  id: 'id',
+  employeeID: 'employeeID',
+  driversLicenseNumber: 'driversLicenseNumber',
+  driversLicenseExpiration: 'driversLicenseExpiration',
+  insuranceStartDate: 'insuranceStartDate',
+  insuranceEndDate: 'insuranceEndDate',
+  insurancePolicyNumber: 'insurancePolicyNumber',
+  carModel: 'carModel',
+  carMake: 'carMake',
+  carYear: 'carYear',
+  carHandicapAccessible: 'carHandicapAccessible',
+  registrationStartDate: 'registrationStartDate',
+  registrationExpiration: 'registrationExpiration',
+  physicalExamDate: 'physicalExamDate',
+  tbShotDate: 'tbShotDate',
+  cprCertificationDate: 'cprCertificationDate'
+};
+
+exports.Prisma.EmployeeMedicalInfoScalarFieldEnum = {
+  id: 'id',
+  employeeID: 'employeeID',
+  clearanceName: 'clearanceName',
+  effectiveDate: 'effectiveDate'
+};
+
+exports.Prisma.CertificationScalarFieldEnum = {
+  id: 'id',
+  employeeID: 'employeeID',
+  name: 'name',
+  certificationID: 'certificationID',
+  dateObtained: 'dateObtained'
+};
+
+exports.Prisma.ContactScalarFieldEnum = {
+  id: 'id',
+  employeeID: 'employeeID',
+  clientID: 'clientID',
+  title: 'title',
+  firstName: 'firstName',
+  lastName: 'lastName',
+  middleInitial: 'middleInitial',
+  suffix: 'suffix',
+  gender: 'gender',
+  birthDate: 'birthDate',
+  languages: 'languages',
+  type: 'type',
+  relation: 'relation',
+  mainEmergencyContact: 'mainEmergencyContact',
+  addressLine1: 'addressLine1',
+  addressLine2: 'addressLine2',
+  addressType: 'addressType',
+  addressLabel: 'addressLabel',
+  zipcode: 'zipcode',
+  city: 'city',
+  county: 'county',
+  state: 'state',
+  phone1: 'phone1',
+  phone2: 'phone2',
+  phone3: 'phone3',
+  phone4: 'phone4',
+  email: 'email'
+};
+
+exports.Prisma.AddressScalarFieldEnum = {
+  id: 'id',
+  addressLabel: 'addressLabel',
+  addressLine1: 'addressLine1',
+  addressLine2: 'addressLine2',
+  addressLine3: 'addressLine3',
+  addressType: 'addressType',
+  zipcode: 'zipcode',
+  state: 'state',
+  county: 'county',
+  employeeID: 'employeeID',
+  clientID: 'clientID'
+};
+
+exports.Prisma.ClientScalarFieldEnum = {
+  id: 'id',
+  ssn: 'ssn',
+  status: 'status',
+  effectiveDate: 'effectiveDate',
+  clientID: 'clientID',
+  startDate: 'startDate',
+  supervisor: 'supervisor',
+  medicaidID: 'medicaidID',
+  agencyID: 'agencyID',
+  name: 'name',
+  dateOfBirth: 'dateOfBirth',
+  gender: 'gender',
+  languages: 'languages',
+  mainPhone: 'mainPhone',
+  phone2: 'phone2',
+  phone3: 'phone3',
+  phone4: 'phone4',
+  email: 'email',
+  programID: 'programID'
+};
+
+exports.Prisma.ServiceScalarFieldEnum = {
+  id: 'id',
+  name: 'name',
+  code: 'code',
+  startDate: 'startDate',
+  endDate: 'endDate'
+};
+
+exports.Prisma.ProgramScalarFieldEnum = {
+  id: 'id',
+  supervisor: 'supervisor',
+  enrollmentDate: 'enrollmentDate',
+  statusEffectiveDate: 'statusEffectiveDate',
+  socDate: 'socDate',
+  eocDate: 'eocDate',
+  eligibilityBeginDate: 'eligibilityBeginDate',
+  eligibilityEndDate: 'eligibilityEndDate',
+  createdDate: 'createdDate',
+  reasonForChange: 'reasonForChange'
+};
+
+exports.Prisma.PayerScalarFieldEnum = {
+  id: 'id',
+  payerName: 'payerName',
+  medicaidID: 'medicaidID',
+  rank: 'rank',
+  clientPayerID: 'clientPayerID',
+  groupNo: 'groupNo',
+  startDate: 'startDate',
+  endDate: 'endDate'
+};
+
+exports.Prisma.InvoiceScalarFieldEnum = {
+  id: 'id',
+  clientID: 'clientID',
+  invoiceNumber: 'invoiceNumber',
+  amount: 'amount',
+  status: 'status',
+  dueDate: 'dueDate',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  agencyId: 'agencyId'
+};
+
+exports.Prisma.AuthorizationScalarFieldEnum = {
+  id: 'id',
+  payerID: 'payerID',
+  serviceID: 'serviceID',
+  eventCode: 'eventCode',
+  authorizationNumber: 'authorizationNumber',
+  modifier1: 'modifier1',
+  modifier2: 'modifier2',
+  modifier3: 'modifier3',
+  modifier4: 'modifier4',
+  format: 'format',
+  voided: 'voided',
+  startDate: 'startDate',
+  endDate: 'endDate',
+  comments: 'comments',
+  visitsAllowed: 'visitsAllowed'
+};
+
+exports.Prisma.LimitationScalarFieldEnum = {
+  id: 'id',
+  authorizationID: 'authorizationID',
+  total: 'total',
+  limitBy: 'limitBy',
+  count: 'count'
+};
+
+exports.Prisma.ScheduleScalarFieldEnum = {
+  id: 'id',
+  scheduleType: 'scheduleType',
+  clientID: 'clientID',
+  clientMedicaidId: 'clientMedicaidId',
+  authorizations: 'authorizations',
+  authorizationNumber: 'authorizationNumber',
+  serviceId: 'serviceId',
+  officeReason: 'officeReason',
+  eventCode: 'eventCode',
+  authorizationBillUnitType: 'authorizationBillUnitType',
+  eventStatus: 'eventStatus',
+  eventDate: 'eventDate',
+  startTime: 'startTime',
+  endTime: 'endTime',
+  employeeID: 'employeeID',
+  repeatedEvent: 'repeatedEvent',
+  dates: 'dates',
+  comments: 'comments',
+  billingOverride: 'billingOverride',
+  rate: 'rate',
+  copay: 'copay',
+  billAmount: 'billAmount',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt',
+  agencyID: 'agencyID'
+};
+
+exports.Prisma.ChatThreadScalarFieldEnum = {
+  id: 'id',
+  agencyCode: 'agencyCode',
+  title: 'title',
+  type: 'type',
+  status: 'status',
+  startedAt: 'startedAt',
+  endedAt: 'endedAt'
+};
+
+exports.Prisma.ChatParticipantScalarFieldEnum = {
+  id: 'id',
+  threadId: 'threadId',
+  participantId: 'participantId',
+  participantType: 'participantType',
+  displayName: 'displayName',
+  userId: 'userId',
+  mobileEmployeeId: 'mobileEmployeeId'
+};
+
+exports.Prisma.ChatMessageScalarFieldEnum = {
+  id: 'id',
+  threadId: 'threadId',
+  senderId: 'senderId',
+  content: 'content',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -185,9 +526,47 @@ exports.Role = exports.$Enums.Role = {
   AGENCY_ADMIN: 'AGENCY_ADMIN'
 };
 
+exports.ChatType = exports.$Enums.ChatType = {
+  user: 'user',
+  systemAdmin: 'systemAdmin'
+};
+
+exports.ChatStatus = exports.$Enums.ChatStatus = {
+  pending: 'pending',
+  active: 'active',
+  closed: 'closed'
+};
+
+exports.ParticpantType = exports.$Enums.ParticpantType = {
+  USER: 'USER',
+  MOBILE_EMPLOYEE: 'MOBILE_EMPLOYEE',
+  SYSTEM_ADMIN: 'SYSTEM_ADMIN'
+};
+
 exports.Prisma.ModelName = {
   Agency: 'Agency',
-  User: 'User'
+  User: 'User',
+  Visit: 'Visit',
+  VisitException: 'VisitException',
+  VisitHistory: 'VisitHistory',
+  Employee: 'Employee',
+  MobileEmployee: 'MobileEmployee',
+  EmploymentInfo: 'EmploymentInfo',
+  EmployeeMedicalInfo: 'EmployeeMedicalInfo',
+  Certification: 'Certification',
+  Contact: 'Contact',
+  Address: 'Address',
+  Client: 'Client',
+  Service: 'Service',
+  Program: 'Program',
+  Payer: 'Payer',
+  Invoice: 'Invoice',
+  Authorization: 'Authorization',
+  Limitation: 'Limitation',
+  Schedule: 'Schedule',
+  ChatThread: 'ChatThread',
+  ChatParticipant: 'ChatParticipant',
+  ChatMessage: 'ChatMessage'
 };
 
 /**
