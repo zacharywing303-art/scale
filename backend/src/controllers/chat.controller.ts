@@ -4,6 +4,8 @@ import {
   listThreadsForUser,
   createDirectChat,
 } from "../services/chat.service";
+import prisma from "../lib/db";
+import { chatNsp } from "../sockets/chat.socket";
 
 export async function getMyThreads(req: Request, res: Response) {
   try {
@@ -54,8 +56,67 @@ export async function postDirectChat(req: Request, res: Response) {
       { id: targetId, displayName: targetName, type: targetType }
     );
 
+    if (chatNsp) {
+      chatNsp.to(`user:${targetId}`).emit("chatStarted", {
+        threadId: thread.id,
+        status: thread.status,
+      });
+      // also notify the requester (optional)
+      chatNsp.to(`user:${me}`).emit("chatStarted", {
+        threadId: thread.id,
+        status: thread.status,
+      });
+    }
+
     res.status(201).json(thread);
   } catch {
     res.status(500).json({ message: "Unable to create chat" });
+  }
+}
+export async function getPendingRequests(req: Request, res: Response) {
+  try {
+    const agencyCode = (req.query.agencyCode as string) || "UNITY124";
+
+    const threads = await prisma.chatThread.findMany({
+      where: { agencyCode, type: "systemAdmin", status: "pending" },
+      include: { participants: true },
+      orderBy: { startedAt: "desc" },
+    });
+
+    const data = threads.map((t) => ({
+      threadId: t.id,
+      from: t.participants.find((p) => p.participantType !== "SYSTEM_ADMIN") // requester
+        ? {
+            userId: t.participants.find(
+              (p) => p.participantType !== "SYSTEM_ADMIN"
+            )!.participantId,
+            displayName: t.participants.find(
+              (p) => p.participantType !== "SYSTEM_ADMIN"
+            )!.displayName,
+            participantType: t.participants.find(
+              (p) => p.participantType !== "SYSTEM_ADMIN"
+            )!.participantType,
+          }
+        : null,
+      startedAt: t.startedAt,
+    }));
+
+    res.json(data);
+  } catch (e) {
+    res.status(500).json({ message: "Unable to fetch pending requests" });
+  }
+}
+
+export async function getPendingCount(req: Request, res: Response) {
+  try {
+    const agencyCode = (req.query.agencyCode as string) || "UNITY124";
+
+    const count = await prisma.chatThread.count({
+      where: { agencyCode, type: "systemAdmin", status: "pending" },
+    });
+
+    res.json({ count });
+  } catch (e) {
+    res.status(500).json({ message: "Unable to fetch pending count" });
   }
 }

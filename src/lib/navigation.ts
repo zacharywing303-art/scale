@@ -96,6 +96,11 @@ export const dashboardNavigation = [
 
 export const systemAdminNavigation = [
   {
+    label: "Dashboard",
+    href: "/system_admin",
+    icon: BarChart,
+  },
+  {
     label: "Agencies",
     icon: Building2,
     href: "/system_admin/agencies",

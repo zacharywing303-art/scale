@@ -1,4 +1,4 @@
-import { Server, Socket } from "socket.io";
+import { Server, Socket, Namespace } from "socket.io";
 import prisma from "../lib/db";
 
 type AuthedSocket = Socket & {
@@ -11,16 +11,25 @@ type AuthedSocket = Socket & {
   };
 };
 
+// export namespace pointer so controllers can emit events (used in direct chat)
+export let chatNsp: Namespace | null = null;
+
 export function registerChatNamespace(io: Server) {
   const nsp = io.of("/chat");
+  chatNsp = nsp; // <-- expose namespace
 
+  // Middleware for auth (allow SYSTEM_ADMIN without agencyCode)
   nsp.use((socket: AuthedSocket, next) => {
-    // Minimal auth example:
-    // Expect query params: userId, role, participantType, displayName, agencyCode
     const { userId, role, participantType, displayName, agencyCode } =
       socket.handshake.auth ?? {};
 
-    if (!userId || !participantType || !displayName || !agencyCode) {
+    // Allow SYSTEM_ADMIN to connect without agencyCode, require agencyCode for agency users
+    if (
+      !userId ||
+      !participantType ||
+      !displayName ||
+      (role !== "SYSTEM_ADMIN" && !agencyCode)
+    ) {
       return next(new Error("Missing auth info"));
     }
 
@@ -30,11 +39,13 @@ export function registerChatNamespace(io: Server) {
     socket.data.displayName = displayName;
     socket.data.agencyCode = agencyCode;
 
-    // Join a personal room to receive direct events
     socket.join(`user:${userId}`);
 
-    // System admins also join an agency admin broadcast room
+    // Global room for system admins (they are app-wide)
     if (role === "SYSTEM_ADMIN") {
+      socket.join("systemAdmins");
+    } else if (agencyCode) {
+      // optionally keep per-agency admin room if you ever use it
       socket.join(`agency:${agencyCode}:systemAdmins`);
     }
 
@@ -42,46 +53,47 @@ export function registerChatNamespace(io: Server) {
   });
 
   nsp.on("connection", (socket: AuthedSocket) => {
-    const { userId, displayName, participantType, agencyCode } = socket.data;
+    const { userId, displayName, participantType, agencyCode, role } =
+      socket.data;
 
-    // helper: join thread room
     const joinThreadRoom = (threadId: string) => {
       socket.join(`thread:${threadId}`);
     };
 
-    // Client -> server: start chat (regular or system admin)
+    // ---- Start a chat ----
     socket.on(
       "startChat",
       async (payload: {
         type: "user" | "systemAdmin";
-        targetId?: string; // user/mobile employee id for direct chat
+        targetId?: string;
         targetDisplayName?: string;
         targetParticipantType?: "USER" | "MOBILE_EMPLOYEE";
       }) => {
         try {
-          if (!agencyCode || !userId || !displayName || !participantType)
-            return;
+          if (!userId || !displayName || !participantType) return;
 
-          let status: "pending" | "active" = "active";
-          if (payload.type === "systemAdmin") status = "pending";
+          // systemAdmin => pending + notify global systemAdmins. user => active (direct)
+          const status: "pending" | "active" =
+            payload.type === "systemAdmin" ? "pending" : "active";
 
           const thread = await prisma.chatThread.create({
             data: {
-              agencyCode,
-              type: payload.type === "systemAdmin" ? "systemAdmin" : "user",
+              agencyCode: agencyCode ?? "UNKNOWN",
+              type: payload.type,
               status,
+              startedAt: new Date(),
               participants: {
                 create: [
                   {
                     participantId: userId,
-                    participantType: participantType as any,
+                    participantType,
                     displayName,
                   },
                   ...(payload.type === "user" && payload.targetId
                     ? [
                         {
                           participantId: payload.targetId,
-                          participantType: payload.targetParticipantType as any,
+                          participantType: payload.targetParticipantType!,
                           displayName: payload.targetDisplayName ?? "Member",
                         },
                       ]
@@ -92,16 +104,24 @@ export function registerChatNamespace(io: Server) {
             include: { participants: true },
           });
 
-          // Join this socket to the thread room
+          // ensure requester joins thread room
           joinThreadRoom(thread.id);
 
           if (payload.type === "systemAdmin") {
-            // Broadcast a request to all System Admins for this agency
-            nsp.to(`agency:${agencyCode}:systemAdmins`).emit("chatRequest", {
+            // Emit to global system admins
+            nsp.to("systemAdmins").emit("chatRequest", {
               threadId: thread.id,
               from: { userId, displayName, participantType },
               startedAt: thread.startedAt,
             });
+          } else {
+            // for a direct user->user chat, tell the target user if they are connected
+            if (payload.targetId && chatNsp) {
+              chatNsp.to(`user:${payload.targetId}`).emit("chatStarted", {
+                threadId: thread.id,
+                status: thread.status,
+              });
+            }
           }
 
           socket.emit("chatStarted", {
@@ -109,54 +129,74 @@ export function registerChatNamespace(io: Server) {
             status: thread.status,
           });
         } catch (e) {
+          console.error(e);
           socket.emit("error", { message: "Failed to start chat" });
         }
       }
     );
 
-    // System Admin -> server: accept chat
+    // ---- Accept a pending chat (unchanged / correct) ----
     socket.on("acceptChat", async (payload: { threadId: string }) => {
       try {
-        if (socket.data.role !== "SYSTEM_ADMIN") return;
+        if (role !== "SYSTEM_ADMIN") return;
 
         const thread = await prisma.chatThread.update({
           where: { id: payload.threadId },
           data: {
             status: "active",
             participants: {
-              create: {
-                participantId: userId!,
-                participantType: "SYSTEM_ADMIN",
-                displayName: displayName!,
-              },
+              upsert: [
+                {
+                  where: {
+                    threadId_participantId: {
+                      threadId: payload.threadId,
+                      participantId: userId!,
+                    },
+                  },
+                  create: {
+                    participantId: userId!,
+                    participantType: "SYSTEM_ADMIN",
+                    displayName: displayName!,
+                  },
+                  update: {},
+                },
+              ],
             },
           },
           include: { participants: true },
         });
 
-        // join room and notify participants
+        // join the server socket to the room, notify thread
         joinThreadRoom(thread.id);
         nsp.to(`thread:${thread.id}`).emit("chatAccepted", {
           threadId: thread.id,
           admin: { userId, displayName },
+          participants: thread.participants,
         });
-      } catch {
+      } catch (e) {
+        console.error(e);
         socket.emit("error", { message: "Failed to accept chat" });
       }
     });
 
-    // Client -> server: send message
+    // ---- Send a message ----
     socket.on(
       "sendMessage",
-      async (payload: { threadId: string; content: string }) => {
+      async (payload: {
+        threadId: string;
+        content: string;
+        senderType?: string;
+      }) => {
         try {
           const msg = await prisma.chatMessage.create({
             data: {
               threadId: payload.threadId,
               senderId: userId!,
+              senderType: participantType!,
               content: payload.content,
             },
           });
+
           nsp.to(`thread:${payload.threadId}`).emit("newMessage", {
             threadId: payload.threadId,
             message: {
@@ -165,32 +205,59 @@ export function registerChatNamespace(io: Server) {
               content: msg.content,
               createdAt: msg.createdAt,
               senderName: displayName,
+              senderType: participantType,
             },
           });
-        } catch {
+        } catch (e) {
+          console.error(e);
           socket.emit("error", { message: "Failed to send message" });
         }
       }
     );
 
-    // Client -> server: join thread room (when user opens a thread)
+    // ---- Join a thread (emit full thread back to the requester) ----
     socket.on("joinThread", async ({ threadId }: { threadId: string }) => {
-      joinThreadRoom(threadId);
-      socket.emit("joinedThread", { threadId });
+      try {
+        joinThreadRoom(threadId);
+
+        const thread = await prisma.chatThread.findUnique({
+          where: { id: threadId },
+          include: {
+            participants: true,
+            messages: { orderBy: { createdAt: "asc" } },
+          },
+        });
+
+        // emit the thread object to this socket so the client can populate history
+        socket.emit("joinedThread", thread ?? { id: threadId });
+      } catch (e) {
+        console.error(e);
+        socket.emit("error", { message: "Failed to join thread" });
+      }
     });
 
-    // Client -> server: end chat
-    socket.on("endChat", async (payload: { threadId: string }) => {
+    // ---- End chat ----
+    socket.on("endChat", async ({ threadId }: { threadId: string }) => {
       try {
         const thread = await prisma.chatThread.update({
-          where: { id: payload.threadId },
+          where: { id: threadId },
           data: { status: "closed", endedAt: new Date() },
         });
+
         nsp
           .to(`thread:${thread.id}`)
           .emit("chatEnded", { threadId: thread.id });
-      } catch {
+      } catch (e) {
+        console.error(e);
         socket.emit("error", { message: "Failed to end chat" });
+      }
+    });
+
+    // ---- Cleanup on disconnect ----
+    socket.on("disconnect", () => {
+      socket.removeAllListeners();
+      for (const room of socket.rooms) {
+        if (room !== socket.id) socket.leave(room);
       }
     });
   });

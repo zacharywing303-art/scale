@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+
 import {
   Select,
   SelectContent,
@@ -7,139 +7,138 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-
-const services = ["All Services", "Nursing", "Therapy", "Daily Living"];
-const employees = ["All Employees", "Alice", "Bob", "Carlos"];
-const clients = ["All Clients", "John Doe", "Jane Smith"];
-const roles = ["All Roles", "Supervisor", "Manager", "Nurse", "Caregiver"];
 
 type ScheduleFiltersProps = {
+  employees: string[];
+  clients: string[];
+  services: string[];
+  roles: string[];
   filters: {
     type: string;
-    service?: string;
-    employee?: string;
-    client?: string;
-    role?: string;
+    employee: string;
+    client: string;
+    service: string;
+    role: string;
   };
-  onChange: (filters: {
-    type: string;
-    service?: string;
-    employee?: string;
-    client?: string;
-    role?: string;
-  }) => void;
+  setFilters: React.Dispatch<
+    React.SetStateAction<{
+      type: string;
+      employee: string;
+      client: string;
+      service: string;
+      role: string;
+    }>
+  >;
 };
 
 export default function ScheduleFilters({
+  employees,
+  clients,
+  services,
+  roles,
   filters,
-  onChange,
+  setFilters,
 }: ScheduleFiltersProps) {
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
-      <div>
-        <Label htmlFor="type" className="mb-1 block">
-          Type
-        </Label>
-        <Select
-          value={filters.type}
-          onValueChange={(value) => onChange({ ...filters, type: value })}
-        >
-          <SelectTrigger id="type">
-            <SelectValue placeholder="Select Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="office">Office</SelectItem>
-            <SelectItem value="home">Home Care</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
+      {/* Type Filter */}
+      <Select
+        value={filters.type || "all"}
+        onValueChange={(value) =>
+          setFilters((prev) => ({ ...prev, type: value }))
+        }
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Filter by type" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Types</SelectItem>
+          <SelectItem value="Shift">Shifts</SelectItem>
+          <SelectItem value="Visit">Visits</SelectItem>
+          <SelectItem value="Office">Office</SelectItem>
+          <SelectItem value="Facility">Facility</SelectItem>
+        </SelectContent>
+      </Select>
 
-      {filters.type === "home" && (
-        <div>
-          <Label htmlFor="service" className="mb-1 block">
-            Service
-          </Label>
-          <Select
-            value={filters.service || ""}
-            onValueChange={(value) => onChange({ ...filters, service: value })}
-          >
-            <SelectTrigger id="service">
-              <SelectValue placeholder="All Services" />
-            </SelectTrigger>
-            <SelectContent>
-              {services.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {s}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      )}
+      {/* Employee Filter */}
+      <Select
+        value={filters.employee || "all"}
+        onValueChange={(value) =>
+          setFilters((prev) => ({ ...prev, employee: value }))
+        }
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Filter by employee" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Employees</SelectItem>
+          {employees.map((e) => (
+            <SelectItem key={e || "unknown"} value={e || "unknown"}>
+              {e || "Unassigned"}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-      <div>
-        <Label htmlFor="employee" className="mb-1 block">
-          Employee
-        </Label>
-        <Select
-          value={filters.employee || ""}
-          onValueChange={(value) => onChange({ ...filters, employee: value })}
-        >
-          <SelectTrigger id="employee">
-            <SelectValue placeholder="All Employees" />
-          </SelectTrigger>
-          <SelectContent>
-            {employees.map((e) => (
-              <SelectItem key={e} value={e}>
-                {e}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Client Filter */}
+      <Select
+        value={filters.client || "all"}
+        onValueChange={(value) =>
+          setFilters((prev) => ({ ...prev, client: value }))
+        }
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Filter by client" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Clients</SelectItem>
+          {clients.map((c) => (
+            <SelectItem key={c || "unknown"} value={c || "unknown"}>
+              {c || "Unassigned"}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-      <div>
-        <Label htmlFor="client" className="mb-1 block">
-          Client
-        </Label>
-        <Select
-          value={filters.client || ""}
-          onValueChange={(value) => onChange({ ...filters, client: value })}
-        >
-          <SelectTrigger id="client">
-            <SelectValue placeholder="All Clients" />
-          </SelectTrigger>
-          <SelectContent>
-            {clients.map((c) => (
-              <SelectItem key={c} value={c}>
-                {c}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Service Filter */}
+      <Select
+        value={filters.service || "all"}
+        onValueChange={(value) =>
+          setFilters((prev) => ({ ...prev, service: value }))
+        }
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Filter by service" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Services</SelectItem>
+          {services.map((s) => (
+            <SelectItem key={s || "unknown"} value={s || "unknown"}>
+              {s || "Unassigned"}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
 
-      <div>
-        <Label htmlFor="role" className="mb-1 block">
-          Role
-        </Label>
-        <Select
-          value={filters.role || ""}
-          onValueChange={(value) => onChange({ ...filters, role: value })}
-        >
-          <SelectTrigger id="role">
-            <SelectValue placeholder="All Roles" />
-          </SelectTrigger>
-          <SelectContent>
-            {roles.map((r) => (
-              <SelectItem key={r} value={r}>
-                {r}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
+      {/* Role Filter */}
+      <Select
+        value={filters.role || "all"}
+        onValueChange={(value) =>
+          setFilters((prev) => ({ ...prev, role: value }))
+        }
+      >
+        <SelectTrigger>
+          <SelectValue placeholder="Filter by role" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All Roles</SelectItem>
+          {roles.map((r) => (
+            <SelectItem key={r} value={r}>
+              {r}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 }

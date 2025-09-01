@@ -112,8 +112,14 @@ model Visit {
   units                        Int?
   visitFromDate                DateTime?
   sandataAgencyID              String?
-  visitStatus                  String?
+  visitStatus                  VisitStatus      @default(Scheduled)
   visitTimeZone                String?
+  missedVisits                 MissedVisit[]    @relation("VisitToMissedVisit")
+
+  @@index([agencyID, scheduledTimeOut])
+  @@index([agencyID, scheduledTimeIn])
+  @@index([visitStatus])
+  @@index([callIn, callOut])
 }
 
 model VisitException {
@@ -400,15 +406,15 @@ model Limitation {
 // Schedule
 // ========================
 model Schedule {
-  id                        String    @id @default(cuid())
-  scheduleType              String // Office or Visit
+  id                        String        @id @default(cuid())
+  scheduleType              String // Office, Visit, or Facility
   clientID                  String
-  client                    Client    @relation(fields: [clientID], references: [id])
+  client                    Client        @relation(fields: [clientID], references: [id])
   clientMedicaidId          String
   authorizations            String? // Can be a list of auth descriptions, could also be relation later
   authorizationNumber       String?
   serviceId                 String?
-  service                   Service?  @relation(fields: [serviceId], references: [id])
+  service                   Service?      @relation(fields: [serviceId], references: [id])
   officeReason              String?
   eventCode                 String // Required
   authorizationBillUnitType String // Hourly, Unit, Visit
@@ -417,17 +423,18 @@ model Schedule {
   startTime                 DateTime
   endTime                   DateTime
   employeeID                String?
-  employee                  Employee? @relation(fields: [employeeID], references: [id])
-  repeatedEvent             Boolean   @default(false)
+  employee                  Employee?     @relation(fields: [employeeID], references: [id])
+  repeatedEvent             Boolean       @default(false)
   dates                     String[] // Array of ISO strings for repeated dates
   comments                  String?
-  billingOverride           Boolean   @default(false)
+  billingOverride           Boolean       @default(false)
   rate                      Float?
   copay                     Float?
   billAmount                Float?
-  createdAt                 DateTime  @default(now())
-  updatedAt                 DateTime  @updatedAt
-  agencyID                  String    @default("UNITY124")
+  createdAt                 DateTime      @default(now())
+  updatedAt                 DateTime      @updatedAt
+  agencyID                  String        @default("UNITY124")
+  missedVisits              MissedVisit[] @relation("ScheduleToMissedVisit")
 }
 
 model ChatThread {
@@ -454,16 +461,33 @@ model ChatParticipant {
   mobileEmployeeId String?
   thread           ChatThread     @relation(fields: [threadId], references: [id])
 
+  @@unique([threadId, participantId])
   @@index([threadId])
 }
 
 model ChatMessage {
-  id        String     @id @default(cuid())
-  threadId  String
-  senderId  String
-  content   String
-  createdAt DateTime   @default(now())
-  thread    ChatThread @relation(fields: [threadId], references: [id])
+  id         String     @id @default(cuid())
+  threadId   String
+  senderId   String
+  senderType String
+  content    String
+  createdAt  DateTime   @default(now())
+  thread     ChatThread @relation(fields: [threadId], references: [id])
+}
+
+model MissedVisit {
+  id          String   @id @default(cuid())
+  visitId     Int      @unique
+  reason      String   @default("No Show")
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+  rescheduled Boolean  @default(false)
+
+  replacementScheduleId String?
+  replacementSchedule   Schedule? @relation("ScheduleToMissedVisit", fields: [replacementScheduleId], references: [id])
+  visit                 Visit     @relation("VisitToMissedVisit", fields: [visitId], references: [id])
+
+  @@index([expiresAt])
 }
 
 enum ChatType {
@@ -488,4 +512,13 @@ enum Role {
   SYSTEM_ADMIN
   AGENCY_USER
   AGENCY_ADMIN
+}
+
+enum VisitStatus {
+  Incomplete
+  InProcess
+  Verified
+  Scheduled
+  Processed
+  Omitted
 }

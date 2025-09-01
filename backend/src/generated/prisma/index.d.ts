@@ -128,6 +128,11 @@ export type ChatParticipant = $Result.DefaultSelection<Prisma.$ChatParticipantPa
  * 
  */
 export type ChatMessage = $Result.DefaultSelection<Prisma.$ChatMessagePayload>
+/**
+ * Model MissedVisit
+ * 
+ */
+export type MissedVisit = $Result.DefaultSelection<Prisma.$MissedVisitPayload>
 
 /**
  * Enums
@@ -168,6 +173,18 @@ export const Role: {
 
 export type Role = (typeof Role)[keyof typeof Role]
 
+
+export const VisitStatus: {
+  Incomplete: 'Incomplete',
+  InProcess: 'InProcess',
+  Verified: 'Verified',
+  Scheduled: 'Scheduled',
+  Processed: 'Processed',
+  Omitted: 'Omitted'
+};
+
+export type VisitStatus = (typeof VisitStatus)[keyof typeof VisitStatus]
+
 }
 
 export type ChatType = $Enums.ChatType
@@ -185,6 +202,10 @@ export const ParticpantType: typeof $Enums.ParticpantType
 export type Role = $Enums.Role
 
 export const Role: typeof $Enums.Role
+
+export type VisitStatus = $Enums.VisitStatus
+
+export const VisitStatus: typeof $Enums.VisitStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -540,6 +561,16 @@ export class PrismaClient<
     * ```
     */
   get chatMessage(): Prisma.ChatMessageDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.missedVisit`: Exposes CRUD operations for the **MissedVisit** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more MissedVisits
+    * const missedVisits = await prisma.missedVisit.findMany()
+    * ```
+    */
+  get missedVisit(): Prisma.MissedVisitDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1002,7 +1033,8 @@ export namespace Prisma {
     Schedule: 'Schedule',
     ChatThread: 'ChatThread',
     ChatParticipant: 'ChatParticipant',
-    ChatMessage: 'ChatMessage'
+    ChatMessage: 'ChatMessage',
+    MissedVisit: 'MissedVisit'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1021,7 +1053,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "agency" | "user" | "visit" | "visitException" | "visitHistory" | "employee" | "mobileEmployee" | "employmentInfo" | "employeeMedicalInfo" | "certification" | "contact" | "address" | "client" | "service" | "program" | "payer" | "invoice" | "authorization" | "limitation" | "schedule" | "chatThread" | "chatParticipant" | "chatMessage"
+      modelProps: "agency" | "user" | "visit" | "visitException" | "visitHistory" | "employee" | "mobileEmployee" | "employmentInfo" | "employeeMedicalInfo" | "certification" | "contact" | "address" | "client" | "service" | "program" | "payer" | "invoice" | "authorization" | "limitation" | "schedule" | "chatThread" | "chatParticipant" | "chatMessage" | "missedVisit"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -2727,6 +2759,80 @@ export namespace Prisma {
           }
         }
       }
+      MissedVisit: {
+        payload: Prisma.$MissedVisitPayload<ExtArgs>
+        fields: Prisma.MissedVisitFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.MissedVisitFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissedVisitPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.MissedVisitFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissedVisitPayload>
+          }
+          findFirst: {
+            args: Prisma.MissedVisitFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissedVisitPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.MissedVisitFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissedVisitPayload>
+          }
+          findMany: {
+            args: Prisma.MissedVisitFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissedVisitPayload>[]
+          }
+          create: {
+            args: Prisma.MissedVisitCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissedVisitPayload>
+          }
+          createMany: {
+            args: Prisma.MissedVisitCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.MissedVisitCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissedVisitPayload>[]
+          }
+          delete: {
+            args: Prisma.MissedVisitDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissedVisitPayload>
+          }
+          update: {
+            args: Prisma.MissedVisitUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissedVisitPayload>
+          }
+          deleteMany: {
+            args: Prisma.MissedVisitDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.MissedVisitUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.MissedVisitUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissedVisitPayload>[]
+          }
+          upsert: {
+            args: Prisma.MissedVisitUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$MissedVisitPayload>
+          }
+          aggregate: {
+            args: Prisma.MissedVisitAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateMissedVisit>
+          }
+          groupBy: {
+            args: Prisma.MissedVisitGroupByArgs<ExtArgs>
+            result: $Utils.Optional<MissedVisitGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.MissedVisitCountArgs<ExtArgs>
+            result: $Utils.Optional<MissedVisitCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -2842,6 +2948,7 @@ export namespace Prisma {
     chatThread?: ChatThreadOmit
     chatParticipant?: ChatParticipantOmit
     chatMessage?: ChatMessageOmit
+    missedVisit?: MissedVisitOmit
   }
 
   /* Types for Logging */
@@ -2983,11 +3090,13 @@ export namespace Prisma {
   export type VisitCountOutputType = {
     exceptions: number
     history: number
+    missedVisits: number
   }
 
   export type VisitCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     exceptions?: boolean | VisitCountOutputTypeCountExceptionsArgs
     history?: boolean | VisitCountOutputTypeCountHistoryArgs
+    missedVisits?: boolean | VisitCountOutputTypeCountMissedVisitsArgs
   }
 
   // Custom InputTypes
@@ -3013,6 +3122,13 @@ export namespace Prisma {
    */
   export type VisitCountOutputTypeCountHistoryArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: VisitHistoryWhereInput
+  }
+
+  /**
+   * VisitCountOutputType without action
+   */
+  export type VisitCountOutputTypeCountMissedVisitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MissedVisitWhereInput
   }
 
 
@@ -3352,6 +3468,37 @@ export namespace Prisma {
    */
   export type AuthorizationCountOutputTypeCountLimitationsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: LimitationWhereInput
+  }
+
+
+  /**
+   * Count Type ScheduleCountOutputType
+   */
+
+  export type ScheduleCountOutputType = {
+    missedVisits: number
+  }
+
+  export type ScheduleCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    missedVisits?: boolean | ScheduleCountOutputTypeCountMissedVisitsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * ScheduleCountOutputType without action
+   */
+  export type ScheduleCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ScheduleCountOutputType
+     */
+    select?: ScheduleCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * ScheduleCountOutputType without action
+   */
+  export type ScheduleCountOutputTypeCountMissedVisitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MissedVisitWhereInput
   }
 
 
@@ -6139,7 +6286,7 @@ export namespace Prisma {
     units: number | null
     visitFromDate: Date | null
     sandataAgencyID: string | null
-    visitStatus: string | null
+    visitStatus: $Enums.VisitStatus | null
     visitTimeZone: string | null
   }
 
@@ -6196,7 +6343,7 @@ export namespace Prisma {
     units: number | null
     visitFromDate: Date | null
     sandataAgencyID: string | null
-    visitStatus: string | null
+    visitStatus: $Enums.VisitStatus | null
     visitTimeZone: string | null
   }
 
@@ -6604,7 +6751,7 @@ export namespace Prisma {
     units: number | null
     visitFromDate: Date | null
     sandataAgencyID: string | null
-    visitStatus: string | null
+    visitStatus: $Enums.VisitStatus
     visitTimeZone: string | null
     _count: VisitCountAggregateOutputType | null
     _avg: VisitAvgAggregateOutputType | null
@@ -6684,6 +6831,7 @@ export namespace Prisma {
     visitTimeZone?: boolean
     exceptions?: boolean | Visit$exceptionsArgs<ExtArgs>
     history?: boolean | Visit$historyArgs<ExtArgs>
+    missedVisits?: boolean | Visit$missedVisitsArgs<ExtArgs>
     _count?: boolean | VisitCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["visit"]>
 
@@ -6862,6 +7010,7 @@ export namespace Prisma {
   export type VisitInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     exceptions?: boolean | Visit$exceptionsArgs<ExtArgs>
     history?: boolean | Visit$historyArgs<ExtArgs>
+    missedVisits?: boolean | Visit$missedVisitsArgs<ExtArgs>
     _count?: boolean | VisitCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type VisitIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
@@ -6872,6 +7021,7 @@ export namespace Prisma {
     objects: {
       exceptions: Prisma.$VisitExceptionPayload<ExtArgs>[]
       history: Prisma.$VisitHistoryPayload<ExtArgs>[]
+      missedVisits: Prisma.$MissedVisitPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: number
@@ -6926,7 +7076,7 @@ export namespace Prisma {
       units: number | null
       visitFromDate: Date | null
       sandataAgencyID: string | null
-      visitStatus: string | null
+      visitStatus: $Enums.VisitStatus
       visitTimeZone: string | null
     }, ExtArgs["result"]["visit"]>
     composites: {}
@@ -7324,6 +7474,7 @@ export namespace Prisma {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     exceptions<T extends Visit$exceptionsArgs<ExtArgs> = {}>(args?: Subset<T, Visit$exceptionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VisitExceptionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     history<T extends Visit$historyArgs<ExtArgs> = {}>(args?: Subset<T, Visit$historyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$VisitHistoryPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    missedVisits<T extends Visit$missedVisitsArgs<ExtArgs> = {}>(args?: Subset<T, Visit$missedVisitsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissedVisitPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -7405,7 +7556,7 @@ export namespace Prisma {
     readonly units: FieldRef<"Visit", 'Int'>
     readonly visitFromDate: FieldRef<"Visit", 'DateTime'>
     readonly sandataAgencyID: FieldRef<"Visit", 'String'>
-    readonly visitStatus: FieldRef<"Visit", 'String'>
+    readonly visitStatus: FieldRef<"Visit", 'VisitStatus'>
     readonly visitTimeZone: FieldRef<"Visit", 'String'>
   }
     
@@ -7840,6 +7991,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: VisitHistoryScalarFieldEnum | VisitHistoryScalarFieldEnum[]
+  }
+
+  /**
+   * Visit.missedVisits
+   */
+  export type Visit$missedVisitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitInclude<ExtArgs> | null
+    where?: MissedVisitWhereInput
+    orderBy?: MissedVisitOrderByWithRelationInput | MissedVisitOrderByWithRelationInput[]
+    cursor?: MissedVisitWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MissedVisitScalarFieldEnum | MissedVisitScalarFieldEnum[]
   }
 
   /**
@@ -27430,6 +27605,8 @@ export namespace Prisma {
     client?: boolean | ClientDefaultArgs<ExtArgs>
     service?: boolean | Schedule$serviceArgs<ExtArgs>
     employee?: boolean | Schedule$employeeArgs<ExtArgs>
+    missedVisits?: boolean | Schedule$missedVisitsArgs<ExtArgs>
+    _count?: boolean | ScheduleCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["schedule"]>
 
   export type ScheduleSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -27527,6 +27704,8 @@ export namespace Prisma {
     client?: boolean | ClientDefaultArgs<ExtArgs>
     service?: boolean | Schedule$serviceArgs<ExtArgs>
     employee?: boolean | Schedule$employeeArgs<ExtArgs>
+    missedVisits?: boolean | Schedule$missedVisitsArgs<ExtArgs>
+    _count?: boolean | ScheduleCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type ScheduleIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     client?: boolean | ClientDefaultArgs<ExtArgs>
@@ -27545,6 +27724,7 @@ export namespace Prisma {
       client: Prisma.$ClientPayload<ExtArgs>
       service: Prisma.$ServicePayload<ExtArgs> | null
       employee: Prisma.$EmployeePayload<ExtArgs> | null
+      missedVisits: Prisma.$MissedVisitPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -27969,6 +28149,7 @@ export namespace Prisma {
     client<T extends ClientDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ClientDefaultArgs<ExtArgs>>): Prisma__ClientClient<$Result.GetResult<Prisma.$ClientPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
     service<T extends Schedule$serviceArgs<ExtArgs> = {}>(args?: Subset<T, Schedule$serviceArgs<ExtArgs>>): Prisma__ServiceClient<$Result.GetResult<Prisma.$ServicePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     employee<T extends Schedule$employeeArgs<ExtArgs> = {}>(args?: Subset<T, Schedule$employeeArgs<ExtArgs>>): Prisma__EmployeeClient<$Result.GetResult<Prisma.$EmployeePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    missedVisits<T extends Schedule$missedVisitsArgs<ExtArgs> = {}>(args?: Subset<T, Schedule$missedVisitsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissedVisitPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -28454,6 +28635,30 @@ export namespace Prisma {
      */
     include?: EmployeeInclude<ExtArgs> | null
     where?: EmployeeWhereInput
+  }
+
+  /**
+   * Schedule.missedVisits
+   */
+  export type Schedule$missedVisitsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitInclude<ExtArgs> | null
+    where?: MissedVisitWhereInput
+    orderBy?: MissedVisitOrderByWithRelationInput | MissedVisitOrderByWithRelationInput[]
+    cursor?: MissedVisitWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: MissedVisitScalarFieldEnum | MissedVisitScalarFieldEnum[]
   }
 
   /**
@@ -30697,6 +30902,7 @@ export namespace Prisma {
     id: string | null
     threadId: string | null
     senderId: string | null
+    senderType: string | null
     content: string | null
     createdAt: Date | null
   }
@@ -30705,6 +30911,7 @@ export namespace Prisma {
     id: string | null
     threadId: string | null
     senderId: string | null
+    senderType: string | null
     content: string | null
     createdAt: Date | null
   }
@@ -30713,6 +30920,7 @@ export namespace Prisma {
     id: number
     threadId: number
     senderId: number
+    senderType: number
     content: number
     createdAt: number
     _all: number
@@ -30723,6 +30931,7 @@ export namespace Prisma {
     id?: true
     threadId?: true
     senderId?: true
+    senderType?: true
     content?: true
     createdAt?: true
   }
@@ -30731,6 +30940,7 @@ export namespace Prisma {
     id?: true
     threadId?: true
     senderId?: true
+    senderType?: true
     content?: true
     createdAt?: true
   }
@@ -30739,6 +30949,7 @@ export namespace Prisma {
     id?: true
     threadId?: true
     senderId?: true
+    senderType?: true
     content?: true
     createdAt?: true
     _all?: true
@@ -30820,6 +31031,7 @@ export namespace Prisma {
     id: string
     threadId: string
     senderId: string
+    senderType: string
     content: string
     createdAt: Date
     _count: ChatMessageCountAggregateOutputType | null
@@ -30845,6 +31057,7 @@ export namespace Prisma {
     id?: boolean
     threadId?: boolean
     senderId?: boolean
+    senderType?: boolean
     content?: boolean
     createdAt?: boolean
     thread?: boolean | ChatThreadDefaultArgs<ExtArgs>
@@ -30854,6 +31067,7 @@ export namespace Prisma {
     id?: boolean
     threadId?: boolean
     senderId?: boolean
+    senderType?: boolean
     content?: boolean
     createdAt?: boolean
     thread?: boolean | ChatThreadDefaultArgs<ExtArgs>
@@ -30863,6 +31077,7 @@ export namespace Prisma {
     id?: boolean
     threadId?: boolean
     senderId?: boolean
+    senderType?: boolean
     content?: boolean
     createdAt?: boolean
     thread?: boolean | ChatThreadDefaultArgs<ExtArgs>
@@ -30872,11 +31087,12 @@ export namespace Prisma {
     id?: boolean
     threadId?: boolean
     senderId?: boolean
+    senderType?: boolean
     content?: boolean
     createdAt?: boolean
   }
 
-  export type ChatMessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "threadId" | "senderId" | "content" | "createdAt", ExtArgs["result"]["chatMessage"]>
+  export type ChatMessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "threadId" | "senderId" | "senderType" | "content" | "createdAt", ExtArgs["result"]["chatMessage"]>
   export type ChatMessageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     thread?: boolean | ChatThreadDefaultArgs<ExtArgs>
   }
@@ -30896,6 +31112,7 @@ export namespace Prisma {
       id: string
       threadId: string
       senderId: string
+      senderType: string
       content: string
       createdAt: Date
     }, ExtArgs["result"]["chatMessage"]>
@@ -31325,6 +31542,7 @@ export namespace Prisma {
     readonly id: FieldRef<"ChatMessage", 'String'>
     readonly threadId: FieldRef<"ChatMessage", 'String'>
     readonly senderId: FieldRef<"ChatMessage", 'String'>
+    readonly senderType: FieldRef<"ChatMessage", 'String'>
     readonly content: FieldRef<"ChatMessage", 'String'>
     readonly createdAt: FieldRef<"ChatMessage", 'DateTime'>
   }
@@ -31738,6 +31956,1151 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: ChatMessageInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model MissedVisit
+   */
+
+  export type AggregateMissedVisit = {
+    _count: MissedVisitCountAggregateOutputType | null
+    _avg: MissedVisitAvgAggregateOutputType | null
+    _sum: MissedVisitSumAggregateOutputType | null
+    _min: MissedVisitMinAggregateOutputType | null
+    _max: MissedVisitMaxAggregateOutputType | null
+  }
+
+  export type MissedVisitAvgAggregateOutputType = {
+    visitId: number | null
+  }
+
+  export type MissedVisitSumAggregateOutputType = {
+    visitId: number | null
+  }
+
+  export type MissedVisitMinAggregateOutputType = {
+    id: string | null
+    visitId: number | null
+    reason: string | null
+    createdAt: Date | null
+    expiresAt: Date | null
+    rescheduled: boolean | null
+    replacementScheduleId: string | null
+  }
+
+  export type MissedVisitMaxAggregateOutputType = {
+    id: string | null
+    visitId: number | null
+    reason: string | null
+    createdAt: Date | null
+    expiresAt: Date | null
+    rescheduled: boolean | null
+    replacementScheduleId: string | null
+  }
+
+  export type MissedVisitCountAggregateOutputType = {
+    id: number
+    visitId: number
+    reason: number
+    createdAt: number
+    expiresAt: number
+    rescheduled: number
+    replacementScheduleId: number
+    _all: number
+  }
+
+
+  export type MissedVisitAvgAggregateInputType = {
+    visitId?: true
+  }
+
+  export type MissedVisitSumAggregateInputType = {
+    visitId?: true
+  }
+
+  export type MissedVisitMinAggregateInputType = {
+    id?: true
+    visitId?: true
+    reason?: true
+    createdAt?: true
+    expiresAt?: true
+    rescheduled?: true
+    replacementScheduleId?: true
+  }
+
+  export type MissedVisitMaxAggregateInputType = {
+    id?: true
+    visitId?: true
+    reason?: true
+    createdAt?: true
+    expiresAt?: true
+    rescheduled?: true
+    replacementScheduleId?: true
+  }
+
+  export type MissedVisitCountAggregateInputType = {
+    id?: true
+    visitId?: true
+    reason?: true
+    createdAt?: true
+    expiresAt?: true
+    rescheduled?: true
+    replacementScheduleId?: true
+    _all?: true
+  }
+
+  export type MissedVisitAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MissedVisit to aggregate.
+     */
+    where?: MissedVisitWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MissedVisits to fetch.
+     */
+    orderBy?: MissedVisitOrderByWithRelationInput | MissedVisitOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: MissedVisitWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MissedVisits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MissedVisits.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned MissedVisits
+    **/
+    _count?: true | MissedVisitCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: MissedVisitAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: MissedVisitSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: MissedVisitMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: MissedVisitMaxAggregateInputType
+  }
+
+  export type GetMissedVisitAggregateType<T extends MissedVisitAggregateArgs> = {
+        [P in keyof T & keyof AggregateMissedVisit]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateMissedVisit[P]>
+      : GetScalarType<T[P], AggregateMissedVisit[P]>
+  }
+
+
+
+
+  export type MissedVisitGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: MissedVisitWhereInput
+    orderBy?: MissedVisitOrderByWithAggregationInput | MissedVisitOrderByWithAggregationInput[]
+    by: MissedVisitScalarFieldEnum[] | MissedVisitScalarFieldEnum
+    having?: MissedVisitScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: MissedVisitCountAggregateInputType | true
+    _avg?: MissedVisitAvgAggregateInputType
+    _sum?: MissedVisitSumAggregateInputType
+    _min?: MissedVisitMinAggregateInputType
+    _max?: MissedVisitMaxAggregateInputType
+  }
+
+  export type MissedVisitGroupByOutputType = {
+    id: string
+    visitId: number
+    reason: string
+    createdAt: Date
+    expiresAt: Date
+    rescheduled: boolean
+    replacementScheduleId: string | null
+    _count: MissedVisitCountAggregateOutputType | null
+    _avg: MissedVisitAvgAggregateOutputType | null
+    _sum: MissedVisitSumAggregateOutputType | null
+    _min: MissedVisitMinAggregateOutputType | null
+    _max: MissedVisitMaxAggregateOutputType | null
+  }
+
+  type GetMissedVisitGroupByPayload<T extends MissedVisitGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<MissedVisitGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof MissedVisitGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], MissedVisitGroupByOutputType[P]>
+            : GetScalarType<T[P], MissedVisitGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type MissedVisitSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    visitId?: boolean
+    reason?: boolean
+    createdAt?: boolean
+    expiresAt?: boolean
+    rescheduled?: boolean
+    replacementScheduleId?: boolean
+    replacementSchedule?: boolean | MissedVisit$replacementScheduleArgs<ExtArgs>
+    visit?: boolean | VisitDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["missedVisit"]>
+
+  export type MissedVisitSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    visitId?: boolean
+    reason?: boolean
+    createdAt?: boolean
+    expiresAt?: boolean
+    rescheduled?: boolean
+    replacementScheduleId?: boolean
+    replacementSchedule?: boolean | MissedVisit$replacementScheduleArgs<ExtArgs>
+    visit?: boolean | VisitDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["missedVisit"]>
+
+  export type MissedVisitSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    visitId?: boolean
+    reason?: boolean
+    createdAt?: boolean
+    expiresAt?: boolean
+    rescheduled?: boolean
+    replacementScheduleId?: boolean
+    replacementSchedule?: boolean | MissedVisit$replacementScheduleArgs<ExtArgs>
+    visit?: boolean | VisitDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["missedVisit"]>
+
+  export type MissedVisitSelectScalar = {
+    id?: boolean
+    visitId?: boolean
+    reason?: boolean
+    createdAt?: boolean
+    expiresAt?: boolean
+    rescheduled?: boolean
+    replacementScheduleId?: boolean
+  }
+
+  export type MissedVisitOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "visitId" | "reason" | "createdAt" | "expiresAt" | "rescheduled" | "replacementScheduleId", ExtArgs["result"]["missedVisit"]>
+  export type MissedVisitInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    replacementSchedule?: boolean | MissedVisit$replacementScheduleArgs<ExtArgs>
+    visit?: boolean | VisitDefaultArgs<ExtArgs>
+  }
+  export type MissedVisitIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    replacementSchedule?: boolean | MissedVisit$replacementScheduleArgs<ExtArgs>
+    visit?: boolean | VisitDefaultArgs<ExtArgs>
+  }
+  export type MissedVisitIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    replacementSchedule?: boolean | MissedVisit$replacementScheduleArgs<ExtArgs>
+    visit?: boolean | VisitDefaultArgs<ExtArgs>
+  }
+
+  export type $MissedVisitPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "MissedVisit"
+    objects: {
+      replacementSchedule: Prisma.$SchedulePayload<ExtArgs> | null
+      visit: Prisma.$VisitPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      visitId: number
+      reason: string
+      createdAt: Date
+      expiresAt: Date
+      rescheduled: boolean
+      replacementScheduleId: string | null
+    }, ExtArgs["result"]["missedVisit"]>
+    composites: {}
+  }
+
+  type MissedVisitGetPayload<S extends boolean | null | undefined | MissedVisitDefaultArgs> = $Result.GetResult<Prisma.$MissedVisitPayload, S>
+
+  type MissedVisitCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<MissedVisitFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: MissedVisitCountAggregateInputType | true
+    }
+
+  export interface MissedVisitDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['MissedVisit'], meta: { name: 'MissedVisit' } }
+    /**
+     * Find zero or one MissedVisit that matches the filter.
+     * @param {MissedVisitFindUniqueArgs} args - Arguments to find a MissedVisit
+     * @example
+     * // Get one MissedVisit
+     * const missedVisit = await prisma.missedVisit.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends MissedVisitFindUniqueArgs>(args: SelectSubset<T, MissedVisitFindUniqueArgs<ExtArgs>>): Prisma__MissedVisitClient<$Result.GetResult<Prisma.$MissedVisitPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one MissedVisit that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {MissedVisitFindUniqueOrThrowArgs} args - Arguments to find a MissedVisit
+     * @example
+     * // Get one MissedVisit
+     * const missedVisit = await prisma.missedVisit.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends MissedVisitFindUniqueOrThrowArgs>(args: SelectSubset<T, MissedVisitFindUniqueOrThrowArgs<ExtArgs>>): Prisma__MissedVisitClient<$Result.GetResult<Prisma.$MissedVisitPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MissedVisit that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissedVisitFindFirstArgs} args - Arguments to find a MissedVisit
+     * @example
+     * // Get one MissedVisit
+     * const missedVisit = await prisma.missedVisit.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends MissedVisitFindFirstArgs>(args?: SelectSubset<T, MissedVisitFindFirstArgs<ExtArgs>>): Prisma__MissedVisitClient<$Result.GetResult<Prisma.$MissedVisitPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first MissedVisit that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissedVisitFindFirstOrThrowArgs} args - Arguments to find a MissedVisit
+     * @example
+     * // Get one MissedVisit
+     * const missedVisit = await prisma.missedVisit.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends MissedVisitFindFirstOrThrowArgs>(args?: SelectSubset<T, MissedVisitFindFirstOrThrowArgs<ExtArgs>>): Prisma__MissedVisitClient<$Result.GetResult<Prisma.$MissedVisitPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more MissedVisits that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissedVisitFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all MissedVisits
+     * const missedVisits = await prisma.missedVisit.findMany()
+     * 
+     * // Get first 10 MissedVisits
+     * const missedVisits = await prisma.missedVisit.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const missedVisitWithIdOnly = await prisma.missedVisit.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends MissedVisitFindManyArgs>(args?: SelectSubset<T, MissedVisitFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissedVisitPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a MissedVisit.
+     * @param {MissedVisitCreateArgs} args - Arguments to create a MissedVisit.
+     * @example
+     * // Create one MissedVisit
+     * const MissedVisit = await prisma.missedVisit.create({
+     *   data: {
+     *     // ... data to create a MissedVisit
+     *   }
+     * })
+     * 
+     */
+    create<T extends MissedVisitCreateArgs>(args: SelectSubset<T, MissedVisitCreateArgs<ExtArgs>>): Prisma__MissedVisitClient<$Result.GetResult<Prisma.$MissedVisitPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many MissedVisits.
+     * @param {MissedVisitCreateManyArgs} args - Arguments to create many MissedVisits.
+     * @example
+     * // Create many MissedVisits
+     * const missedVisit = await prisma.missedVisit.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends MissedVisitCreateManyArgs>(args?: SelectSubset<T, MissedVisitCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many MissedVisits and returns the data saved in the database.
+     * @param {MissedVisitCreateManyAndReturnArgs} args - Arguments to create many MissedVisits.
+     * @example
+     * // Create many MissedVisits
+     * const missedVisit = await prisma.missedVisit.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many MissedVisits and only return the `id`
+     * const missedVisitWithIdOnly = await prisma.missedVisit.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends MissedVisitCreateManyAndReturnArgs>(args?: SelectSubset<T, MissedVisitCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissedVisitPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a MissedVisit.
+     * @param {MissedVisitDeleteArgs} args - Arguments to delete one MissedVisit.
+     * @example
+     * // Delete one MissedVisit
+     * const MissedVisit = await prisma.missedVisit.delete({
+     *   where: {
+     *     // ... filter to delete one MissedVisit
+     *   }
+     * })
+     * 
+     */
+    delete<T extends MissedVisitDeleteArgs>(args: SelectSubset<T, MissedVisitDeleteArgs<ExtArgs>>): Prisma__MissedVisitClient<$Result.GetResult<Prisma.$MissedVisitPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one MissedVisit.
+     * @param {MissedVisitUpdateArgs} args - Arguments to update one MissedVisit.
+     * @example
+     * // Update one MissedVisit
+     * const missedVisit = await prisma.missedVisit.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends MissedVisitUpdateArgs>(args: SelectSubset<T, MissedVisitUpdateArgs<ExtArgs>>): Prisma__MissedVisitClient<$Result.GetResult<Prisma.$MissedVisitPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more MissedVisits.
+     * @param {MissedVisitDeleteManyArgs} args - Arguments to filter MissedVisits to delete.
+     * @example
+     * // Delete a few MissedVisits
+     * const { count } = await prisma.missedVisit.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends MissedVisitDeleteManyArgs>(args?: SelectSubset<T, MissedVisitDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MissedVisits.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissedVisitUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many MissedVisits
+     * const missedVisit = await prisma.missedVisit.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends MissedVisitUpdateManyArgs>(args: SelectSubset<T, MissedVisitUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more MissedVisits and returns the data updated in the database.
+     * @param {MissedVisitUpdateManyAndReturnArgs} args - Arguments to update many MissedVisits.
+     * @example
+     * // Update many MissedVisits
+     * const missedVisit = await prisma.missedVisit.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more MissedVisits and only return the `id`
+     * const missedVisitWithIdOnly = await prisma.missedVisit.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends MissedVisitUpdateManyAndReturnArgs>(args: SelectSubset<T, MissedVisitUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MissedVisitPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one MissedVisit.
+     * @param {MissedVisitUpsertArgs} args - Arguments to update or create a MissedVisit.
+     * @example
+     * // Update or create a MissedVisit
+     * const missedVisit = await prisma.missedVisit.upsert({
+     *   create: {
+     *     // ... data to create a MissedVisit
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the MissedVisit we want to update
+     *   }
+     * })
+     */
+    upsert<T extends MissedVisitUpsertArgs>(args: SelectSubset<T, MissedVisitUpsertArgs<ExtArgs>>): Prisma__MissedVisitClient<$Result.GetResult<Prisma.$MissedVisitPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of MissedVisits.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissedVisitCountArgs} args - Arguments to filter MissedVisits to count.
+     * @example
+     * // Count the number of MissedVisits
+     * const count = await prisma.missedVisit.count({
+     *   where: {
+     *     // ... the filter for the MissedVisits we want to count
+     *   }
+     * })
+    **/
+    count<T extends MissedVisitCountArgs>(
+      args?: Subset<T, MissedVisitCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], MissedVisitCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a MissedVisit.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissedVisitAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends MissedVisitAggregateArgs>(args: Subset<T, MissedVisitAggregateArgs>): Prisma.PrismaPromise<GetMissedVisitAggregateType<T>>
+
+    /**
+     * Group by MissedVisit.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {MissedVisitGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends MissedVisitGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: MissedVisitGroupByArgs['orderBy'] }
+        : { orderBy?: MissedVisitGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, MissedVisitGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetMissedVisitGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the MissedVisit model
+   */
+  readonly fields: MissedVisitFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for MissedVisit.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__MissedVisitClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    replacementSchedule<T extends MissedVisit$replacementScheduleArgs<ExtArgs> = {}>(args?: Subset<T, MissedVisit$replacementScheduleArgs<ExtArgs>>): Prisma__ScheduleClient<$Result.GetResult<Prisma.$SchedulePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    visit<T extends VisitDefaultArgs<ExtArgs> = {}>(args?: Subset<T, VisitDefaultArgs<ExtArgs>>): Prisma__VisitClient<$Result.GetResult<Prisma.$VisitPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the MissedVisit model
+   */
+  interface MissedVisitFieldRefs {
+    readonly id: FieldRef<"MissedVisit", 'String'>
+    readonly visitId: FieldRef<"MissedVisit", 'Int'>
+    readonly reason: FieldRef<"MissedVisit", 'String'>
+    readonly createdAt: FieldRef<"MissedVisit", 'DateTime'>
+    readonly expiresAt: FieldRef<"MissedVisit", 'DateTime'>
+    readonly rescheduled: FieldRef<"MissedVisit", 'Boolean'>
+    readonly replacementScheduleId: FieldRef<"MissedVisit", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * MissedVisit findUnique
+   */
+  export type MissedVisitFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitInclude<ExtArgs> | null
+    /**
+     * Filter, which MissedVisit to fetch.
+     */
+    where: MissedVisitWhereUniqueInput
+  }
+
+  /**
+   * MissedVisit findUniqueOrThrow
+   */
+  export type MissedVisitFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitInclude<ExtArgs> | null
+    /**
+     * Filter, which MissedVisit to fetch.
+     */
+    where: MissedVisitWhereUniqueInput
+  }
+
+  /**
+   * MissedVisit findFirst
+   */
+  export type MissedVisitFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitInclude<ExtArgs> | null
+    /**
+     * Filter, which MissedVisit to fetch.
+     */
+    where?: MissedVisitWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MissedVisits to fetch.
+     */
+    orderBy?: MissedVisitOrderByWithRelationInput | MissedVisitOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MissedVisits.
+     */
+    cursor?: MissedVisitWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MissedVisits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MissedVisits.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MissedVisits.
+     */
+    distinct?: MissedVisitScalarFieldEnum | MissedVisitScalarFieldEnum[]
+  }
+
+  /**
+   * MissedVisit findFirstOrThrow
+   */
+  export type MissedVisitFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitInclude<ExtArgs> | null
+    /**
+     * Filter, which MissedVisit to fetch.
+     */
+    where?: MissedVisitWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MissedVisits to fetch.
+     */
+    orderBy?: MissedVisitOrderByWithRelationInput | MissedVisitOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for MissedVisits.
+     */
+    cursor?: MissedVisitWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MissedVisits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MissedVisits.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of MissedVisits.
+     */
+    distinct?: MissedVisitScalarFieldEnum | MissedVisitScalarFieldEnum[]
+  }
+
+  /**
+   * MissedVisit findMany
+   */
+  export type MissedVisitFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitInclude<ExtArgs> | null
+    /**
+     * Filter, which MissedVisits to fetch.
+     */
+    where?: MissedVisitWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of MissedVisits to fetch.
+     */
+    orderBy?: MissedVisitOrderByWithRelationInput | MissedVisitOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing MissedVisits.
+     */
+    cursor?: MissedVisitWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` MissedVisits from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` MissedVisits.
+     */
+    skip?: number
+    distinct?: MissedVisitScalarFieldEnum | MissedVisitScalarFieldEnum[]
+  }
+
+  /**
+   * MissedVisit create
+   */
+  export type MissedVisitCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitInclude<ExtArgs> | null
+    /**
+     * The data needed to create a MissedVisit.
+     */
+    data: XOR<MissedVisitCreateInput, MissedVisitUncheckedCreateInput>
+  }
+
+  /**
+   * MissedVisit createMany
+   */
+  export type MissedVisitCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many MissedVisits.
+     */
+    data: MissedVisitCreateManyInput | MissedVisitCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * MissedVisit createManyAndReturn
+   */
+  export type MissedVisitCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * The data used to create many MissedVisits.
+     */
+    data: MissedVisitCreateManyInput | MissedVisitCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MissedVisit update
+   */
+  export type MissedVisitUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitInclude<ExtArgs> | null
+    /**
+     * The data needed to update a MissedVisit.
+     */
+    data: XOR<MissedVisitUpdateInput, MissedVisitUncheckedUpdateInput>
+    /**
+     * Choose, which MissedVisit to update.
+     */
+    where: MissedVisitWhereUniqueInput
+  }
+
+  /**
+   * MissedVisit updateMany
+   */
+  export type MissedVisitUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update MissedVisits.
+     */
+    data: XOR<MissedVisitUpdateManyMutationInput, MissedVisitUncheckedUpdateManyInput>
+    /**
+     * Filter which MissedVisits to update
+     */
+    where?: MissedVisitWhereInput
+    /**
+     * Limit how many MissedVisits to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * MissedVisit updateManyAndReturn
+   */
+  export type MissedVisitUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * The data used to update MissedVisits.
+     */
+    data: XOR<MissedVisitUpdateManyMutationInput, MissedVisitUncheckedUpdateManyInput>
+    /**
+     * Filter which MissedVisits to update
+     */
+    where?: MissedVisitWhereInput
+    /**
+     * Limit how many MissedVisits to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * MissedVisit upsert
+   */
+  export type MissedVisitUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitInclude<ExtArgs> | null
+    /**
+     * The filter to search for the MissedVisit to update in case it exists.
+     */
+    where: MissedVisitWhereUniqueInput
+    /**
+     * In case the MissedVisit found by the `where` argument doesn't exist, create a new MissedVisit with this data.
+     */
+    create: XOR<MissedVisitCreateInput, MissedVisitUncheckedCreateInput>
+    /**
+     * In case the MissedVisit was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<MissedVisitUpdateInput, MissedVisitUncheckedUpdateInput>
+  }
+
+  /**
+   * MissedVisit delete
+   */
+  export type MissedVisitDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitInclude<ExtArgs> | null
+    /**
+     * Filter which MissedVisit to delete.
+     */
+    where: MissedVisitWhereUniqueInput
+  }
+
+  /**
+   * MissedVisit deleteMany
+   */
+  export type MissedVisitDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which MissedVisits to delete
+     */
+    where?: MissedVisitWhereInput
+    /**
+     * Limit how many MissedVisits to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * MissedVisit.replacementSchedule
+   */
+  export type MissedVisit$replacementScheduleArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the Schedule
+     */
+    select?: ScheduleSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the Schedule
+     */
+    omit?: ScheduleOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ScheduleInclude<ExtArgs> | null
+    where?: ScheduleWhereInput
+  }
+
+  /**
+   * MissedVisit without action
+   */
+  export type MissedVisitDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the MissedVisit
+     */
+    select?: MissedVisitSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the MissedVisit
+     */
+    omit?: MissedVisitOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: MissedVisitInclude<ExtArgs> | null
   }
 
 
@@ -32202,11 +33565,25 @@ export namespace Prisma {
     id: 'id',
     threadId: 'threadId',
     senderId: 'senderId',
+    senderType: 'senderType',
     content: 'content',
     createdAt: 'createdAt'
   };
 
   export type ChatMessageScalarFieldEnum = (typeof ChatMessageScalarFieldEnum)[keyof typeof ChatMessageScalarFieldEnum]
+
+
+  export const MissedVisitScalarFieldEnum: {
+    id: 'id',
+    visitId: 'visitId',
+    reason: 'reason',
+    createdAt: 'createdAt',
+    expiresAt: 'expiresAt',
+    rescheduled: 'rescheduled',
+    replacementScheduleId: 'replacementScheduleId'
+  };
+
+  export type MissedVisitScalarFieldEnum = (typeof MissedVisitScalarFieldEnum)[keyof typeof MissedVisitScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -32312,6 +33689,20 @@ export namespace Prisma {
    * Reference to a field of type 'Float[]'
    */
   export type ListFloatFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Float[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'VisitStatus'
+   */
+  export type EnumVisitStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VisitStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'VisitStatus[]'
+   */
+  export type ListEnumVisitStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'VisitStatus[]'>
     
 
 
@@ -32677,10 +34068,11 @@ export namespace Prisma {
     units?: IntNullableFilter<"Visit"> | number | null
     visitFromDate?: DateTimeNullableFilter<"Visit"> | Date | string | null
     sandataAgencyID?: StringNullableFilter<"Visit"> | string | null
-    visitStatus?: StringNullableFilter<"Visit"> | string | null
+    visitStatus?: EnumVisitStatusFilter<"Visit"> | $Enums.VisitStatus
     visitTimeZone?: StringNullableFilter<"Visit"> | string | null
     exceptions?: VisitExceptionListRelationFilter
     history?: VisitHistoryListRelationFilter
+    missedVisits?: MissedVisitListRelationFilter
   }
 
   export type VisitOrderByWithRelationInput = {
@@ -32736,10 +34128,11 @@ export namespace Prisma {
     units?: SortOrderInput | SortOrder
     visitFromDate?: SortOrderInput | SortOrder
     sandataAgencyID?: SortOrderInput | SortOrder
-    visitStatus?: SortOrderInput | SortOrder
+    visitStatus?: SortOrder
     visitTimeZone?: SortOrderInput | SortOrder
     exceptions?: VisitExceptionOrderByRelationAggregateInput
     history?: VisitHistoryOrderByRelationAggregateInput
+    missedVisits?: MissedVisitOrderByRelationAggregateInput
   }
 
   export type VisitWhereUniqueInput = Prisma.AtLeast<{
@@ -32798,10 +34191,11 @@ export namespace Prisma {
     units?: IntNullableFilter<"Visit"> | number | null
     visitFromDate?: DateTimeNullableFilter<"Visit"> | Date | string | null
     sandataAgencyID?: StringNullableFilter<"Visit"> | string | null
-    visitStatus?: StringNullableFilter<"Visit"> | string | null
+    visitStatus?: EnumVisitStatusFilter<"Visit"> | $Enums.VisitStatus
     visitTimeZone?: StringNullableFilter<"Visit"> | string | null
     exceptions?: VisitExceptionListRelationFilter
     history?: VisitHistoryListRelationFilter
+    missedVisits?: MissedVisitListRelationFilter
   }, "id">
 
   export type VisitOrderByWithAggregationInput = {
@@ -32857,7 +34251,7 @@ export namespace Prisma {
     units?: SortOrderInput | SortOrder
     visitFromDate?: SortOrderInput | SortOrder
     sandataAgencyID?: SortOrderInput | SortOrder
-    visitStatus?: SortOrderInput | SortOrder
+    visitStatus?: SortOrder
     visitTimeZone?: SortOrderInput | SortOrder
     _count?: VisitCountOrderByAggregateInput
     _avg?: VisitAvgOrderByAggregateInput
@@ -32922,7 +34316,7 @@ export namespace Prisma {
     units?: IntNullableWithAggregatesFilter<"Visit"> | number | null
     visitFromDate?: DateTimeNullableWithAggregatesFilter<"Visit"> | Date | string | null
     sandataAgencyID?: StringNullableWithAggregatesFilter<"Visit"> | string | null
-    visitStatus?: StringNullableWithAggregatesFilter<"Visit"> | string | null
+    visitStatus?: EnumVisitStatusWithAggregatesFilter<"Visit"> | $Enums.VisitStatus
     visitTimeZone?: StringNullableWithAggregatesFilter<"Visit"> | string | null
   }
 
@@ -34422,6 +35816,7 @@ export namespace Prisma {
     client?: XOR<ClientScalarRelationFilter, ClientWhereInput>
     service?: XOR<ServiceNullableScalarRelationFilter, ServiceWhereInput> | null
     employee?: XOR<EmployeeNullableScalarRelationFilter, EmployeeWhereInput> | null
+    missedVisits?: MissedVisitListRelationFilter
   }
 
   export type ScheduleOrderByWithRelationInput = {
@@ -34453,6 +35848,7 @@ export namespace Prisma {
     client?: ClientOrderByWithRelationInput
     service?: ServiceOrderByWithRelationInput
     employee?: EmployeeOrderByWithRelationInput
+    missedVisits?: MissedVisitOrderByRelationAggregateInput
   }
 
   export type ScheduleWhereUniqueInput = Prisma.AtLeast<{
@@ -34487,6 +35883,7 @@ export namespace Prisma {
     client?: XOR<ClientScalarRelationFilter, ClientWhereInput>
     service?: XOR<ServiceNullableScalarRelationFilter, ServiceWhereInput> | null
     employee?: XOR<EmployeeNullableScalarRelationFilter, EmployeeWhereInput> | null
+    missedVisits?: MissedVisitListRelationFilter
   }, "id">
 
   export type ScheduleOrderByWithAggregationInput = {
@@ -34648,6 +36045,7 @@ export namespace Prisma {
 
   export type ChatParticipantWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    threadId_participantId?: ChatParticipantThreadIdParticipantIdCompoundUniqueInput
     AND?: ChatParticipantWhereInput | ChatParticipantWhereInput[]
     OR?: ChatParticipantWhereInput[]
     NOT?: ChatParticipantWhereInput | ChatParticipantWhereInput[]
@@ -34658,7 +36056,7 @@ export namespace Prisma {
     userId?: StringNullableFilter<"ChatParticipant"> | string | null
     mobileEmployeeId?: StringNullableFilter<"ChatParticipant"> | string | null
     thread?: XOR<ChatThreadScalarRelationFilter, ChatThreadWhereInput>
-  }, "id">
+  }, "id" | "threadId_participantId">
 
   export type ChatParticipantOrderByWithAggregationInput = {
     id?: SortOrder
@@ -34693,6 +36091,7 @@ export namespace Prisma {
     id?: StringFilter<"ChatMessage"> | string
     threadId?: StringFilter<"ChatMessage"> | string
     senderId?: StringFilter<"ChatMessage"> | string
+    senderType?: StringFilter<"ChatMessage"> | string
     content?: StringFilter<"ChatMessage"> | string
     createdAt?: DateTimeFilter<"ChatMessage"> | Date | string
     thread?: XOR<ChatThreadScalarRelationFilter, ChatThreadWhereInput>
@@ -34702,6 +36101,7 @@ export namespace Prisma {
     id?: SortOrder
     threadId?: SortOrder
     senderId?: SortOrder
+    senderType?: SortOrder
     content?: SortOrder
     createdAt?: SortOrder
     thread?: ChatThreadOrderByWithRelationInput
@@ -34714,6 +36114,7 @@ export namespace Prisma {
     NOT?: ChatMessageWhereInput | ChatMessageWhereInput[]
     threadId?: StringFilter<"ChatMessage"> | string
     senderId?: StringFilter<"ChatMessage"> | string
+    senderType?: StringFilter<"ChatMessage"> | string
     content?: StringFilter<"ChatMessage"> | string
     createdAt?: DateTimeFilter<"ChatMessage"> | Date | string
     thread?: XOR<ChatThreadScalarRelationFilter, ChatThreadWhereInput>
@@ -34723,6 +36124,7 @@ export namespace Prisma {
     id?: SortOrder
     threadId?: SortOrder
     senderId?: SortOrder
+    senderType?: SortOrder
     content?: SortOrder
     createdAt?: SortOrder
     _count?: ChatMessageCountOrderByAggregateInput
@@ -34737,8 +36139,79 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"ChatMessage"> | string
     threadId?: StringWithAggregatesFilter<"ChatMessage"> | string
     senderId?: StringWithAggregatesFilter<"ChatMessage"> | string
+    senderType?: StringWithAggregatesFilter<"ChatMessage"> | string
     content?: StringWithAggregatesFilter<"ChatMessage"> | string
     createdAt?: DateTimeWithAggregatesFilter<"ChatMessage"> | Date | string
+  }
+
+  export type MissedVisitWhereInput = {
+    AND?: MissedVisitWhereInput | MissedVisitWhereInput[]
+    OR?: MissedVisitWhereInput[]
+    NOT?: MissedVisitWhereInput | MissedVisitWhereInput[]
+    id?: StringFilter<"MissedVisit"> | string
+    visitId?: IntFilter<"MissedVisit"> | number
+    reason?: StringFilter<"MissedVisit"> | string
+    createdAt?: DateTimeFilter<"MissedVisit"> | Date | string
+    expiresAt?: DateTimeFilter<"MissedVisit"> | Date | string
+    rescheduled?: BoolFilter<"MissedVisit"> | boolean
+    replacementScheduleId?: StringNullableFilter<"MissedVisit"> | string | null
+    replacementSchedule?: XOR<ScheduleNullableScalarRelationFilter, ScheduleWhereInput> | null
+    visit?: XOR<VisitScalarRelationFilter, VisitWhereInput>
+  }
+
+  export type MissedVisitOrderByWithRelationInput = {
+    id?: SortOrder
+    visitId?: SortOrder
+    reason?: SortOrder
+    createdAt?: SortOrder
+    expiresAt?: SortOrder
+    rescheduled?: SortOrder
+    replacementScheduleId?: SortOrderInput | SortOrder
+    replacementSchedule?: ScheduleOrderByWithRelationInput
+    visit?: VisitOrderByWithRelationInput
+  }
+
+  export type MissedVisitWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    visitId?: number
+    AND?: MissedVisitWhereInput | MissedVisitWhereInput[]
+    OR?: MissedVisitWhereInput[]
+    NOT?: MissedVisitWhereInput | MissedVisitWhereInput[]
+    reason?: StringFilter<"MissedVisit"> | string
+    createdAt?: DateTimeFilter<"MissedVisit"> | Date | string
+    expiresAt?: DateTimeFilter<"MissedVisit"> | Date | string
+    rescheduled?: BoolFilter<"MissedVisit"> | boolean
+    replacementScheduleId?: StringNullableFilter<"MissedVisit"> | string | null
+    replacementSchedule?: XOR<ScheduleNullableScalarRelationFilter, ScheduleWhereInput> | null
+    visit?: XOR<VisitScalarRelationFilter, VisitWhereInput>
+  }, "id" | "visitId">
+
+  export type MissedVisitOrderByWithAggregationInput = {
+    id?: SortOrder
+    visitId?: SortOrder
+    reason?: SortOrder
+    createdAt?: SortOrder
+    expiresAt?: SortOrder
+    rescheduled?: SortOrder
+    replacementScheduleId?: SortOrderInput | SortOrder
+    _count?: MissedVisitCountOrderByAggregateInput
+    _avg?: MissedVisitAvgOrderByAggregateInput
+    _max?: MissedVisitMaxOrderByAggregateInput
+    _min?: MissedVisitMinOrderByAggregateInput
+    _sum?: MissedVisitSumOrderByAggregateInput
+  }
+
+  export type MissedVisitScalarWhereWithAggregatesInput = {
+    AND?: MissedVisitScalarWhereWithAggregatesInput | MissedVisitScalarWhereWithAggregatesInput[]
+    OR?: MissedVisitScalarWhereWithAggregatesInput[]
+    NOT?: MissedVisitScalarWhereWithAggregatesInput | MissedVisitScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"MissedVisit"> | string
+    visitId?: IntWithAggregatesFilter<"MissedVisit"> | number
+    reason?: StringWithAggregatesFilter<"MissedVisit"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"MissedVisit"> | Date | string
+    expiresAt?: DateTimeWithAggregatesFilter<"MissedVisit"> | Date | string
+    rescheduled?: BoolWithAggregatesFilter<"MissedVisit"> | boolean
+    replacementScheduleId?: StringNullableWithAggregatesFilter<"MissedVisit"> | string | null
   }
 
   export type AgencyCreateInput = {
@@ -35111,10 +36584,11 @@ export namespace Prisma {
     units?: number | null
     visitFromDate?: Date | string | null
     sandataAgencyID?: string | null
-    visitStatus?: string | null
+    visitStatus?: $Enums.VisitStatus
     visitTimeZone?: string | null
     exceptions?: VisitExceptionCreateNestedManyWithoutVisitInput
     history?: VisitHistoryCreateNestedManyWithoutVisitInput
+    missedVisits?: MissedVisitCreateNestedManyWithoutVisitInput
   }
 
   export type VisitUncheckedCreateInput = {
@@ -35170,10 +36644,11 @@ export namespace Prisma {
     units?: number | null
     visitFromDate?: Date | string | null
     sandataAgencyID?: string | null
-    visitStatus?: string | null
+    visitStatus?: $Enums.VisitStatus
     visitTimeZone?: string | null
     exceptions?: VisitExceptionUncheckedCreateNestedManyWithoutVisitInput
     history?: VisitHistoryUncheckedCreateNestedManyWithoutVisitInput
+    missedVisits?: MissedVisitUncheckedCreateNestedManyWithoutVisitInput
   }
 
   export type VisitUpdateInput = {
@@ -35228,10 +36703,11 @@ export namespace Prisma {
     units?: NullableIntFieldUpdateOperationsInput | number | null
     visitFromDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sandataAgencyID?: NullableStringFieldUpdateOperationsInput | string | null
-    visitStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    visitStatus?: EnumVisitStatusFieldUpdateOperationsInput | $Enums.VisitStatus
     visitTimeZone?: NullableStringFieldUpdateOperationsInput | string | null
     exceptions?: VisitExceptionUpdateManyWithoutVisitNestedInput
     history?: VisitHistoryUpdateManyWithoutVisitNestedInput
+    missedVisits?: MissedVisitUpdateManyWithoutVisitNestedInput
   }
 
   export type VisitUncheckedUpdateInput = {
@@ -35287,10 +36763,11 @@ export namespace Prisma {
     units?: NullableIntFieldUpdateOperationsInput | number | null
     visitFromDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sandataAgencyID?: NullableStringFieldUpdateOperationsInput | string | null
-    visitStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    visitStatus?: EnumVisitStatusFieldUpdateOperationsInput | $Enums.VisitStatus
     visitTimeZone?: NullableStringFieldUpdateOperationsInput | string | null
     exceptions?: VisitExceptionUncheckedUpdateManyWithoutVisitNestedInput
     history?: VisitHistoryUncheckedUpdateManyWithoutVisitNestedInput
+    missedVisits?: MissedVisitUncheckedUpdateManyWithoutVisitNestedInput
   }
 
   export type VisitCreateManyInput = {
@@ -35346,7 +36823,7 @@ export namespace Prisma {
     units?: number | null
     visitFromDate?: Date | string | null
     sandataAgencyID?: string | null
-    visitStatus?: string | null
+    visitStatus?: $Enums.VisitStatus
     visitTimeZone?: string | null
   }
 
@@ -35402,7 +36879,7 @@ export namespace Prisma {
     units?: NullableIntFieldUpdateOperationsInput | number | null
     visitFromDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sandataAgencyID?: NullableStringFieldUpdateOperationsInput | string | null
-    visitStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    visitStatus?: EnumVisitStatusFieldUpdateOperationsInput | $Enums.VisitStatus
     visitTimeZone?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
@@ -35459,7 +36936,7 @@ export namespace Prisma {
     units?: NullableIntFieldUpdateOperationsInput | number | null
     visitFromDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sandataAgencyID?: NullableStringFieldUpdateOperationsInput | string | null
-    visitStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    visitStatus?: EnumVisitStatusFieldUpdateOperationsInput | $Enums.VisitStatus
     visitTimeZone?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
@@ -37159,6 +38636,7 @@ export namespace Prisma {
     client: ClientCreateNestedOneWithoutSchedulesInput
     service?: ServiceCreateNestedOneWithoutScheduleInput
     employee?: EmployeeCreateNestedOneWithoutSchedulesInput
+    missedVisits?: MissedVisitCreateNestedManyWithoutReplacementScheduleInput
   }
 
   export type ScheduleUncheckedCreateInput = {
@@ -37187,6 +38665,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     agencyID?: string
+    missedVisits?: MissedVisitUncheckedCreateNestedManyWithoutReplacementScheduleInput
   }
 
   export type ScheduleUpdateInput = {
@@ -37215,6 +38694,7 @@ export namespace Prisma {
     client?: ClientUpdateOneRequiredWithoutSchedulesNestedInput
     service?: ServiceUpdateOneWithoutScheduleNestedInput
     employee?: EmployeeUpdateOneWithoutSchedulesNestedInput
+    missedVisits?: MissedVisitUpdateManyWithoutReplacementScheduleNestedInput
   }
 
   export type ScheduleUncheckedUpdateInput = {
@@ -37243,6 +38723,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     agencyID?: StringFieldUpdateOperationsInput | string
+    missedVisits?: MissedVisitUncheckedUpdateManyWithoutReplacementScheduleNestedInput
   }
 
   export type ScheduleCreateManyInput = {
@@ -37476,6 +38957,7 @@ export namespace Prisma {
   export type ChatMessageCreateInput = {
     id?: string
     senderId: string
+    senderType: string
     content: string
     createdAt?: Date | string
     thread: ChatThreadCreateNestedOneWithoutMessagesInput
@@ -37485,6 +38967,7 @@ export namespace Prisma {
     id?: string
     threadId: string
     senderId: string
+    senderType: string
     content: string
     createdAt?: Date | string
   }
@@ -37492,6 +38975,7 @@ export namespace Prisma {
   export type ChatMessageUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
+    senderType?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     thread?: ChatThreadUpdateOneRequiredWithoutMessagesNestedInput
@@ -37501,6 +38985,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     threadId?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
+    senderType?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -37509,6 +38994,7 @@ export namespace Prisma {
     id?: string
     threadId: string
     senderId: string
+    senderType: string
     content: string
     createdAt?: Date | string
   }
@@ -37516,6 +39002,7 @@ export namespace Prisma {
   export type ChatMessageUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
+    senderType?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -37524,8 +39011,77 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     threadId?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
+    senderType?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type MissedVisitCreateInput = {
+    id?: string
+    reason?: string
+    createdAt?: Date | string
+    expiresAt: Date | string
+    rescheduled?: boolean
+    replacementSchedule?: ScheduleCreateNestedOneWithoutMissedVisitsInput
+    visit: VisitCreateNestedOneWithoutMissedVisitsInput
+  }
+
+  export type MissedVisitUncheckedCreateInput = {
+    id?: string
+    visitId: number
+    reason?: string
+    createdAt?: Date | string
+    expiresAt: Date | string
+    rescheduled?: boolean
+    replacementScheduleId?: string | null
+  }
+
+  export type MissedVisitUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rescheduled?: BoolFieldUpdateOperationsInput | boolean
+    replacementSchedule?: ScheduleUpdateOneWithoutMissedVisitsNestedInput
+    visit?: VisitUpdateOneRequiredWithoutMissedVisitsNestedInput
+  }
+
+  export type MissedVisitUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    visitId?: IntFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rescheduled?: BoolFieldUpdateOperationsInput | boolean
+    replacementScheduleId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type MissedVisitCreateManyInput = {
+    id?: string
+    visitId: number
+    reason?: string
+    createdAt?: Date | string
+    expiresAt: Date | string
+    rescheduled?: boolean
+    replacementScheduleId?: string | null
+  }
+
+  export type MissedVisitUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rescheduled?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type MissedVisitUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    visitId?: IntFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rescheduled?: BoolFieldUpdateOperationsInput | boolean
+    replacementScheduleId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type StringFilter<$PrismaModel = never> = {
@@ -37907,6 +39463,13 @@ export namespace Prisma {
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
+  export type EnumVisitStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.VisitStatus | EnumVisitStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.VisitStatus[] | ListEnumVisitStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.VisitStatus[] | ListEnumVisitStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumVisitStatusFilter<$PrismaModel> | $Enums.VisitStatus
+  }
+
   export type VisitExceptionListRelationFilter = {
     every?: VisitExceptionWhereInput
     some?: VisitExceptionWhereInput
@@ -37919,11 +39482,21 @@ export namespace Prisma {
     none?: VisitHistoryWhereInput
   }
 
+  export type MissedVisitListRelationFilter = {
+    every?: MissedVisitWhereInput
+    some?: MissedVisitWhereInput
+    none?: MissedVisitWhereInput
+  }
+
   export type VisitExceptionOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
   export type VisitHistoryOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type MissedVisitOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -38170,6 +39743,16 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type EnumVisitStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.VisitStatus | EnumVisitStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.VisitStatus[] | ListEnumVisitStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.VisitStatus[] | ListEnumVisitStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumVisitStatusWithAggregatesFilter<$PrismaModel> | $Enums.VisitStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumVisitStatusFilter<$PrismaModel>
+    _max?: NestedEnumVisitStatusFilter<$PrismaModel>
   }
 
   export type VisitScalarRelationFilter = {
@@ -39304,6 +40887,11 @@ export namespace Prisma {
     isNot?: ChatThreadWhereInput
   }
 
+  export type ChatParticipantThreadIdParticipantIdCompoundUniqueInput = {
+    threadId: string
+    participantId: string
+  }
+
   export type ChatParticipantCountOrderByAggregateInput = {
     id?: SortOrder
     threadId?: SortOrder
@@ -39348,6 +40936,7 @@ export namespace Prisma {
     id?: SortOrder
     threadId?: SortOrder
     senderId?: SortOrder
+    senderType?: SortOrder
     content?: SortOrder
     createdAt?: SortOrder
   }
@@ -39356,6 +40945,7 @@ export namespace Prisma {
     id?: SortOrder
     threadId?: SortOrder
     senderId?: SortOrder
+    senderType?: SortOrder
     content?: SortOrder
     createdAt?: SortOrder
   }
@@ -39364,8 +40954,52 @@ export namespace Prisma {
     id?: SortOrder
     threadId?: SortOrder
     senderId?: SortOrder
+    senderType?: SortOrder
     content?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type ScheduleNullableScalarRelationFilter = {
+    is?: ScheduleWhereInput | null
+    isNot?: ScheduleWhereInput | null
+  }
+
+  export type MissedVisitCountOrderByAggregateInput = {
+    id?: SortOrder
+    visitId?: SortOrder
+    reason?: SortOrder
+    createdAt?: SortOrder
+    expiresAt?: SortOrder
+    rescheduled?: SortOrder
+    replacementScheduleId?: SortOrder
+  }
+
+  export type MissedVisitAvgOrderByAggregateInput = {
+    visitId?: SortOrder
+  }
+
+  export type MissedVisitMaxOrderByAggregateInput = {
+    id?: SortOrder
+    visitId?: SortOrder
+    reason?: SortOrder
+    createdAt?: SortOrder
+    expiresAt?: SortOrder
+    rescheduled?: SortOrder
+    replacementScheduleId?: SortOrder
+  }
+
+  export type MissedVisitMinOrderByAggregateInput = {
+    id?: SortOrder
+    visitId?: SortOrder
+    reason?: SortOrder
+    createdAt?: SortOrder
+    expiresAt?: SortOrder
+    rescheduled?: SortOrder
+    replacementScheduleId?: SortOrder
+  }
+
+  export type MissedVisitSumOrderByAggregateInput = {
+    visitId?: SortOrder
   }
 
   export type UserCreateNestedManyWithoutAgencyInput = {
@@ -39562,6 +41196,13 @@ export namespace Prisma {
     connect?: VisitHistoryWhereUniqueInput | VisitHistoryWhereUniqueInput[]
   }
 
+  export type MissedVisitCreateNestedManyWithoutVisitInput = {
+    create?: XOR<MissedVisitCreateWithoutVisitInput, MissedVisitUncheckedCreateWithoutVisitInput> | MissedVisitCreateWithoutVisitInput[] | MissedVisitUncheckedCreateWithoutVisitInput[]
+    connectOrCreate?: MissedVisitCreateOrConnectWithoutVisitInput | MissedVisitCreateOrConnectWithoutVisitInput[]
+    createMany?: MissedVisitCreateManyVisitInputEnvelope
+    connect?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+  }
+
   export type VisitExceptionUncheckedCreateNestedManyWithoutVisitInput = {
     create?: XOR<VisitExceptionCreateWithoutVisitInput, VisitExceptionUncheckedCreateWithoutVisitInput> | VisitExceptionCreateWithoutVisitInput[] | VisitExceptionUncheckedCreateWithoutVisitInput[]
     connectOrCreate?: VisitExceptionCreateOrConnectWithoutVisitInput | VisitExceptionCreateOrConnectWithoutVisitInput[]
@@ -39574,6 +41215,13 @@ export namespace Prisma {
     connectOrCreate?: VisitHistoryCreateOrConnectWithoutVisitInput | VisitHistoryCreateOrConnectWithoutVisitInput[]
     createMany?: VisitHistoryCreateManyVisitInputEnvelope
     connect?: VisitHistoryWhereUniqueInput | VisitHistoryWhereUniqueInput[]
+  }
+
+  export type MissedVisitUncheckedCreateNestedManyWithoutVisitInput = {
+    create?: XOR<MissedVisitCreateWithoutVisitInput, MissedVisitUncheckedCreateWithoutVisitInput> | MissedVisitCreateWithoutVisitInput[] | MissedVisitUncheckedCreateWithoutVisitInput[]
+    connectOrCreate?: MissedVisitCreateOrConnectWithoutVisitInput | MissedVisitCreateOrConnectWithoutVisitInput[]
+    createMany?: MissedVisitCreateManyVisitInputEnvelope
+    connect?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
   }
 
   export type NullableFloatFieldUpdateOperationsInput = {
@@ -39594,6 +41242,10 @@ export namespace Prisma {
     decrement?: number
     multiply?: number
     divide?: number
+  }
+
+  export type EnumVisitStatusFieldUpdateOperationsInput = {
+    set?: $Enums.VisitStatus
   }
 
   export type VisitExceptionUpdateManyWithoutVisitNestedInput = {
@@ -39624,6 +41276,20 @@ export namespace Prisma {
     deleteMany?: VisitHistoryScalarWhereInput | VisitHistoryScalarWhereInput[]
   }
 
+  export type MissedVisitUpdateManyWithoutVisitNestedInput = {
+    create?: XOR<MissedVisitCreateWithoutVisitInput, MissedVisitUncheckedCreateWithoutVisitInput> | MissedVisitCreateWithoutVisitInput[] | MissedVisitUncheckedCreateWithoutVisitInput[]
+    connectOrCreate?: MissedVisitCreateOrConnectWithoutVisitInput | MissedVisitCreateOrConnectWithoutVisitInput[]
+    upsert?: MissedVisitUpsertWithWhereUniqueWithoutVisitInput | MissedVisitUpsertWithWhereUniqueWithoutVisitInput[]
+    createMany?: MissedVisitCreateManyVisitInputEnvelope
+    set?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    disconnect?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    delete?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    connect?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    update?: MissedVisitUpdateWithWhereUniqueWithoutVisitInput | MissedVisitUpdateWithWhereUniqueWithoutVisitInput[]
+    updateMany?: MissedVisitUpdateManyWithWhereWithoutVisitInput | MissedVisitUpdateManyWithWhereWithoutVisitInput[]
+    deleteMany?: MissedVisitScalarWhereInput | MissedVisitScalarWhereInput[]
+  }
+
   export type VisitExceptionUncheckedUpdateManyWithoutVisitNestedInput = {
     create?: XOR<VisitExceptionCreateWithoutVisitInput, VisitExceptionUncheckedCreateWithoutVisitInput> | VisitExceptionCreateWithoutVisitInput[] | VisitExceptionUncheckedCreateWithoutVisitInput[]
     connectOrCreate?: VisitExceptionCreateOrConnectWithoutVisitInput | VisitExceptionCreateOrConnectWithoutVisitInput[]
@@ -39650,6 +41316,20 @@ export namespace Prisma {
     update?: VisitHistoryUpdateWithWhereUniqueWithoutVisitInput | VisitHistoryUpdateWithWhereUniqueWithoutVisitInput[]
     updateMany?: VisitHistoryUpdateManyWithWhereWithoutVisitInput | VisitHistoryUpdateManyWithWhereWithoutVisitInput[]
     deleteMany?: VisitHistoryScalarWhereInput | VisitHistoryScalarWhereInput[]
+  }
+
+  export type MissedVisitUncheckedUpdateManyWithoutVisitNestedInput = {
+    create?: XOR<MissedVisitCreateWithoutVisitInput, MissedVisitUncheckedCreateWithoutVisitInput> | MissedVisitCreateWithoutVisitInput[] | MissedVisitUncheckedCreateWithoutVisitInput[]
+    connectOrCreate?: MissedVisitCreateOrConnectWithoutVisitInput | MissedVisitCreateOrConnectWithoutVisitInput[]
+    upsert?: MissedVisitUpsertWithWhereUniqueWithoutVisitInput | MissedVisitUpsertWithWhereUniqueWithoutVisitInput[]
+    createMany?: MissedVisitCreateManyVisitInputEnvelope
+    set?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    disconnect?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    delete?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    connect?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    update?: MissedVisitUpdateWithWhereUniqueWithoutVisitInput | MissedVisitUpdateWithWhereUniqueWithoutVisitInput[]
+    updateMany?: MissedVisitUpdateManyWithWhereWithoutVisitInput | MissedVisitUpdateManyWithWhereWithoutVisitInput[]
+    deleteMany?: MissedVisitScalarWhereInput | MissedVisitScalarWhereInput[]
   }
 
   export type VisitCreateNestedOneWithoutExceptionsInput = {
@@ -40913,6 +42593,20 @@ export namespace Prisma {
     connect?: EmployeeWhereUniqueInput
   }
 
+  export type MissedVisitCreateNestedManyWithoutReplacementScheduleInput = {
+    create?: XOR<MissedVisitCreateWithoutReplacementScheduleInput, MissedVisitUncheckedCreateWithoutReplacementScheduleInput> | MissedVisitCreateWithoutReplacementScheduleInput[] | MissedVisitUncheckedCreateWithoutReplacementScheduleInput[]
+    connectOrCreate?: MissedVisitCreateOrConnectWithoutReplacementScheduleInput | MissedVisitCreateOrConnectWithoutReplacementScheduleInput[]
+    createMany?: MissedVisitCreateManyReplacementScheduleInputEnvelope
+    connect?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+  }
+
+  export type MissedVisitUncheckedCreateNestedManyWithoutReplacementScheduleInput = {
+    create?: XOR<MissedVisitCreateWithoutReplacementScheduleInput, MissedVisitUncheckedCreateWithoutReplacementScheduleInput> | MissedVisitCreateWithoutReplacementScheduleInput[] | MissedVisitUncheckedCreateWithoutReplacementScheduleInput[]
+    connectOrCreate?: MissedVisitCreateOrConnectWithoutReplacementScheduleInput | MissedVisitCreateOrConnectWithoutReplacementScheduleInput[]
+    createMany?: MissedVisitCreateManyReplacementScheduleInputEnvelope
+    connect?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+  }
+
   export type ScheduleUpdatedatesInput = {
     set?: string[]
     push?: string | string[]
@@ -40944,6 +42638,34 @@ export namespace Prisma {
     delete?: EmployeeWhereInput | boolean
     connect?: EmployeeWhereUniqueInput
     update?: XOR<XOR<EmployeeUpdateToOneWithWhereWithoutSchedulesInput, EmployeeUpdateWithoutSchedulesInput>, EmployeeUncheckedUpdateWithoutSchedulesInput>
+  }
+
+  export type MissedVisitUpdateManyWithoutReplacementScheduleNestedInput = {
+    create?: XOR<MissedVisitCreateWithoutReplacementScheduleInput, MissedVisitUncheckedCreateWithoutReplacementScheduleInput> | MissedVisitCreateWithoutReplacementScheduleInput[] | MissedVisitUncheckedCreateWithoutReplacementScheduleInput[]
+    connectOrCreate?: MissedVisitCreateOrConnectWithoutReplacementScheduleInput | MissedVisitCreateOrConnectWithoutReplacementScheduleInput[]
+    upsert?: MissedVisitUpsertWithWhereUniqueWithoutReplacementScheduleInput | MissedVisitUpsertWithWhereUniqueWithoutReplacementScheduleInput[]
+    createMany?: MissedVisitCreateManyReplacementScheduleInputEnvelope
+    set?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    disconnect?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    delete?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    connect?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    update?: MissedVisitUpdateWithWhereUniqueWithoutReplacementScheduleInput | MissedVisitUpdateWithWhereUniqueWithoutReplacementScheduleInput[]
+    updateMany?: MissedVisitUpdateManyWithWhereWithoutReplacementScheduleInput | MissedVisitUpdateManyWithWhereWithoutReplacementScheduleInput[]
+    deleteMany?: MissedVisitScalarWhereInput | MissedVisitScalarWhereInput[]
+  }
+
+  export type MissedVisitUncheckedUpdateManyWithoutReplacementScheduleNestedInput = {
+    create?: XOR<MissedVisitCreateWithoutReplacementScheduleInput, MissedVisitUncheckedCreateWithoutReplacementScheduleInput> | MissedVisitCreateWithoutReplacementScheduleInput[] | MissedVisitUncheckedCreateWithoutReplacementScheduleInput[]
+    connectOrCreate?: MissedVisitCreateOrConnectWithoutReplacementScheduleInput | MissedVisitCreateOrConnectWithoutReplacementScheduleInput[]
+    upsert?: MissedVisitUpsertWithWhereUniqueWithoutReplacementScheduleInput | MissedVisitUpsertWithWhereUniqueWithoutReplacementScheduleInput[]
+    createMany?: MissedVisitCreateManyReplacementScheduleInputEnvelope
+    set?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    disconnect?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    delete?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    connect?: MissedVisitWhereUniqueInput | MissedVisitWhereUniqueInput[]
+    update?: MissedVisitUpdateWithWhereUniqueWithoutReplacementScheduleInput | MissedVisitUpdateWithWhereUniqueWithoutReplacementScheduleInput[]
+    updateMany?: MissedVisitUpdateManyWithWhereWithoutReplacementScheduleInput | MissedVisitUpdateManyWithWhereWithoutReplacementScheduleInput[]
+    deleteMany?: MissedVisitScalarWhereInput | MissedVisitScalarWhereInput[]
   }
 
   export type ChatParticipantCreateNestedManyWithoutThreadInput = {
@@ -41068,6 +42790,36 @@ export namespace Prisma {
     upsert?: ChatThreadUpsertWithoutMessagesInput
     connect?: ChatThreadWhereUniqueInput
     update?: XOR<XOR<ChatThreadUpdateToOneWithWhereWithoutMessagesInput, ChatThreadUpdateWithoutMessagesInput>, ChatThreadUncheckedUpdateWithoutMessagesInput>
+  }
+
+  export type ScheduleCreateNestedOneWithoutMissedVisitsInput = {
+    create?: XOR<ScheduleCreateWithoutMissedVisitsInput, ScheduleUncheckedCreateWithoutMissedVisitsInput>
+    connectOrCreate?: ScheduleCreateOrConnectWithoutMissedVisitsInput
+    connect?: ScheduleWhereUniqueInput
+  }
+
+  export type VisitCreateNestedOneWithoutMissedVisitsInput = {
+    create?: XOR<VisitCreateWithoutMissedVisitsInput, VisitUncheckedCreateWithoutMissedVisitsInput>
+    connectOrCreate?: VisitCreateOrConnectWithoutMissedVisitsInput
+    connect?: VisitWhereUniqueInput
+  }
+
+  export type ScheduleUpdateOneWithoutMissedVisitsNestedInput = {
+    create?: XOR<ScheduleCreateWithoutMissedVisitsInput, ScheduleUncheckedCreateWithoutMissedVisitsInput>
+    connectOrCreate?: ScheduleCreateOrConnectWithoutMissedVisitsInput
+    upsert?: ScheduleUpsertWithoutMissedVisitsInput
+    disconnect?: ScheduleWhereInput | boolean
+    delete?: ScheduleWhereInput | boolean
+    connect?: ScheduleWhereUniqueInput
+    update?: XOR<XOR<ScheduleUpdateToOneWithWhereWithoutMissedVisitsInput, ScheduleUpdateWithoutMissedVisitsInput>, ScheduleUncheckedUpdateWithoutMissedVisitsInput>
+  }
+
+  export type VisitUpdateOneRequiredWithoutMissedVisitsNestedInput = {
+    create?: XOR<VisitCreateWithoutMissedVisitsInput, VisitUncheckedCreateWithoutMissedVisitsInput>
+    connectOrCreate?: VisitCreateOrConnectWithoutMissedVisitsInput
+    upsert?: VisitUpsertWithoutMissedVisitsInput
+    connect?: VisitWhereUniqueInput
+    update?: XOR<XOR<VisitUpdateToOneWithWhereWithoutMissedVisitsInput, VisitUpdateWithoutMissedVisitsInput>, VisitUncheckedUpdateWithoutMissedVisitsInput>
   }
 
   export type NestedStringFilter<$PrismaModel = never> = {
@@ -41277,6 +43029,13 @@ export namespace Prisma {
     not?: NestedBoolNullableFilter<$PrismaModel> | boolean | null
   }
 
+  export type NestedEnumVisitStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.VisitStatus | EnumVisitStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.VisitStatus[] | ListEnumVisitStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.VisitStatus[] | ListEnumVisitStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumVisitStatusFilter<$PrismaModel> | $Enums.VisitStatus
+  }
+
   export type NestedFloatNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | FloatFieldRefInput<$PrismaModel> | null
     in?: number[] | ListFloatFieldRefInput<$PrismaModel> | null
@@ -41315,6 +43074,16 @@ export namespace Prisma {
     _sum?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedIntNullableFilter<$PrismaModel>
     _max?: NestedIntNullableFilter<$PrismaModel>
+  }
+
+  export type NestedEnumVisitStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.VisitStatus | EnumVisitStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.VisitStatus[] | ListEnumVisitStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.VisitStatus[] | ListEnumVisitStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumVisitStatusWithAggregatesFilter<$PrismaModel> | $Enums.VisitStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumVisitStatusFilter<$PrismaModel>
+    _max?: NestedEnumVisitStatusFilter<$PrismaModel>
   }
 
   export type NestedFloatWithAggregatesFilter<$PrismaModel = never> = {
@@ -41919,6 +43688,34 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
+  export type MissedVisitCreateWithoutVisitInput = {
+    id?: string
+    reason?: string
+    createdAt?: Date | string
+    expiresAt: Date | string
+    rescheduled?: boolean
+    replacementSchedule?: ScheduleCreateNestedOneWithoutMissedVisitsInput
+  }
+
+  export type MissedVisitUncheckedCreateWithoutVisitInput = {
+    id?: string
+    reason?: string
+    createdAt?: Date | string
+    expiresAt: Date | string
+    rescheduled?: boolean
+    replacementScheduleId?: string | null
+  }
+
+  export type MissedVisitCreateOrConnectWithoutVisitInput = {
+    where: MissedVisitWhereUniqueInput
+    create: XOR<MissedVisitCreateWithoutVisitInput, MissedVisitUncheckedCreateWithoutVisitInput>
+  }
+
+  export type MissedVisitCreateManyVisitInputEnvelope = {
+    data: MissedVisitCreateManyVisitInput | MissedVisitCreateManyVisitInput[]
+    skipDuplicates?: boolean
+  }
+
   export type VisitExceptionUpsertWithWhereUniqueWithoutVisitInput = {
     where: VisitExceptionWhereUniqueInput
     update: XOR<VisitExceptionUpdateWithoutVisitInput, VisitExceptionUncheckedUpdateWithoutVisitInput>
@@ -41975,6 +43772,35 @@ export namespace Prisma {
     updatedBy?: StringFilter<"VisitHistory"> | string
   }
 
+  export type MissedVisitUpsertWithWhereUniqueWithoutVisitInput = {
+    where: MissedVisitWhereUniqueInput
+    update: XOR<MissedVisitUpdateWithoutVisitInput, MissedVisitUncheckedUpdateWithoutVisitInput>
+    create: XOR<MissedVisitCreateWithoutVisitInput, MissedVisitUncheckedCreateWithoutVisitInput>
+  }
+
+  export type MissedVisitUpdateWithWhereUniqueWithoutVisitInput = {
+    where: MissedVisitWhereUniqueInput
+    data: XOR<MissedVisitUpdateWithoutVisitInput, MissedVisitUncheckedUpdateWithoutVisitInput>
+  }
+
+  export type MissedVisitUpdateManyWithWhereWithoutVisitInput = {
+    where: MissedVisitScalarWhereInput
+    data: XOR<MissedVisitUpdateManyMutationInput, MissedVisitUncheckedUpdateManyWithoutVisitInput>
+  }
+
+  export type MissedVisitScalarWhereInput = {
+    AND?: MissedVisitScalarWhereInput | MissedVisitScalarWhereInput[]
+    OR?: MissedVisitScalarWhereInput[]
+    NOT?: MissedVisitScalarWhereInput | MissedVisitScalarWhereInput[]
+    id?: StringFilter<"MissedVisit"> | string
+    visitId?: IntFilter<"MissedVisit"> | number
+    reason?: StringFilter<"MissedVisit"> | string
+    createdAt?: DateTimeFilter<"MissedVisit"> | Date | string
+    expiresAt?: DateTimeFilter<"MissedVisit"> | Date | string
+    rescheduled?: BoolFilter<"MissedVisit"> | boolean
+    replacementScheduleId?: StringNullableFilter<"MissedVisit"> | string | null
+  }
+
   export type VisitCreateWithoutExceptionsInput = {
     agencyID: string
     adjustedHours?: number | null
@@ -42027,9 +43853,10 @@ export namespace Prisma {
     units?: number | null
     visitFromDate?: Date | string | null
     sandataAgencyID?: string | null
-    visitStatus?: string | null
+    visitStatus?: $Enums.VisitStatus
     visitTimeZone?: string | null
     history?: VisitHistoryCreateNestedManyWithoutVisitInput
+    missedVisits?: MissedVisitCreateNestedManyWithoutVisitInput
   }
 
   export type VisitUncheckedCreateWithoutExceptionsInput = {
@@ -42085,9 +43912,10 @@ export namespace Prisma {
     units?: number | null
     visitFromDate?: Date | string | null
     sandataAgencyID?: string | null
-    visitStatus?: string | null
+    visitStatus?: $Enums.VisitStatus
     visitTimeZone?: string | null
     history?: VisitHistoryUncheckedCreateNestedManyWithoutVisitInput
+    missedVisits?: MissedVisitUncheckedCreateNestedManyWithoutVisitInput
   }
 
   export type VisitCreateOrConnectWithoutExceptionsInput = {
@@ -42158,9 +43986,10 @@ export namespace Prisma {
     units?: NullableIntFieldUpdateOperationsInput | number | null
     visitFromDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sandataAgencyID?: NullableStringFieldUpdateOperationsInput | string | null
-    visitStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    visitStatus?: EnumVisitStatusFieldUpdateOperationsInput | $Enums.VisitStatus
     visitTimeZone?: NullableStringFieldUpdateOperationsInput | string | null
     history?: VisitHistoryUpdateManyWithoutVisitNestedInput
+    missedVisits?: MissedVisitUpdateManyWithoutVisitNestedInput
   }
 
   export type VisitUncheckedUpdateWithoutExceptionsInput = {
@@ -42216,9 +44045,10 @@ export namespace Prisma {
     units?: NullableIntFieldUpdateOperationsInput | number | null
     visitFromDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sandataAgencyID?: NullableStringFieldUpdateOperationsInput | string | null
-    visitStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    visitStatus?: EnumVisitStatusFieldUpdateOperationsInput | $Enums.VisitStatus
     visitTimeZone?: NullableStringFieldUpdateOperationsInput | string | null
     history?: VisitHistoryUncheckedUpdateManyWithoutVisitNestedInput
+    missedVisits?: MissedVisitUncheckedUpdateManyWithoutVisitNestedInput
   }
 
   export type VisitCreateWithoutHistoryInput = {
@@ -42273,9 +44103,10 @@ export namespace Prisma {
     units?: number | null
     visitFromDate?: Date | string | null
     sandataAgencyID?: string | null
-    visitStatus?: string | null
+    visitStatus?: $Enums.VisitStatus
     visitTimeZone?: string | null
     exceptions?: VisitExceptionCreateNestedManyWithoutVisitInput
+    missedVisits?: MissedVisitCreateNestedManyWithoutVisitInput
   }
 
   export type VisitUncheckedCreateWithoutHistoryInput = {
@@ -42331,9 +44162,10 @@ export namespace Prisma {
     units?: number | null
     visitFromDate?: Date | string | null
     sandataAgencyID?: string | null
-    visitStatus?: string | null
+    visitStatus?: $Enums.VisitStatus
     visitTimeZone?: string | null
     exceptions?: VisitExceptionUncheckedCreateNestedManyWithoutVisitInput
+    missedVisits?: MissedVisitUncheckedCreateNestedManyWithoutVisitInput
   }
 
   export type VisitCreateOrConnectWithoutHistoryInput = {
@@ -42404,9 +44236,10 @@ export namespace Prisma {
     units?: NullableIntFieldUpdateOperationsInput | number | null
     visitFromDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sandataAgencyID?: NullableStringFieldUpdateOperationsInput | string | null
-    visitStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    visitStatus?: EnumVisitStatusFieldUpdateOperationsInput | $Enums.VisitStatus
     visitTimeZone?: NullableStringFieldUpdateOperationsInput | string | null
     exceptions?: VisitExceptionUpdateManyWithoutVisitNestedInput
+    missedVisits?: MissedVisitUpdateManyWithoutVisitNestedInput
   }
 
   export type VisitUncheckedUpdateWithoutHistoryInput = {
@@ -42462,9 +44295,10 @@ export namespace Prisma {
     units?: NullableIntFieldUpdateOperationsInput | number | null
     visitFromDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     sandataAgencyID?: NullableStringFieldUpdateOperationsInput | string | null
-    visitStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    visitStatus?: EnumVisitStatusFieldUpdateOperationsInput | $Enums.VisitStatus
     visitTimeZone?: NullableStringFieldUpdateOperationsInput | string | null
     exceptions?: VisitExceptionUncheckedUpdateManyWithoutVisitNestedInput
+    missedVisits?: MissedVisitUncheckedUpdateManyWithoutVisitNestedInput
   }
 
   export type AddressCreateWithoutEmployeeInput = {
@@ -42596,6 +44430,7 @@ export namespace Prisma {
     agencyID?: string
     client: ClientCreateNestedOneWithoutSchedulesInput
     service?: ServiceCreateNestedOneWithoutScheduleInput
+    missedVisits?: MissedVisitCreateNestedManyWithoutReplacementScheduleInput
   }
 
   export type ScheduleUncheckedCreateWithoutEmployeeInput = {
@@ -42623,6 +44458,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     agencyID?: string
+    missedVisits?: MissedVisitUncheckedCreateNestedManyWithoutReplacementScheduleInput
   }
 
   export type ScheduleCreateOrConnectWithoutEmployeeInput = {
@@ -44444,6 +46280,7 @@ export namespace Prisma {
     agencyID?: string
     service?: ServiceCreateNestedOneWithoutScheduleInput
     employee?: EmployeeCreateNestedOneWithoutSchedulesInput
+    missedVisits?: MissedVisitCreateNestedManyWithoutReplacementScheduleInput
   }
 
   export type ScheduleUncheckedCreateWithoutClientInput = {
@@ -44471,6 +46308,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     agencyID?: string
+    missedVisits?: MissedVisitUncheckedCreateNestedManyWithoutReplacementScheduleInput
   }
 
   export type ScheduleCreateOrConnectWithoutClientInput = {
@@ -45138,6 +46976,7 @@ export namespace Prisma {
     agencyID?: string
     client: ClientCreateNestedOneWithoutSchedulesInput
     employee?: EmployeeCreateNestedOneWithoutSchedulesInput
+    missedVisits?: MissedVisitCreateNestedManyWithoutReplacementScheduleInput
   }
 
   export type ScheduleUncheckedCreateWithoutServiceInput = {
@@ -45165,6 +47004,7 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     agencyID?: string
+    missedVisits?: MissedVisitUncheckedCreateNestedManyWithoutReplacementScheduleInput
   }
 
   export type ScheduleCreateOrConnectWithoutServiceInput = {
@@ -46229,6 +48069,34 @@ export namespace Prisma {
     create: XOR<EmployeeCreateWithoutSchedulesInput, EmployeeUncheckedCreateWithoutSchedulesInput>
   }
 
+  export type MissedVisitCreateWithoutReplacementScheduleInput = {
+    id?: string
+    reason?: string
+    createdAt?: Date | string
+    expiresAt: Date | string
+    rescheduled?: boolean
+    visit: VisitCreateNestedOneWithoutMissedVisitsInput
+  }
+
+  export type MissedVisitUncheckedCreateWithoutReplacementScheduleInput = {
+    id?: string
+    visitId: number
+    reason?: string
+    createdAt?: Date | string
+    expiresAt: Date | string
+    rescheduled?: boolean
+  }
+
+  export type MissedVisitCreateOrConnectWithoutReplacementScheduleInput = {
+    where: MissedVisitWhereUniqueInput
+    create: XOR<MissedVisitCreateWithoutReplacementScheduleInput, MissedVisitUncheckedCreateWithoutReplacementScheduleInput>
+  }
+
+  export type MissedVisitCreateManyReplacementScheduleInputEnvelope = {
+    data: MissedVisitCreateManyReplacementScheduleInput | MissedVisitCreateManyReplacementScheduleInput[]
+    skipDuplicates?: boolean
+  }
+
   export type ClientUpsertWithoutSchedulesInput = {
     update: XOR<ClientUpdateWithoutSchedulesInput, ClientUncheckedUpdateWithoutSchedulesInput>
     create: XOR<ClientCreateWithoutSchedulesInput, ClientUncheckedCreateWithoutSchedulesInput>
@@ -46414,6 +48282,22 @@ export namespace Prisma {
     mobileInfo?: MobileEmployeeUncheckedUpdateOneWithoutEmployeeNestedInput
   }
 
+  export type MissedVisitUpsertWithWhereUniqueWithoutReplacementScheduleInput = {
+    where: MissedVisitWhereUniqueInput
+    update: XOR<MissedVisitUpdateWithoutReplacementScheduleInput, MissedVisitUncheckedUpdateWithoutReplacementScheduleInput>
+    create: XOR<MissedVisitCreateWithoutReplacementScheduleInput, MissedVisitUncheckedCreateWithoutReplacementScheduleInput>
+  }
+
+  export type MissedVisitUpdateWithWhereUniqueWithoutReplacementScheduleInput = {
+    where: MissedVisitWhereUniqueInput
+    data: XOR<MissedVisitUpdateWithoutReplacementScheduleInput, MissedVisitUncheckedUpdateWithoutReplacementScheduleInput>
+  }
+
+  export type MissedVisitUpdateManyWithWhereWithoutReplacementScheduleInput = {
+    where: MissedVisitScalarWhereInput
+    data: XOR<MissedVisitUpdateManyMutationInput, MissedVisitUncheckedUpdateManyWithoutReplacementScheduleInput>
+  }
+
   export type ChatParticipantCreateWithoutThreadInput = {
     id?: string
     participantId: string
@@ -46445,6 +48329,7 @@ export namespace Prisma {
   export type ChatMessageCreateWithoutThreadInput = {
     id?: string
     senderId: string
+    senderType: string
     content: string
     createdAt?: Date | string
   }
@@ -46452,6 +48337,7 @@ export namespace Prisma {
   export type ChatMessageUncheckedCreateWithoutThreadInput = {
     id?: string
     senderId: string
+    senderType: string
     content: string
     createdAt?: Date | string
   }
@@ -46518,6 +48404,7 @@ export namespace Prisma {
     id?: StringFilter<"ChatMessage"> | string
     threadId?: StringFilter<"ChatMessage"> | string
     senderId?: StringFilter<"ChatMessage"> | string
+    senderType?: StringFilter<"ChatMessage"> | string
     content?: StringFilter<"ChatMessage"> | string
     createdAt?: DateTimeFilter<"ChatMessage"> | Date | string
   }
@@ -46642,6 +48529,384 @@ export namespace Prisma {
     participants?: ChatParticipantUncheckedUpdateManyWithoutThreadNestedInput
   }
 
+  export type ScheduleCreateWithoutMissedVisitsInput = {
+    id?: string
+    scheduleType: string
+    clientMedicaidId: string
+    authorizations?: string | null
+    authorizationNumber?: string | null
+    officeReason?: string | null
+    eventCode: string
+    authorizationBillUnitType: string
+    eventStatus: string
+    eventDate: Date | string
+    startTime: Date | string
+    endTime: Date | string
+    repeatedEvent?: boolean
+    dates?: ScheduleCreatedatesInput | string[]
+    comments?: string | null
+    billingOverride?: boolean
+    rate?: number | null
+    copay?: number | null
+    billAmount?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    agencyID?: string
+    client: ClientCreateNestedOneWithoutSchedulesInput
+    service?: ServiceCreateNestedOneWithoutScheduleInput
+    employee?: EmployeeCreateNestedOneWithoutSchedulesInput
+  }
+
+  export type ScheduleUncheckedCreateWithoutMissedVisitsInput = {
+    id?: string
+    scheduleType: string
+    clientID: string
+    clientMedicaidId: string
+    authorizations?: string | null
+    authorizationNumber?: string | null
+    serviceId?: string | null
+    officeReason?: string | null
+    eventCode: string
+    authorizationBillUnitType: string
+    eventStatus: string
+    eventDate: Date | string
+    startTime: Date | string
+    endTime: Date | string
+    employeeID?: string | null
+    repeatedEvent?: boolean
+    dates?: ScheduleCreatedatesInput | string[]
+    comments?: string | null
+    billingOverride?: boolean
+    rate?: number | null
+    copay?: number | null
+    billAmount?: number | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    agencyID?: string
+  }
+
+  export type ScheduleCreateOrConnectWithoutMissedVisitsInput = {
+    where: ScheduleWhereUniqueInput
+    create: XOR<ScheduleCreateWithoutMissedVisitsInput, ScheduleUncheckedCreateWithoutMissedVisitsInput>
+  }
+
+  export type VisitCreateWithoutMissedVisitsInput = {
+    agencyID: string
+    adjustedHours?: number | null
+    adjustedIn?: Date | string | null
+    adjustedOut?: Date | string | null
+    approved?: boolean | null
+    clientSignature?: string | null
+    employeeSignature?: string | null
+    visitSource?: string | null
+    mileage?: number | null
+    authorizationReferenceNumber?: string | null
+    location?: string | null
+    latitudeIn?: number | null
+    longitudeIn?: number | null
+    latitudeOut?: number | null
+    longitudeOut?: number | null
+    callType?: string | null
+    user?: string | null
+    claimID?: string | null
+    billHours?: number | null
+    callHours?: number | null
+    callIn?: Date | string | null
+    callOut?: Date | string | null
+    claimsVerificationStatus?: string | null
+    clientID?: number | null
+    clientMedicaidID?: string | null
+    clientName?: string | null
+    clientPrimaryPhoneNumber?: string | null
+    clientVerified?: boolean | null
+    doNotBill?: boolean | null
+    employeeContactPhoneNumber?: string | null
+    employeeID?: number | null
+    employeeName?: string | null
+    employeeOtherID?: string | null
+    exported?: boolean | null
+    groupVisitCode?: string | null
+    inOutCallLocation?: string | null
+    memo?: string | null
+    payHours?: number | null
+    payEqualsSch?: boolean | null
+    payer?: string | null
+    program?: string | null
+    santraxID?: string | null
+    scheduledHours?: number | null
+    scheduledTimeIn?: Date | string | null
+    scheduledTimeOut?: Date | string | null
+    service?: string | null
+    supervisor?: string | null
+    tasks?: string | null
+    units?: number | null
+    visitFromDate?: Date | string | null
+    sandataAgencyID?: string | null
+    visitStatus?: $Enums.VisitStatus
+    visitTimeZone?: string | null
+    exceptions?: VisitExceptionCreateNestedManyWithoutVisitInput
+    history?: VisitHistoryCreateNestedManyWithoutVisitInput
+  }
+
+  export type VisitUncheckedCreateWithoutMissedVisitsInput = {
+    id?: number
+    agencyID: string
+    adjustedHours?: number | null
+    adjustedIn?: Date | string | null
+    adjustedOut?: Date | string | null
+    approved?: boolean | null
+    clientSignature?: string | null
+    employeeSignature?: string | null
+    visitSource?: string | null
+    mileage?: number | null
+    authorizationReferenceNumber?: string | null
+    location?: string | null
+    latitudeIn?: number | null
+    longitudeIn?: number | null
+    latitudeOut?: number | null
+    longitudeOut?: number | null
+    callType?: string | null
+    user?: string | null
+    claimID?: string | null
+    billHours?: number | null
+    callHours?: number | null
+    callIn?: Date | string | null
+    callOut?: Date | string | null
+    claimsVerificationStatus?: string | null
+    clientID?: number | null
+    clientMedicaidID?: string | null
+    clientName?: string | null
+    clientPrimaryPhoneNumber?: string | null
+    clientVerified?: boolean | null
+    doNotBill?: boolean | null
+    employeeContactPhoneNumber?: string | null
+    employeeID?: number | null
+    employeeName?: string | null
+    employeeOtherID?: string | null
+    exported?: boolean | null
+    groupVisitCode?: string | null
+    inOutCallLocation?: string | null
+    memo?: string | null
+    payHours?: number | null
+    payEqualsSch?: boolean | null
+    payer?: string | null
+    program?: string | null
+    santraxID?: string | null
+    scheduledHours?: number | null
+    scheduledTimeIn?: Date | string | null
+    scheduledTimeOut?: Date | string | null
+    service?: string | null
+    supervisor?: string | null
+    tasks?: string | null
+    units?: number | null
+    visitFromDate?: Date | string | null
+    sandataAgencyID?: string | null
+    visitStatus?: $Enums.VisitStatus
+    visitTimeZone?: string | null
+    exceptions?: VisitExceptionUncheckedCreateNestedManyWithoutVisitInput
+    history?: VisitHistoryUncheckedCreateNestedManyWithoutVisitInput
+  }
+
+  export type VisitCreateOrConnectWithoutMissedVisitsInput = {
+    where: VisitWhereUniqueInput
+    create: XOR<VisitCreateWithoutMissedVisitsInput, VisitUncheckedCreateWithoutMissedVisitsInput>
+  }
+
+  export type ScheduleUpsertWithoutMissedVisitsInput = {
+    update: XOR<ScheduleUpdateWithoutMissedVisitsInput, ScheduleUncheckedUpdateWithoutMissedVisitsInput>
+    create: XOR<ScheduleCreateWithoutMissedVisitsInput, ScheduleUncheckedCreateWithoutMissedVisitsInput>
+    where?: ScheduleWhereInput
+  }
+
+  export type ScheduleUpdateToOneWithWhereWithoutMissedVisitsInput = {
+    where?: ScheduleWhereInput
+    data: XOR<ScheduleUpdateWithoutMissedVisitsInput, ScheduleUncheckedUpdateWithoutMissedVisitsInput>
+  }
+
+  export type ScheduleUpdateWithoutMissedVisitsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    scheduleType?: StringFieldUpdateOperationsInput | string
+    clientMedicaidId?: StringFieldUpdateOperationsInput | string
+    authorizations?: NullableStringFieldUpdateOperationsInput | string | null
+    authorizationNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    officeReason?: NullableStringFieldUpdateOperationsInput | string | null
+    eventCode?: StringFieldUpdateOperationsInput | string
+    authorizationBillUnitType?: StringFieldUpdateOperationsInput | string
+    eventStatus?: StringFieldUpdateOperationsInput | string
+    eventDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    dates?: ScheduleUpdatedatesInput | string[]
+    comments?: NullableStringFieldUpdateOperationsInput | string | null
+    billingOverride?: BoolFieldUpdateOperationsInput | boolean
+    rate?: NullableFloatFieldUpdateOperationsInput | number | null
+    copay?: NullableFloatFieldUpdateOperationsInput | number | null
+    billAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    agencyID?: StringFieldUpdateOperationsInput | string
+    client?: ClientUpdateOneRequiredWithoutSchedulesNestedInput
+    service?: ServiceUpdateOneWithoutScheduleNestedInput
+    employee?: EmployeeUpdateOneWithoutSchedulesNestedInput
+  }
+
+  export type ScheduleUncheckedUpdateWithoutMissedVisitsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    scheduleType?: StringFieldUpdateOperationsInput | string
+    clientID?: StringFieldUpdateOperationsInput | string
+    clientMedicaidId?: StringFieldUpdateOperationsInput | string
+    authorizations?: NullableStringFieldUpdateOperationsInput | string | null
+    authorizationNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    serviceId?: NullableStringFieldUpdateOperationsInput | string | null
+    officeReason?: NullableStringFieldUpdateOperationsInput | string | null
+    eventCode?: StringFieldUpdateOperationsInput | string
+    authorizationBillUnitType?: StringFieldUpdateOperationsInput | string
+    eventStatus?: StringFieldUpdateOperationsInput | string
+    eventDate?: DateTimeFieldUpdateOperationsInput | Date | string
+    startTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    endTime?: DateTimeFieldUpdateOperationsInput | Date | string
+    employeeID?: NullableStringFieldUpdateOperationsInput | string | null
+    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    dates?: ScheduleUpdatedatesInput | string[]
+    comments?: NullableStringFieldUpdateOperationsInput | string | null
+    billingOverride?: BoolFieldUpdateOperationsInput | boolean
+    rate?: NullableFloatFieldUpdateOperationsInput | number | null
+    copay?: NullableFloatFieldUpdateOperationsInput | number | null
+    billAmount?: NullableFloatFieldUpdateOperationsInput | number | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    agencyID?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type VisitUpsertWithoutMissedVisitsInput = {
+    update: XOR<VisitUpdateWithoutMissedVisitsInput, VisitUncheckedUpdateWithoutMissedVisitsInput>
+    create: XOR<VisitCreateWithoutMissedVisitsInput, VisitUncheckedCreateWithoutMissedVisitsInput>
+    where?: VisitWhereInput
+  }
+
+  export type VisitUpdateToOneWithWhereWithoutMissedVisitsInput = {
+    where?: VisitWhereInput
+    data: XOR<VisitUpdateWithoutMissedVisitsInput, VisitUncheckedUpdateWithoutMissedVisitsInput>
+  }
+
+  export type VisitUpdateWithoutMissedVisitsInput = {
+    agencyID?: StringFieldUpdateOperationsInput | string
+    adjustedHours?: NullableFloatFieldUpdateOperationsInput | number | null
+    adjustedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    adjustedOut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    clientSignature?: NullableStringFieldUpdateOperationsInput | string | null
+    employeeSignature?: NullableStringFieldUpdateOperationsInput | string | null
+    visitSource?: NullableStringFieldUpdateOperationsInput | string | null
+    mileage?: NullableFloatFieldUpdateOperationsInput | number | null
+    authorizationReferenceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    latitudeIn?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitudeIn?: NullableFloatFieldUpdateOperationsInput | number | null
+    latitudeOut?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitudeOut?: NullableFloatFieldUpdateOperationsInput | number | null
+    callType?: NullableStringFieldUpdateOperationsInput | string | null
+    user?: NullableStringFieldUpdateOperationsInput | string | null
+    claimID?: NullableStringFieldUpdateOperationsInput | string | null
+    billHours?: NullableFloatFieldUpdateOperationsInput | number | null
+    callHours?: NullableFloatFieldUpdateOperationsInput | number | null
+    callIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    callOut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    claimsVerificationStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    clientID?: NullableIntFieldUpdateOperationsInput | number | null
+    clientMedicaidID?: NullableStringFieldUpdateOperationsInput | string | null
+    clientName?: NullableStringFieldUpdateOperationsInput | string | null
+    clientPrimaryPhoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    clientVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    doNotBill?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    employeeContactPhoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    employeeID?: NullableIntFieldUpdateOperationsInput | number | null
+    employeeName?: NullableStringFieldUpdateOperationsInput | string | null
+    employeeOtherID?: NullableStringFieldUpdateOperationsInput | string | null
+    exported?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    groupVisitCode?: NullableStringFieldUpdateOperationsInput | string | null
+    inOutCallLocation?: NullableStringFieldUpdateOperationsInput | string | null
+    memo?: NullableStringFieldUpdateOperationsInput | string | null
+    payHours?: NullableFloatFieldUpdateOperationsInput | number | null
+    payEqualsSch?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    payer?: NullableStringFieldUpdateOperationsInput | string | null
+    program?: NullableStringFieldUpdateOperationsInput | string | null
+    santraxID?: NullableStringFieldUpdateOperationsInput | string | null
+    scheduledHours?: NullableFloatFieldUpdateOperationsInput | number | null
+    scheduledTimeIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scheduledTimeOut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    service?: NullableStringFieldUpdateOperationsInput | string | null
+    supervisor?: NullableStringFieldUpdateOperationsInput | string | null
+    tasks?: NullableStringFieldUpdateOperationsInput | string | null
+    units?: NullableIntFieldUpdateOperationsInput | number | null
+    visitFromDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sandataAgencyID?: NullableStringFieldUpdateOperationsInput | string | null
+    visitStatus?: EnumVisitStatusFieldUpdateOperationsInput | $Enums.VisitStatus
+    visitTimeZone?: NullableStringFieldUpdateOperationsInput | string | null
+    exceptions?: VisitExceptionUpdateManyWithoutVisitNestedInput
+    history?: VisitHistoryUpdateManyWithoutVisitNestedInput
+  }
+
+  export type VisitUncheckedUpdateWithoutMissedVisitsInput = {
+    id?: IntFieldUpdateOperationsInput | number
+    agencyID?: StringFieldUpdateOperationsInput | string
+    adjustedHours?: NullableFloatFieldUpdateOperationsInput | number | null
+    adjustedIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    adjustedOut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    approved?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    clientSignature?: NullableStringFieldUpdateOperationsInput | string | null
+    employeeSignature?: NullableStringFieldUpdateOperationsInput | string | null
+    visitSource?: NullableStringFieldUpdateOperationsInput | string | null
+    mileage?: NullableFloatFieldUpdateOperationsInput | number | null
+    authorizationReferenceNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    location?: NullableStringFieldUpdateOperationsInput | string | null
+    latitudeIn?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitudeIn?: NullableFloatFieldUpdateOperationsInput | number | null
+    latitudeOut?: NullableFloatFieldUpdateOperationsInput | number | null
+    longitudeOut?: NullableFloatFieldUpdateOperationsInput | number | null
+    callType?: NullableStringFieldUpdateOperationsInput | string | null
+    user?: NullableStringFieldUpdateOperationsInput | string | null
+    claimID?: NullableStringFieldUpdateOperationsInput | string | null
+    billHours?: NullableFloatFieldUpdateOperationsInput | number | null
+    callHours?: NullableFloatFieldUpdateOperationsInput | number | null
+    callIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    callOut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    claimsVerificationStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    clientID?: NullableIntFieldUpdateOperationsInput | number | null
+    clientMedicaidID?: NullableStringFieldUpdateOperationsInput | string | null
+    clientName?: NullableStringFieldUpdateOperationsInput | string | null
+    clientPrimaryPhoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    clientVerified?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    doNotBill?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    employeeContactPhoneNumber?: NullableStringFieldUpdateOperationsInput | string | null
+    employeeID?: NullableIntFieldUpdateOperationsInput | number | null
+    employeeName?: NullableStringFieldUpdateOperationsInput | string | null
+    employeeOtherID?: NullableStringFieldUpdateOperationsInput | string | null
+    exported?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    groupVisitCode?: NullableStringFieldUpdateOperationsInput | string | null
+    inOutCallLocation?: NullableStringFieldUpdateOperationsInput | string | null
+    memo?: NullableStringFieldUpdateOperationsInput | string | null
+    payHours?: NullableFloatFieldUpdateOperationsInput | number | null
+    payEqualsSch?: NullableBoolFieldUpdateOperationsInput | boolean | null
+    payer?: NullableStringFieldUpdateOperationsInput | string | null
+    program?: NullableStringFieldUpdateOperationsInput | string | null
+    santraxID?: NullableStringFieldUpdateOperationsInput | string | null
+    scheduledHours?: NullableFloatFieldUpdateOperationsInput | number | null
+    scheduledTimeIn?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    scheduledTimeOut?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    service?: NullableStringFieldUpdateOperationsInput | string | null
+    supervisor?: NullableStringFieldUpdateOperationsInput | string | null
+    tasks?: NullableStringFieldUpdateOperationsInput | string | null
+    units?: NullableIntFieldUpdateOperationsInput | number | null
+    visitFromDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    sandataAgencyID?: NullableStringFieldUpdateOperationsInput | string | null
+    visitStatus?: EnumVisitStatusFieldUpdateOperationsInput | $Enums.VisitStatus
+    visitTimeZone?: NullableStringFieldUpdateOperationsInput | string | null
+    exceptions?: VisitExceptionUncheckedUpdateManyWithoutVisitNestedInput
+    history?: VisitHistoryUncheckedUpdateManyWithoutVisitNestedInput
+  }
+
   export type UserCreateManyAgencyInput = {
     id?: string
     name: string
@@ -46760,6 +49025,15 @@ export namespace Prisma {
     updatedBy: string
   }
 
+  export type MissedVisitCreateManyVisitInput = {
+    id?: string
+    reason?: string
+    createdAt?: Date | string
+    expiresAt: Date | string
+    rescheduled?: boolean
+    replacementScheduleId?: string | null
+  }
+
   export type VisitExceptionUpdateWithoutVisitInput = {
     exceptionType?: StringFieldUpdateOperationsInput | string
     date?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -46804,6 +49078,33 @@ export namespace Prisma {
     reason?: NullableStringFieldUpdateOperationsInput | string | null
     dateTime?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedBy?: StringFieldUpdateOperationsInput | string
+  }
+
+  export type MissedVisitUpdateWithoutVisitInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rescheduled?: BoolFieldUpdateOperationsInput | boolean
+    replacementSchedule?: ScheduleUpdateOneWithoutMissedVisitsNestedInput
+  }
+
+  export type MissedVisitUncheckedUpdateWithoutVisitInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rescheduled?: BoolFieldUpdateOperationsInput | boolean
+    replacementScheduleId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type MissedVisitUncheckedUpdateManyWithoutVisitInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rescheduled?: BoolFieldUpdateOperationsInput | boolean
+    replacementScheduleId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type AddressCreateManyEmployeeInput = {
@@ -47057,6 +49358,7 @@ export namespace Prisma {
     agencyID?: StringFieldUpdateOperationsInput | string
     client?: ClientUpdateOneRequiredWithoutSchedulesNestedInput
     service?: ServiceUpdateOneWithoutScheduleNestedInput
+    missedVisits?: MissedVisitUpdateManyWithoutReplacementScheduleNestedInput
   }
 
   export type ScheduleUncheckedUpdateWithoutEmployeeInput = {
@@ -47084,6 +49386,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     agencyID?: StringFieldUpdateOperationsInput | string
+    missedVisits?: MissedVisitUncheckedUpdateManyWithoutReplacementScheduleNestedInput
   }
 
   export type ScheduleUncheckedUpdateManyWithoutEmployeeInput = {
@@ -47478,6 +49781,7 @@ export namespace Prisma {
     agencyID?: StringFieldUpdateOperationsInput | string
     service?: ServiceUpdateOneWithoutScheduleNestedInput
     employee?: EmployeeUpdateOneWithoutSchedulesNestedInput
+    missedVisits?: MissedVisitUpdateManyWithoutReplacementScheduleNestedInput
   }
 
   export type ScheduleUncheckedUpdateWithoutClientInput = {
@@ -47505,6 +49809,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     agencyID?: StringFieldUpdateOperationsInput | string
+    missedVisits?: MissedVisitUncheckedUpdateManyWithoutReplacementScheduleNestedInput
   }
 
   export type ScheduleUncheckedUpdateManyWithoutClientInput = {
@@ -48033,6 +50338,7 @@ export namespace Prisma {
     agencyID?: StringFieldUpdateOperationsInput | string
     client?: ClientUpdateOneRequiredWithoutSchedulesNestedInput
     employee?: EmployeeUpdateOneWithoutSchedulesNestedInput
+    missedVisits?: MissedVisitUpdateManyWithoutReplacementScheduleNestedInput
   }
 
   export type ScheduleUncheckedUpdateWithoutServiceInput = {
@@ -48060,6 +50366,7 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     agencyID?: StringFieldUpdateOperationsInput | string
+    missedVisits?: MissedVisitUncheckedUpdateManyWithoutReplacementScheduleNestedInput
   }
 
   export type ScheduleUncheckedUpdateManyWithoutServiceInput = {
@@ -48449,6 +50756,42 @@ export namespace Prisma {
     count?: IntFieldUpdateOperationsInput | number
   }
 
+  export type MissedVisitCreateManyReplacementScheduleInput = {
+    id?: string
+    visitId: number
+    reason?: string
+    createdAt?: Date | string
+    expiresAt: Date | string
+    rescheduled?: boolean
+  }
+
+  export type MissedVisitUpdateWithoutReplacementScheduleInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    reason?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rescheduled?: BoolFieldUpdateOperationsInput | boolean
+    visit?: VisitUpdateOneRequiredWithoutMissedVisitsNestedInput
+  }
+
+  export type MissedVisitUncheckedUpdateWithoutReplacementScheduleInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    visitId?: IntFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rescheduled?: BoolFieldUpdateOperationsInput | boolean
+  }
+
+  export type MissedVisitUncheckedUpdateManyWithoutReplacementScheduleInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    visitId?: IntFieldUpdateOperationsInput | number
+    reason?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    rescheduled?: BoolFieldUpdateOperationsInput | boolean
+  }
+
   export type ChatParticipantCreateManyThreadInput = {
     id?: string
     participantId: string
@@ -48461,6 +50804,7 @@ export namespace Prisma {
   export type ChatMessageCreateManyThreadInput = {
     id?: string
     senderId: string
+    senderType: string
     content: string
     createdAt?: Date | string
   }
@@ -48495,6 +50839,7 @@ export namespace Prisma {
   export type ChatMessageUpdateWithoutThreadInput = {
     id?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
+    senderType?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -48502,6 +50847,7 @@ export namespace Prisma {
   export type ChatMessageUncheckedUpdateWithoutThreadInput = {
     id?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
+    senderType?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -48509,6 +50855,7 @@ export namespace Prisma {
   export type ChatMessageUncheckedUpdateManyWithoutThreadInput = {
     id?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
+    senderType?: StringFieldUpdateOperationsInput | string
     content?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

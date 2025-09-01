@@ -19,7 +19,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       // Session timeout
       const expiresAt = JSON.parse(
-        localStorage.getItem("unity_user") || "{}"
+        localStorage.getItem("loggedInUser") || "{}"
       ).expiresAt;
       const timeLeft = expiresAt - Date.now();
 

@@ -4,8 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
-import { getChatSocket, disconnectChatSocket } from "@/lib/socket/chat"; // your socket helper
-import io, { Socket } from "socket.io-client";
+import { getChatSocket } from "@/lib/socket/chat"; // socket helper
+import { Socket } from "socket.io-client";
 
 interface ChatRequest {
   threadId: string;
@@ -28,9 +28,10 @@ export default function SystemAdminLiveChatPage() {
   const [newMessage, setNewMessage] = useState("");
   const socketRef = useRef<Socket | null>(null);
 
+  // ---- Fetch pending chat requests periodically ----
   const fetchChatRequests = async () => {
     try {
-      const res = await fetch("/api/chat/requests");
+      const res = await fetch("http://localhost:5000/api/chat/requests");
       const data: ChatRequest[] = await res.json();
       setChatRequests(data);
     } catch (err) {
@@ -44,34 +45,39 @@ export default function SystemAdminLiveChatPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Initialize socket when a thread is active
+  // ---- Create socket ON MOUNT ----
   useEffect(() => {
-    if (!activeThreadId) return;
-    const user = getLoggedInUser(); // {userId, role, participantType, displayName, agencyCode}
+    const user = getLoggedInUser(); // {id, role, name, agency?}
     if (!user) return;
 
+    // System admins don't need agencyCode
     const socket = getChatSocket({
       userId: user.id,
       role: user.role as any,
       participantType: "SYSTEM_ADMIN",
       displayName: user.name,
-      agencyCode: user.agency?.code ?? "",
+      agencyCode: user.agency?.code ?? "", // ignored for sys admins
     });
 
     socketRef.current = socket;
 
-    // Join the thread room
-    socket.emit("joinThread", { threadId: activeThreadId });
-
-    // Listen for new messages
+    // 🔹 Global socket listeners (not tied to threadId)
     socket.on(
       "newMessage",
-      (payload: { threadId: string; message: ChatMessage }) => {
+      (payload: {
+        threadId: string;
+        message: ChatMessage & { senderType: string };
+      }) => {
         if (payload.threadId === activeThreadId) {
           setMessages((prev) => [...prev, payload.message]);
         }
       }
     );
+
+    socket.on("chatAccepted", ({ threadId }: { threadId: string }) => {
+      setActiveThreadId(threadId);
+      setMessages([]); // reset messages (could fetch history if needed)
+    });
 
     socket.on("chatEnded", ({ threadId }: { threadId: string }) => {
       if (threadId === activeThreadId) {
@@ -82,31 +88,37 @@ export default function SystemAdminLiveChatPage() {
     });
 
     return () => {
-      disconnectChatSocket();
+      socket.off("newMessage");
+      socket.off("chatAccepted");
+      socket.off("chatEnded");
+      socket.disconnect();
     };
   }, [activeThreadId]);
 
-  const acceptChat = async (threadId: string) => {
-    try {
-      const socket = socketRef.current;
-      if (!socket) return;
-      socket.emit("acceptChat", { threadId });
-      setActiveThreadId(threadId);
-      setMessages([]);
-    } catch (err) {
-      console.error("Failed to accept chat", err);
-    }
+  // ---- Accept a pending chat ----
+  const acceptChat = (threadId: string) => {
+    const socket = socketRef.current;
+    if (!socket) return;
+
+    socket.emit("acceptChat", { threadId });
+    socket.emit("joinThread", { threadId }); // join room for messages
+    setActiveThreadId(threadId);
+    setMessages([]);
   };
 
+  // ---- Send a message ----
   const sendMessage = () => {
     if (!newMessage.trim() || !activeThreadId || !socketRef.current) return;
+
     socketRef.current.emit("sendMessage", {
       threadId: activeThreadId,
-      content: newMessage,
+      content: newMessage.trim(),
     });
+
     setNewMessage("");
   };
 
+  // ---- End chat ----
   const endChat = () => {
     if (!activeThreadId || !socketRef.current) return;
     socketRef.current.emit("endChat", { threadId: activeThreadId });
@@ -116,7 +128,7 @@ export default function SystemAdminLiveChatPage() {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] p-4 gap-4">
-      {/* Chat Requests */}
+      {/* Pending Requests */}
       <div className="w-80 border p-2 bg-white overflow-y-auto">
         <h2 className="font-semibold mb-2">Pending Chat Requests</h2>
         {chatRequests.length === 0 && <p>No pending requests</p>}

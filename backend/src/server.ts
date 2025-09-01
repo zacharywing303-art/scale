@@ -12,6 +12,12 @@ import statsRoutes from "./routes/agency.stats.route";
 import userRoutes from "./routes/users.route";
 import dashboardRoutes from "./routes/dashboard.route";
 import chatRoutes from "./routes/chat.route";
+import scheduleRoutes from "./routes/schedule.route";
+import clientRoutes from "./routes/client.route";
+import employeeRoutes from "./routes/employee.route";
+import serviceRoutes from "./routes/services.route";
+import missedVisitsRoutes from "./routes/missed-visits.route";
+import "./workers/visitStatus.worker";
 
 // Load env variables
 dotenv.config();
@@ -30,6 +36,11 @@ app.use("/api/system", statsRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/schedules", scheduleRoutes);
+app.use("/api/clients", clientRoutes);
+app.use("/api/employees", employeeRoutes);
+app.use("/api/services", serviceRoutes);
+app.use("/api/missed-visits", missedVisitsRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {

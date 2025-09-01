@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Select,
   SelectTrigger,
@@ -29,6 +29,33 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { TimePicker } from "@/components/TimePicker";
+
+function buildDateTime(baseDate: Date, time: string): Date {
+  const [h, m] = time.split(":").map(Number);
+  const dt = new Date(baseDate);
+  dt.setHours(h, m, 0, 0);
+  return dt;
+}
+
+function normalizeStartEnd(
+  baseDate: Date,
+  startTime: string,
+  endTime: string
+): { start: Date; end: Date } | null {
+  const start = buildDateTime(baseDate, startTime);
+  const end = buildDateTime(baseDate, endTime);
+
+  if (end.getTime() === start.getTime()) {
+    return null; // Invalid
+  }
+
+  if (end < start) {
+    end.setDate(end.getDate() + 1); // roll to next day
+  }
+
+  return { start, end };
+}
 
 export default function CreateSchedulePage() {
   const [type, setType] = useState<"office" | "visit" | "">("");
@@ -58,8 +85,15 @@ export default function CreateSchedulePage() {
   const [reschedule, setReschedule] = useState(false);
   const [selectedMissed, setSelectedMissed] = useState<string[]>([]);
 
+  // ✅ Live data from API
+  const [clients, setClients] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+
+  const [timePickerOpen, setTimePickerOpen] = useState(false);
 
   const weekdaysList = [
     "Sunday",
@@ -71,10 +105,34 @@ export default function CreateSchedulePage() {
     "Saturday",
   ];
 
-  const dummyClients = ["Client A", "Client B", "Client C"];
-  const dummyServices = ["Speech Therapy", "Physical Therapy", "Counseling"];
-  const dummyEmployees = ["Jane Smith", "John Doe", "Maria Clark"];
   const dummyMissedShifts = ["Visit with Mr. A (6/10)", "Office shift (6/5)"];
+
+  // 🔹 Fetch data from backend
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [clientsRes, servicesRes, employeesRes] = await Promise.all([
+          fetch("http://localhost:5000/api/clients"),
+          fetch("http://localhost:5000/api/services"),
+          fetch("http://localhost:5000/api/employees"),
+        ]);
+
+        const [clientsData, servicesData, employeesData] = await Promise.all([
+          clientsRes.json(),
+          servicesRes.json(),
+          employeesRes.json(),
+        ]);
+
+        setClients(clientsData);
+        setServices(servicesData);
+        setEmployees(employeesData);
+      } catch (err) {
+        console.error("❌ Error fetching data", err);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const canSubmit = () => {
     if (!type) return false;
@@ -97,6 +155,20 @@ export default function CreateSchedulePage() {
     );
   };
 
+  const handleEmployeeSelect = (empId: string) => {
+    if (groupVisit) {
+      // ✅ Allow multiple
+      setVisitEmployees((prev) =>
+        prev.includes(empId)
+          ? prev.filter((id) => id !== empId)
+          : [...prev, empId]
+      );
+    } else {
+      // ✅ Only one employee allowed
+      setVisitEmployees([empId]);
+    }
+  };
+
   return (
     <div className="p-6 space-y-6">
       <h2 className="text-2xl font-bold">Create Schedule</h2>
@@ -111,6 +183,7 @@ export default function CreateSchedulePage() {
           <SelectContent>
             <SelectItem value="office">Office</SelectItem>
             <SelectItem value="visit">Visit</SelectItem>
+            <SelectItem value="facility">Facility</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -125,9 +198,9 @@ export default function CreateSchedulePage() {
                 <SelectValue placeholder="Select client" />
               </SelectTrigger>
               <SelectContent>
-                {dummyClients.map((c) => (
-                  <SelectItem key={c} value={c}>
-                    {c}
+                {clients.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -248,24 +321,18 @@ export default function CreateSchedulePage() {
 
           {/* Time */}
           <div className="flex gap-4 mt-4">
-            <div className="flex-1">
-              <Label className="mb-1 block">Start Time *</Label>
-              <Input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                // Removed the disabled
-              />
-            </div>
-            <div className="flex-1">
-              <Label className="mb-1 block">End Time *</Label>
-              <Input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                // Removed the disabled
-              />
-            </div>
+            <TimePicker
+              label="Start Time *"
+              value={startTime}
+              onChange={setStartTime}
+              onApply={() => setTimePickerOpen(false)}
+            />
+            <TimePicker
+              label="End Time *"
+              value={endTime}
+              onChange={setEndTime}
+              onApply={() => setTimePickerOpen(false)}
+            />
           </div>
 
           {/* Visit-specific fields */}
@@ -278,9 +345,9 @@ export default function CreateSchedulePage() {
                     <SelectValue placeholder="Select service" />
                   </SelectTrigger>
                   <SelectContent>
-                    {dummyServices.map((s) => (
-                      <SelectItem key={s} value={s}>
-                        {s}
+                    {services.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name} ({s.code})
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -305,24 +372,18 @@ export default function CreateSchedulePage() {
                   {groupVisit ? "Select Employees" : "Assign Employee"}
                 </Label>
                 <div className="flex flex-wrap gap-2 mt-2">
-                  {dummyEmployees.map((emp) => (
+                  {employees.map((emp) => (
                     <button
-                      key={emp}
+                      key={emp.id}
                       type="button"
                       className={`px-3 py-1 rounded border ${
-                        visitEmployees.includes(emp)
+                        visitEmployees.includes(emp.id)
                           ? "bg-primary text-white"
                           : "bg-muted text-muted-foreground"
                       }`}
-                      onClick={() =>
-                        handleCheckboxChange(
-                          emp,
-                          visitEmployees,
-                          setVisitEmployees
-                        )
-                      }
+                      onClick={() => handleEmployeeSelect(emp.id)}
                     >
-                      {emp}
+                      {emp.name}
                     </button>
                   ))}
                 </div>
@@ -414,29 +475,70 @@ export default function CreateSchedulePage() {
                       </div>
                     </>
                   )}
-                  <div>
-                    <strong>Start Time:</strong> {startTime}
-                  </div>
-                  <div>
-                    <strong>End Time:</strong> {endTime}
-                  </div>
+                  {(() => {
+                    const normalized =
+                      startTime &&
+                      endTime &&
+                      (oneDay ? selectedDate : rangeStart)
+                        ? normalizeStartEnd(
+                            oneDay
+                              ? (selectedDate as Date)
+                              : (rangeStart as Date),
+                            startTime,
+                            endTime
+                          )
+                        : null;
+                    return (
+                      <>
+                        <div>
+                          <strong>Start Time:</strong>{" "}
+                          {normalized
+                            ? format(normalized.start, "PPpp")
+                            : "Invalid Time"}
+                        </div>
+                        <div>
+                          <strong>End Time:</strong>{" "}
+                          {normalized
+                            ? format(normalized.end, "PPpp")
+                            : "Invalid Time"}
+                        </div>
+                      </>
+                    );
+                  })()}
+
                   {type === "visit" && (
                     <div>
-                      <strong>Service:</strong> {service || "N/A"}
+                      <strong>Service:</strong>{" "}
+                      {services.find((s) => s.id === service)?.name || "N/A"}
                     </div>
                   )}
                   <div>
                     <strong>Employee:</strong>{" "}
                     {type === "visit"
                       ? visitEmployees.length > 0
-                        ? visitEmployees.join(", ")
+                        ? visitEmployees
+                            .map(
+                              (empId) =>
+                                employees.find((e) => e.id === empId)?.name ||
+                                empId
+                            )
+                            .join(", ")
                         : "N/A"
                       : officeEmployees.length > 0
-                      ? officeEmployees.join(", ")
+                      ? officeEmployees
+                          .map(
+                            (empId) =>
+                              employees.find((e) => e.id === empId)?.name ||
+                              empId
+                          )
+                          .join(", ")
                       : "N/A"}
                   </div>
                   <div>
-                    <strong>Client:</strong> {client || "N/A"}
+                    <strong>Client:</strong>{" "}
+                    {client
+                      ? clients.find((c) => c.id === client)?.name || client
+                      : "N/A"}
                   </div>
                   {/* <div>
       <strong>Role:</strong> {role || "N/A"}
@@ -446,11 +548,65 @@ export default function CreateSchedulePage() {
                 <div className="pt-4">
                   <Button
                     className="w-full"
-                    onClick={() => {
-                      alert("Schedule created successfully!");
-                      window.location.assign(
-                        "/dashboard/scheduling/schedule-edit"
+                    onClick={async () => {
+                      const normalizedTimes = normalizeStartEnd(
+                        oneDay ? (selectedDate as Date) : (rangeStart as Date),
+                        startTime,
+                        endTime
                       );
+
+                      if (!normalizedTimes) {
+                        alert(
+                          "❌ End time cannot be the same as start time. Please choose a different time."
+                        );
+                        return; // Stop submission
+                      }
+                      try {
+                        const payload = {
+                          scheduleType: type, // office | visit | facility
+                          clientID: client || null,
+                          clientMedicaidId: "TEMP123", // ⚡️ you can fetch/set this properly later
+                          authorizations: authorization || null,
+                          serviceId: service || null,
+                          officeReason: type === "office" ? reason : null,
+                          eventCode: "EVT001", // ⚡️ placeholder until you define how codes are assigned
+                          authorizationBillUnitType: "Hourly", // ⚡️ make dropdown later
+                          eventStatus: "Confirmed", // ⚡️ default
+                          eventDate: oneDay ? selectedDate : rangeStart, // base date
+                          startTime: normalizedTimes.start.toISOString(),
+                          endTime: normalizedTimes.end.toISOString(),
+
+                          employeeID: visitEmployees[0] || null, // first employee for now
+                          repeatedEvent: !oneDay && recurring,
+                          dates: !oneDay
+                            ? weekdays.map((w) => w) // ⚡️ we can expand this to real ISO dates later
+                            : [],
+                          comments,
+                          billingOverride: false,
+                          rate: null,
+                          copay: null,
+                          billAmount: null,
+                        };
+
+                        const res = await fetch(
+                          "http://localhost:5000/api/schedules",
+                          {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(payload),
+                          }
+                        );
+
+                        if (!res.ok)
+                          throw new Error("Failed to create schedule");
+
+                        alert("✅ Schedule created successfully!");
+                        window.location.href =
+                          "/dashboard/scheduling/schedule-view";
+                      } catch (err) {
+                        console.error(err);
+                        alert("❌ Error creating schedule");
+                      }
                     }}
                   >
                     Confirm & Create Schedule

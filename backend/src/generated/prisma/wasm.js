@@ -501,8 +501,19 @@ exports.Prisma.ChatMessageScalarFieldEnum = {
   id: 'id',
   threadId: 'threadId',
   senderId: 'senderId',
+  senderType: 'senderType',
   content: 'content',
   createdAt: 'createdAt'
+};
+
+exports.Prisma.MissedVisitScalarFieldEnum = {
+  id: 'id',
+  visitId: 'visitId',
+  reason: 'reason',
+  createdAt: 'createdAt',
+  expiresAt: 'expiresAt',
+  rescheduled: 'rescheduled',
+  replacementScheduleId: 'replacementScheduleId'
 };
 
 exports.Prisma.SortOrder = {
@@ -524,6 +535,15 @@ exports.Role = exports.$Enums.Role = {
   SYSTEM_ADMIN: 'SYSTEM_ADMIN',
   AGENCY_USER: 'AGENCY_USER',
   AGENCY_ADMIN: 'AGENCY_ADMIN'
+};
+
+exports.VisitStatus = exports.$Enums.VisitStatus = {
+  Incomplete: 'Incomplete',
+  InProcess: 'InProcess',
+  Verified: 'Verified',
+  Scheduled: 'Scheduled',
+  Processed: 'Processed',
+  Omitted: 'Omitted'
 };
 
 exports.ChatType = exports.$Enums.ChatType = {
@@ -566,7 +586,8 @@ exports.Prisma.ModelName = {
   Schedule: 'Schedule',
   ChatThread: 'ChatThread',
   ChatParticipant: 'ChatParticipant',
-  ChatMessage: 'ChatMessage'
+  ChatMessage: 'ChatMessage',
+  MissedVisit: 'MissedVisit'
 };
 
 /**
