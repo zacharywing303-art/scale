@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import {
   getAllSchedules,
   createScheduleAndVisit,
+  updateSchedule,
 } from "../services/schedule.service";
 
 export const getSchedulesController = async (req: Request, res: Response) => {
@@ -34,3 +35,19 @@ export async function createScheduleController(req: Request, res: Response) {
     res.status(400).json({ error: err.message ?? "Failed to create schedule" });
   }
 }
+
+export const updateScheduleController = async (req: Request, res: Response) => {
+  try {
+    const id = req.params.id;
+    const updated = await updateSchedule(id, req.body);
+
+    if (!updated) {
+      return res.status(404).json({ error: "Schedule not found" });
+    }
+
+    res.json(updated);
+  } catch (err) {
+    console.error("❌ Error updating schedule:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

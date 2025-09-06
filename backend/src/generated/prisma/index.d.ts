@@ -256,13 +256,6 @@ export class PrismaClient<
    */
   $disconnect(): $Utils.JsPromise<void>;
 
-  /**
-   * Add a middleware
-   * @deprecated since 4.16.0. For new code, prefer client extensions instead.
-   * @see https://pris.ly/d/extensions
-   */
-  $use(cb: Prisma.Middleware): void
-
 /**
    * Executes a prepared raw query and returns the number of affected rows.
    * @example
@@ -629,8 +622,8 @@ export namespace Prisma {
   export import Exact = $Public.Exact
 
   /**
-   * Prisma Client JS version: 6.13.0
-   * Query Engine version: 361e86d0ea4987e9f53a565309b3eed797a6bcbd
+   * Prisma Client JS version: 6.15.0
+   * Query Engine version: 85179d7826409ee107a6ba334b5e305ae3fba9fb
    */
   export type PrismaVersion = {
     client: string
@@ -3006,25 +2999,6 @@ export namespace Prisma {
     | 'runCommandRaw'
     | 'findRaw'
     | 'groupBy'
-
-  /**
-   * These options are being passed into the middleware as "params"
-   */
-  export type MiddlewareParams = {
-    model?: ModelName
-    action: PrismaAction
-    args: any
-    dataPath: string[]
-    runInTransaction: boolean
-  }
-
-  /**
-   * The `T` type makes sure, that the `return proceed` is not forgotten in the middleware implementation
-   */
-  export type Middleware<T = any> = (
-    params: MiddlewareParams,
-    next: (params: MiddlewareParams) => $Utils.JsPromise<T>,
-  ) => $Utils.JsPromise<T>
 
   // tested in getLogLevel.test.ts
   export function getLogLevel(log: Array<LogLevel | LogDefinition>): LogLevel | undefined;
@@ -10280,6 +10254,9 @@ export namespace Prisma {
     registryID: string | null
     isSupervisor: boolean | null
     name: string | null
+    firstName: string | null
+    middleName: string | null
+    lastName: string | null
     dateOfBirth: Date | null
     gender: string | null
     mainPhone: string | null
@@ -10309,6 +10286,9 @@ export namespace Prisma {
     registryID: string | null
     isSupervisor: boolean | null
     name: string | null
+    firstName: string | null
+    middleName: string | null
+    lastName: string | null
     dateOfBirth: Date | null
     gender: string | null
     mainPhone: string | null
@@ -10338,6 +10318,9 @@ export namespace Prisma {
     registryID: number
     isSupervisor: number
     name: number
+    firstName: number
+    middleName: number
+    lastName: number
     dateOfBirth: number
     gender: number
     languages: number
@@ -10370,6 +10353,9 @@ export namespace Prisma {
     registryID?: true
     isSupervisor?: true
     name?: true
+    firstName?: true
+    middleName?: true
+    lastName?: true
     dateOfBirth?: true
     gender?: true
     mainPhone?: true
@@ -10399,6 +10385,9 @@ export namespace Prisma {
     registryID?: true
     isSupervisor?: true
     name?: true
+    firstName?: true
+    middleName?: true
+    lastName?: true
     dateOfBirth?: true
     gender?: true
     mainPhone?: true
@@ -10428,6 +10417,9 @@ export namespace Prisma {
     registryID?: true
     isSupervisor?: true
     name?: true
+    firstName?: true
+    middleName?: true
+    lastName?: true
     dateOfBirth?: true
     gender?: true
     languages?: true
@@ -10531,6 +10523,9 @@ export namespace Prisma {
     registryID: string | null
     isSupervisor: boolean
     name: string
+    firstName: string
+    middleName: string | null
+    lastName: string
     dateOfBirth: Date
     gender: string
     languages: string[]
@@ -10578,6 +10573,9 @@ export namespace Prisma {
     registryID?: boolean
     isSupervisor?: boolean
     name?: boolean
+    firstName?: boolean
+    middleName?: boolean
+    lastName?: boolean
     dateOfBirth?: boolean
     gender?: boolean
     languages?: boolean
@@ -10617,6 +10615,9 @@ export namespace Prisma {
     registryID?: boolean
     isSupervisor?: boolean
     name?: boolean
+    firstName?: boolean
+    middleName?: boolean
+    lastName?: boolean
     dateOfBirth?: boolean
     gender?: boolean
     languages?: boolean
@@ -10647,6 +10648,9 @@ export namespace Prisma {
     registryID?: boolean
     isSupervisor?: boolean
     name?: boolean
+    firstName?: boolean
+    middleName?: boolean
+    lastName?: boolean
     dateOfBirth?: boolean
     gender?: boolean
     languages?: boolean
@@ -10677,6 +10681,9 @@ export namespace Prisma {
     registryID?: boolean
     isSupervisor?: boolean
     name?: boolean
+    firstName?: boolean
+    middleName?: boolean
+    lastName?: boolean
     dateOfBirth?: boolean
     gender?: boolean
     languages?: boolean
@@ -10691,7 +10698,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type EmployeeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "last5SSN" | "status" | "effectiveDate" | "employeeID" | "agencyID" | "position" | "hireDate" | "supervisor" | "supervisorCode" | "nationalProviderID" | "alternativeProviderID" | "registryID" | "isSupervisor" | "name" | "dateOfBirth" | "gender" | "languages" | "mainPhone" | "phone2" | "phone3" | "phone4" | "email" | "mobileUser" | "rehire" | "createdAt" | "updatedAt", ExtArgs["result"]["employee"]>
+  export type EmployeeOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "last5SSN" | "status" | "effectiveDate" | "employeeID" | "agencyID" | "position" | "hireDate" | "supervisor" | "supervisorCode" | "nationalProviderID" | "alternativeProviderID" | "registryID" | "isSupervisor" | "name" | "firstName" | "middleName" | "lastName" | "dateOfBirth" | "gender" | "languages" | "mainPhone" | "phone2" | "phone3" | "phone4" | "email" | "mobileUser" | "rehire" | "createdAt" | "updatedAt", ExtArgs["result"]["employee"]>
   export type EmployeeInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     addresses?: boolean | Employee$addressesArgs<ExtArgs>
     contacts?: boolean | Employee$contactsArgs<ExtArgs>
@@ -10734,6 +10741,9 @@ export namespace Prisma {
       registryID: string | null
       isSupervisor: boolean
       name: string
+      firstName: string
+      middleName: string | null
+      lastName: string
       dateOfBirth: Date
       gender: string
       languages: string[]
@@ -11192,6 +11202,9 @@ export namespace Prisma {
     readonly registryID: FieldRef<"Employee", 'String'>
     readonly isSupervisor: FieldRef<"Employee", 'Boolean'>
     readonly name: FieldRef<"Employee", 'String'>
+    readonly firstName: FieldRef<"Employee", 'String'>
+    readonly middleName: FieldRef<"Employee", 'String'>
+    readonly lastName: FieldRef<"Employee", 'String'>
     readonly dateOfBirth: FieldRef<"Employee", 'DateTime'>
     readonly gender: FieldRef<"Employee", 'String'>
     readonly languages: FieldRef<"Employee", 'String[]'>
@@ -27280,7 +27293,7 @@ export namespace Prisma {
     startTime: Date | null
     endTime: Date | null
     employeeID: string | null
-    repeatedEvent: boolean | null
+    recurring: boolean | null
     comments: string | null
     billingOverride: boolean | null
     rate: number | null
@@ -27307,7 +27320,7 @@ export namespace Prisma {
     startTime: Date | null
     endTime: Date | null
     employeeID: string | null
-    repeatedEvent: boolean | null
+    recurring: boolean | null
     comments: string | null
     billingOverride: boolean | null
     rate: number | null
@@ -27334,7 +27347,7 @@ export namespace Prisma {
     startTime: number
     endTime: number
     employeeID: number
-    repeatedEvent: number
+    recurring: number
     dates: number
     comments: number
     billingOverride: number
@@ -27376,7 +27389,7 @@ export namespace Prisma {
     startTime?: true
     endTime?: true
     employeeID?: true
-    repeatedEvent?: true
+    recurring?: true
     comments?: true
     billingOverride?: true
     rate?: true
@@ -27403,7 +27416,7 @@ export namespace Prisma {
     startTime?: true
     endTime?: true
     employeeID?: true
-    repeatedEvent?: true
+    recurring?: true
     comments?: true
     billingOverride?: true
     rate?: true
@@ -27430,7 +27443,7 @@ export namespace Prisma {
     startTime?: true
     endTime?: true
     employeeID?: true
-    repeatedEvent?: true
+    recurring?: true
     dates?: true
     comments?: true
     billingOverride?: true
@@ -27545,7 +27558,7 @@ export namespace Prisma {
     startTime: Date
     endTime: Date
     employeeID: string | null
-    repeatedEvent: boolean
+    recurring: boolean
     dates: string[]
     comments: string | null
     billingOverride: boolean
@@ -27592,7 +27605,7 @@ export namespace Prisma {
     startTime?: boolean
     endTime?: boolean
     employeeID?: boolean
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: boolean
     comments?: boolean
     billingOverride?: boolean
@@ -27625,7 +27638,7 @@ export namespace Prisma {
     startTime?: boolean
     endTime?: boolean
     employeeID?: boolean
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: boolean
     comments?: boolean
     billingOverride?: boolean
@@ -27656,7 +27669,7 @@ export namespace Prisma {
     startTime?: boolean
     endTime?: boolean
     employeeID?: boolean
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: boolean
     comments?: boolean
     billingOverride?: boolean
@@ -27687,7 +27700,7 @@ export namespace Prisma {
     startTime?: boolean
     endTime?: boolean
     employeeID?: boolean
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: boolean
     comments?: boolean
     billingOverride?: boolean
@@ -27699,7 +27712,7 @@ export namespace Prisma {
     agencyID?: boolean
   }
 
-  export type ScheduleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "scheduleType" | "clientID" | "clientMedicaidId" | "authorizations" | "authorizationNumber" | "serviceId" | "officeReason" | "eventCode" | "authorizationBillUnitType" | "eventStatus" | "eventDate" | "startTime" | "endTime" | "employeeID" | "repeatedEvent" | "dates" | "comments" | "billingOverride" | "rate" | "copay" | "billAmount" | "createdAt" | "updatedAt" | "agencyID", ExtArgs["result"]["schedule"]>
+  export type ScheduleOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "scheduleType" | "clientID" | "clientMedicaidId" | "authorizations" | "authorizationNumber" | "serviceId" | "officeReason" | "eventCode" | "authorizationBillUnitType" | "eventStatus" | "eventDate" | "startTime" | "endTime" | "employeeID" | "recurring" | "dates" | "comments" | "billingOverride" | "rate" | "copay" | "billAmount" | "createdAt" | "updatedAt" | "agencyID", ExtArgs["result"]["schedule"]>
   export type ScheduleInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     client?: boolean | ClientDefaultArgs<ExtArgs>
     service?: boolean | Schedule$serviceArgs<ExtArgs>
@@ -27742,7 +27755,7 @@ export namespace Prisma {
       startTime: Date
       endTime: Date
       employeeID: string | null
-      repeatedEvent: boolean
+      recurring: boolean
       dates: string[]
       comments: string | null
       billingOverride: boolean
@@ -28194,7 +28207,7 @@ export namespace Prisma {
     readonly startTime: FieldRef<"Schedule", 'DateTime'>
     readonly endTime: FieldRef<"Schedule", 'DateTime'>
     readonly employeeID: FieldRef<"Schedule", 'String'>
-    readonly repeatedEvent: FieldRef<"Schedule", 'Boolean'>
+    readonly recurring: FieldRef<"Schedule", 'Boolean'>
     readonly dates: FieldRef<"Schedule", 'String[]'>
     readonly comments: FieldRef<"Schedule", 'String'>
     readonly billingOverride: FieldRef<"Schedule", 'Boolean'>
@@ -33268,6 +33281,9 @@ export namespace Prisma {
     registryID: 'registryID',
     isSupervisor: 'isSupervisor',
     name: 'name',
+    firstName: 'firstName',
+    middleName: 'middleName',
+    lastName: 'lastName',
     dateOfBirth: 'dateOfBirth',
     gender: 'gender',
     languages: 'languages',
@@ -33520,7 +33536,7 @@ export namespace Prisma {
     startTime: 'startTime',
     endTime: 'endTime',
     employeeID: 'employeeID',
-    repeatedEvent: 'repeatedEvent',
+    recurring: 'recurring',
     dates: 'dates',
     comments: 'comments',
     billingOverride: 'billingOverride',
@@ -34463,6 +34479,9 @@ export namespace Prisma {
     registryID?: StringNullableFilter<"Employee"> | string | null
     isSupervisor?: BoolFilter<"Employee"> | boolean
     name?: StringFilter<"Employee"> | string
+    firstName?: StringFilter<"Employee"> | string
+    middleName?: StringNullableFilter<"Employee"> | string | null
+    lastName?: StringFilter<"Employee"> | string
     dateOfBirth?: DateTimeFilter<"Employee"> | Date | string
     gender?: StringFilter<"Employee"> | string
     languages?: StringNullableListFilter<"Employee">
@@ -34501,6 +34520,9 @@ export namespace Prisma {
     registryID?: SortOrderInput | SortOrder
     isSupervisor?: SortOrder
     name?: SortOrder
+    firstName?: SortOrder
+    middleName?: SortOrderInput | SortOrder
+    lastName?: SortOrder
     dateOfBirth?: SortOrder
     gender?: SortOrder
     languages?: SortOrder
@@ -34542,6 +34564,9 @@ export namespace Prisma {
     registryID?: StringNullableFilter<"Employee"> | string | null
     isSupervisor?: BoolFilter<"Employee"> | boolean
     name?: StringFilter<"Employee"> | string
+    firstName?: StringFilter<"Employee"> | string
+    middleName?: StringNullableFilter<"Employee"> | string | null
+    lastName?: StringFilter<"Employee"> | string
     dateOfBirth?: DateTimeFilter<"Employee"> | Date | string
     gender?: StringFilter<"Employee"> | string
     languages?: StringNullableListFilter<"Employee">
@@ -34580,6 +34605,9 @@ export namespace Prisma {
     registryID?: SortOrderInput | SortOrder
     isSupervisor?: SortOrder
     name?: SortOrder
+    firstName?: SortOrder
+    middleName?: SortOrderInput | SortOrder
+    lastName?: SortOrder
     dateOfBirth?: SortOrder
     gender?: SortOrder
     languages?: SortOrder
@@ -34616,6 +34644,9 @@ export namespace Prisma {
     registryID?: StringNullableWithAggregatesFilter<"Employee"> | string | null
     isSupervisor?: BoolWithAggregatesFilter<"Employee"> | boolean
     name?: StringWithAggregatesFilter<"Employee"> | string
+    firstName?: StringWithAggregatesFilter<"Employee"> | string
+    middleName?: StringNullableWithAggregatesFilter<"Employee"> | string | null
+    lastName?: StringWithAggregatesFilter<"Employee"> | string
     dateOfBirth?: DateTimeWithAggregatesFilter<"Employee"> | Date | string
     gender?: StringWithAggregatesFilter<"Employee"> | string
     languages?: StringNullableListFilter<"Employee">
@@ -35803,7 +35834,7 @@ export namespace Prisma {
     startTime?: DateTimeFilter<"Schedule"> | Date | string
     endTime?: DateTimeFilter<"Schedule"> | Date | string
     employeeID?: StringNullableFilter<"Schedule"> | string | null
-    repeatedEvent?: BoolFilter<"Schedule"> | boolean
+    recurring?: BoolFilter<"Schedule"> | boolean
     dates?: StringNullableListFilter<"Schedule">
     comments?: StringNullableFilter<"Schedule"> | string | null
     billingOverride?: BoolFilter<"Schedule"> | boolean
@@ -35835,7 +35866,7 @@ export namespace Prisma {
     startTime?: SortOrder
     endTime?: SortOrder
     employeeID?: SortOrderInput | SortOrder
-    repeatedEvent?: SortOrder
+    recurring?: SortOrder
     dates?: SortOrder
     comments?: SortOrderInput | SortOrder
     billingOverride?: SortOrder
@@ -35870,7 +35901,7 @@ export namespace Prisma {
     startTime?: DateTimeFilter<"Schedule"> | Date | string
     endTime?: DateTimeFilter<"Schedule"> | Date | string
     employeeID?: StringNullableFilter<"Schedule"> | string | null
-    repeatedEvent?: BoolFilter<"Schedule"> | boolean
+    recurring?: BoolFilter<"Schedule"> | boolean
     dates?: StringNullableListFilter<"Schedule">
     comments?: StringNullableFilter<"Schedule"> | string | null
     billingOverride?: BoolFilter<"Schedule"> | boolean
@@ -35902,7 +35933,7 @@ export namespace Prisma {
     startTime?: SortOrder
     endTime?: SortOrder
     employeeID?: SortOrderInput | SortOrder
-    repeatedEvent?: SortOrder
+    recurring?: SortOrder
     dates?: SortOrder
     comments?: SortOrderInput | SortOrder
     billingOverride?: SortOrder
@@ -35938,7 +35969,7 @@ export namespace Prisma {
     startTime?: DateTimeWithAggregatesFilter<"Schedule"> | Date | string
     endTime?: DateTimeWithAggregatesFilter<"Schedule"> | Date | string
     employeeID?: StringNullableWithAggregatesFilter<"Schedule"> | string | null
-    repeatedEvent?: BoolWithAggregatesFilter<"Schedule"> | boolean
+    recurring?: BoolWithAggregatesFilter<"Schedule"> | boolean
     dates?: StringNullableListFilter<"Schedule">
     comments?: StringNullableWithAggregatesFilter<"Schedule"> | string | null
     billingOverride?: BoolWithAggregatesFilter<"Schedule"> | boolean
@@ -37074,7 +37105,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -37112,7 +37146,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -37150,6 +37187,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -37188,6 +37228,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -37226,7 +37269,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -37256,6 +37302,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -37286,6 +37335,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -38623,7 +38675,7 @@ export namespace Prisma {
     eventDate: Date | string
     startTime: Date | string
     endTime: Date | string
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -38655,7 +38707,7 @@ export namespace Prisma {
     startTime: Date | string
     endTime: Date | string
     employeeID?: string | null
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -38681,7 +38733,7 @@ export namespace Prisma {
     eventDate?: DateTimeFieldUpdateOperationsInput | Date | string
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -38713,7 +38765,7 @@ export namespace Prisma {
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
     employeeID?: NullableStringFieldUpdateOperationsInput | string | null
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -38742,7 +38794,7 @@ export namespace Prisma {
     startTime: Date | string
     endTime: Date | string
     employeeID?: string | null
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -38767,7 +38819,7 @@ export namespace Prisma {
     eventDate?: DateTimeFieldUpdateOperationsInput | Date | string
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -38795,7 +38847,7 @@ export namespace Prisma {
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
     employeeID?: NullableStringFieldUpdateOperationsInput | string | null
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -39933,6 +39985,9 @@ export namespace Prisma {
     registryID?: SortOrder
     isSupervisor?: SortOrder
     name?: SortOrder
+    firstName?: SortOrder
+    middleName?: SortOrder
+    lastName?: SortOrder
     dateOfBirth?: SortOrder
     gender?: SortOrder
     languages?: SortOrder
@@ -39963,6 +40018,9 @@ export namespace Prisma {
     registryID?: SortOrder
     isSupervisor?: SortOrder
     name?: SortOrder
+    firstName?: SortOrder
+    middleName?: SortOrder
+    lastName?: SortOrder
     dateOfBirth?: SortOrder
     gender?: SortOrder
     mainPhone?: SortOrder
@@ -39992,6 +40050,9 @@ export namespace Prisma {
     registryID?: SortOrder
     isSupervisor?: SortOrder
     name?: SortOrder
+    firstName?: SortOrder
+    middleName?: SortOrder
+    lastName?: SortOrder
     dateOfBirth?: SortOrder
     gender?: SortOrder
     mainPhone?: SortOrder
@@ -40713,7 +40774,7 @@ export namespace Prisma {
     startTime?: SortOrder
     endTime?: SortOrder
     employeeID?: SortOrder
-    repeatedEvent?: SortOrder
+    recurring?: SortOrder
     dates?: SortOrder
     comments?: SortOrder
     billingOverride?: SortOrder
@@ -40747,7 +40808,7 @@ export namespace Prisma {
     startTime?: SortOrder
     endTime?: SortOrder
     employeeID?: SortOrder
-    repeatedEvent?: SortOrder
+    recurring?: SortOrder
     comments?: SortOrder
     billingOverride?: SortOrder
     rate?: SortOrder
@@ -40774,7 +40835,7 @@ export namespace Prisma {
     startTime?: SortOrder
     endTime?: SortOrder
     employeeID?: SortOrder
-    repeatedEvent?: SortOrder
+    recurring?: SortOrder
     comments?: SortOrder
     billingOverride?: SortOrder
     rate?: SortOrder
@@ -44418,7 +44479,7 @@ export namespace Prisma {
     eventDate: Date | string
     startTime: Date | string
     endTime: Date | string
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -44448,7 +44509,7 @@ export namespace Prisma {
     eventDate: Date | string
     startTime: Date | string
     endTime: Date | string
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -44766,7 +44827,7 @@ export namespace Prisma {
     startTime?: DateTimeFilter<"Schedule"> | Date | string
     endTime?: DateTimeFilter<"Schedule"> | Date | string
     employeeID?: StringNullableFilter<"Schedule"> | string | null
-    repeatedEvent?: BoolFilter<"Schedule"> | boolean
+    recurring?: BoolFilter<"Schedule"> | boolean
     dates?: StringNullableListFilter<"Schedule">
     comments?: StringNullableFilter<"Schedule"> | string | null
     billingOverride?: BoolFilter<"Schedule"> | boolean
@@ -44955,7 +45016,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -44992,7 +45056,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -45045,6 +45112,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -45082,6 +45152,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -45119,7 +45192,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -45156,7 +45232,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -45209,6 +45288,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -45246,6 +45328,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -45283,7 +45368,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -45320,7 +45408,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -45373,6 +45464,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -45410,6 +45504,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -45447,7 +45544,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -45484,7 +45584,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -45537,6 +45640,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -45574,6 +45680,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -45611,7 +45720,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -45648,7 +45760,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -45764,6 +45879,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -45801,6 +45919,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -45907,7 +46028,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -45944,7 +46068,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -46060,6 +46187,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -46097,6 +46227,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -46268,7 +46401,7 @@ export namespace Prisma {
     eventDate: Date | string
     startTime: Date | string
     endTime: Date | string
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -46298,7 +46431,7 @@ export namespace Prisma {
     startTime: Date | string
     endTime: Date | string
     employeeID?: string | null
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -46337,7 +46470,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -46374,7 +46510,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -46663,6 +46802,9 @@ export namespace Prisma {
     registryID?: StringNullableFilter<"Employee"> | string | null
     isSupervisor?: BoolFilter<"Employee"> | boolean
     name?: StringFilter<"Employee"> | string
+    firstName?: StringFilter<"Employee"> | string
+    middleName?: StringNullableFilter<"Employee"> | string | null
+    lastName?: StringFilter<"Employee"> | string
     dateOfBirth?: DateTimeFilter<"Employee"> | Date | string
     gender?: StringFilter<"Employee"> | string
     languages?: StringNullableListFilter<"Employee">
@@ -46964,7 +47106,7 @@ export namespace Prisma {
     eventDate: Date | string
     startTime: Date | string
     endTime: Date | string
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -46994,7 +47136,7 @@ export namespace Prisma {
     startTime: Date | string
     endTime: Date | string
     employeeID?: string | null
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -48006,7 +48148,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -48043,7 +48188,10 @@ export namespace Prisma {
     registryID?: string | null
     isSupervisor?: boolean
     name: string
-    dateOfBirth: Date | string
+    firstName?: string
+    middleName?: string | null
+    lastName?: string
+    dateOfBirth?: Date | string
     gender: string
     languages?: EmployeeCreatelanguagesInput | string[]
     mainPhone: string
@@ -48224,6 +48372,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -48261,6 +48412,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -48542,7 +48696,7 @@ export namespace Prisma {
     eventDate: Date | string
     startTime: Date | string
     endTime: Date | string
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -48573,7 +48727,7 @@ export namespace Prisma {
     startTime: Date | string
     endTime: Date | string
     employeeID?: string | null
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -48736,7 +48890,7 @@ export namespace Prisma {
     eventDate?: DateTimeFieldUpdateOperationsInput | Date | string
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -48767,7 +48921,7 @@ export namespace Prisma {
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
     employeeID?: NullableStringFieldUpdateOperationsInput | string | null
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -49164,7 +49318,7 @@ export namespace Prisma {
     eventDate: Date | string
     startTime: Date | string
     endTime: Date | string
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -49346,7 +49500,7 @@ export namespace Prisma {
     eventDate?: DateTimeFieldUpdateOperationsInput | Date | string
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -49376,7 +49530,7 @@ export namespace Prisma {
     eventDate?: DateTimeFieldUpdateOperationsInput | Date | string
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -49404,7 +49558,7 @@ export namespace Prisma {
     eventDate?: DateTimeFieldUpdateOperationsInput | Date | string
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -49633,7 +49787,7 @@ export namespace Prisma {
     startTime: Date | string
     endTime: Date | string
     employeeID?: string | null
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -49769,7 +49923,7 @@ export namespace Prisma {
     eventDate?: DateTimeFieldUpdateOperationsInput | Date | string
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -49799,7 +49953,7 @@ export namespace Prisma {
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
     employeeID?: NullableStringFieldUpdateOperationsInput | string | null
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -49827,7 +49981,7 @@ export namespace Prisma {
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
     employeeID?: NullableStringFieldUpdateOperationsInput | string | null
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -49855,6 +50009,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -49892,6 +50049,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -49929,6 +50089,9 @@ export namespace Prisma {
     registryID?: NullableStringFieldUpdateOperationsInput | string | null
     isSupervisor?: BoolFieldUpdateOperationsInput | boolean
     name?: StringFieldUpdateOperationsInput | string
+    firstName?: StringFieldUpdateOperationsInput | string
+    middleName?: NullableStringFieldUpdateOperationsInput | string | null
+    lastName?: StringFieldUpdateOperationsInput | string
     dateOfBirth?: DateTimeFieldUpdateOperationsInput | Date | string
     gender?: StringFieldUpdateOperationsInput | string
     languages?: EmployeeUpdatelanguagesInput | string[]
@@ -50166,7 +50329,7 @@ export namespace Prisma {
     startTime: Date | string
     endTime: Date | string
     employeeID?: string | null
-    repeatedEvent?: boolean
+    recurring?: boolean
     dates?: ScheduleCreatedatesInput | string[]
     comments?: string | null
     billingOverride?: boolean
@@ -50326,7 +50489,7 @@ export namespace Prisma {
     eventDate?: DateTimeFieldUpdateOperationsInput | Date | string
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -50356,7 +50519,7 @@ export namespace Prisma {
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
     employeeID?: NullableStringFieldUpdateOperationsInput | string | null
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean
@@ -50384,7 +50547,7 @@ export namespace Prisma {
     startTime?: DateTimeFieldUpdateOperationsInput | Date | string
     endTime?: DateTimeFieldUpdateOperationsInput | Date | string
     employeeID?: NullableStringFieldUpdateOperationsInput | string | null
-    repeatedEvent?: BoolFieldUpdateOperationsInput | boolean
+    recurring?: BoolFieldUpdateOperationsInput | boolean
     dates?: ScheduleUpdatedatesInput | string[]
     comments?: NullableStringFieldUpdateOperationsInput | string | null
     billingOverride?: BoolFieldUpdateOperationsInput | boolean

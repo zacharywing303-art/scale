@@ -1,62 +1,3 @@
-// import prisma from "../lib/db";
-
-// export const getAllSchedules = async () => {
-//   return prisma.schedule.findMany({
-//     include: {
-//       client: true,
-//       employee: true,
-//       service: true,
-//     },
-//   });
-// };
-
-// export const createSchedule = async (data: any) => {
-//   // Validate required fields
-//   if (!data.scheduleType) throw new Error("scheduleType is required");
-//   if (!data.startTime || !data.endTime)
-//     throw new Error("start/end time required");
-
-//   // Different logic depending on type
-//   if (data.scheduleType === "office") {
-//     if (!data.officeReason) throw new Error("Office schedules require reason");
-//   }
-
-//   if (data.scheduleType === "visit") {
-//     if (!data.clientID || !data.serviceId) {
-//       throw new Error("Visit requires client and service");
-//     }
-//   }
-
-//   if (data.scheduleType === "facility") {
-//     // ⚡️ Define rules later (maybe facilityID?)
-//   }
-
-//   return prisma.schedule.create({
-//     data: {
-//       scheduleType: data.scheduleType,
-//       clientID: data.clientID,
-//       clientMedicaidId: data.clientMedicaidId,
-//       authorizations: data.authorizations,
-//       authorizationNumber: data.authorizationNumber,
-//       serviceId: data.serviceId,
-//       officeReason: data.officeReason,
-//       eventCode: data.eventCode,
-//       authorizationBillUnitType: data.authorizationBillUnitType,
-//       eventStatus: data.eventStatus,
-//       eventDate: new Date(data.eventDate),
-//       startTime: new Date(data.startTime),
-//       endTime: new Date(data.endTime),
-//       employeeID: data.employeeID,
-//       repeatedEvent: data.repeatedEvent,
-//       dates: data.dates || [],
-//       comments: data.comments,
-//       billingOverride: data.billingOverride || false,
-//       rate: data.rate,
-//       copay: data.copay,
-//       billAmount: data.billAmount,
-//     },
-//   });
-// };
 import prisma from "../lib/db";
 import { addMinutes } from "date-fns";
 
@@ -75,7 +16,7 @@ type CreateScheduleInput = {
   startTime: Date; // ISO
   endTime: Date; // ISO
   employeeID?: string | null;
-  repeatedEvent: boolean;
+  recurring: boolean;
   dates: string[];
   comments?: string | null;
   billingOverride?: boolean;
@@ -97,6 +38,11 @@ export const getAllSchedules = async () => {
 
 export async function createScheduleAndVisit(input: CreateScheduleInput) {
   return await prisma.$transaction(async (tx) => {
+    // Validation
+    if (input.endTime <= input.startTime) {
+      throw new Error("End time must be after start time");
+    }
+
     // 1) Create Schedule
     const schedule = await tx.schedule.create({
       data: {
@@ -114,7 +60,7 @@ export async function createScheduleAndVisit(input: CreateScheduleInput) {
         startTime: input.startTime,
         endTime: input.endTime,
         employeeID: input.employeeID ?? undefined,
-        repeatedEvent: input.repeatedEvent,
+        recurring: input.recurring,
         dates: input.dates,
         comments: input.comments ?? undefined,
         billingOverride: input.billingOverride ?? false,
@@ -125,11 +71,30 @@ export async function createScheduleAndVisit(input: CreateScheduleInput) {
       },
     });
 
-    // 2) Create the matching Visit
-    // Initial status = Scheduled (enum default). We’ll let the worker update status later.
+    // 2) Get related data for visit
+    const client = await tx.client.findUnique({
+      where: { id: input.clientID },
+      select: { name: true, medicaidID: true },
+    });
+
+    const employee = input.employeeID
+      ? await tx.employee.findUnique({
+          where: { id: input.employeeID },
+          select: { name: true },
+        })
+      : null;
+
+    const service = input.serviceId
+      ? await tx.service.findUnique({
+          where: { id: input.serviceId },
+          select: { code: true, name: true },
+        })
+      : null;
+
     const scheduledHours =
       (input.endTime.getTime() - input.startTime.getTime()) / 1000 / 60 / 60;
 
+    // 3) Create Visit
     await tx.visit.create({
       data: {
         agencyID: input.agencyID,
@@ -137,31 +102,13 @@ export async function createScheduleAndVisit(input: CreateScheduleInput) {
         scheduledTimeOut: input.endTime,
         scheduledHours,
         visitStatus: "Scheduled",
-        clientID: undefined, // you’re using string IDs elsewhere; keep visit’s client references as descriptive
-        clientMedicaidID: input.clientMedicaidId,
-        clientName: (
-          await tx.client.findUnique({
-            where: { id: input.clientID },
-            select: { name: true },
-          })
-        )?.name,
-        employeeID: undefined, // visit has Int? in schema; keep informative fields instead
-        employeeName: input.employeeID
-          ? (
-              await tx.employee.findUnique({
-                where: { id: input.employeeID },
-                select: { name: true },
-              })
-            )?.name
-          : undefined,
-        service: input.serviceId
-          ? (await tx.service.findUnique({
-              where: { id: input.serviceId },
-              select: { code: true, name: true },
-            })) && "ok"
-          : undefined, // keep as string for now per schema; if you prefer "CODE - NAME", build that string
-
-        payEqualsSch: true, // aligns with “use scheduled hours” default
+        clientID: input.clientID ? Number(input.clientID) : undefined,
+        clientMedicaidID: client?.medicaidID ?? input.clientMedicaidId,
+        clientName: client?.name,
+        employeeID: input.employeeID ? Number(input.employeeID) : undefined,
+        employeeName: employee?.name,
+        service: service ? `${service.code} - ${service.name}` : undefined,
+        payEqualsSch: true,
         memo: input.comments ?? undefined,
       },
     });
@@ -169,3 +116,30 @@ export async function createScheduleAndVisit(input: CreateScheduleInput) {
     return schedule;
   });
 }
+
+export const updateSchedule = async (id: string, data: any) => {
+  if (
+    data.endTime &&
+    data.startTime &&
+    new Date(data.endTime) <= new Date(data.startTime)
+  ) {
+    throw new Error("End time must be after start time");
+  }
+
+  return prisma.schedule.update({
+    where: { id },
+    data: {
+      scheduleType: data.scheduleType ?? data.type,
+      serviceId: data.serviceId ?? undefined,
+      officeReason: data.officeReason,
+      eventStatus: data.eventStatus,
+      eventDate: data.eventDate ? new Date(data.eventDate) : undefined,
+      startTime: data.startTime ? new Date(data.startTime) : undefined,
+      endTime: data.endTime ? new Date(data.endTime) : undefined,
+      employeeID: data.employeeID ?? undefined,
+      recurring: data.recurring,
+      dates: data.dates ?? [],
+      comments: data.comments,
+    },
+  });
+};

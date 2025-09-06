@@ -57,6 +57,29 @@ function normalizeStartEnd(
   return { start, end };
 }
 
+function generateSchedulesInRange(
+  rangeStart: Date,
+  rangeEnd: Date,
+  weekdays: string[],
+  startTime: string,
+  endTime: string
+) {
+  const schedules: { start: Date; end: Date }[] = [];
+  const dayMs = 24 * 60 * 60 * 1000;
+  const start = new Date(rangeStart);
+  const end = new Date(rangeEnd);
+
+  for (let d = new Date(start); d <= end; d = new Date(d.getTime() + dayMs)) {
+    const dayName = d.toLocaleDateString("en-US", { weekday: "long" });
+    if (weekdays.includes(dayName)) {
+      const normalized = normalizeStartEnd(d, startTime, endTime);
+      if (normalized) schedules.push(normalized);
+    }
+  }
+
+  return schedules;
+}
+
 export default function CreateSchedulePage() {
   const [type, setType] = useState<"office" | "visit" | "">("");
   const [client, setClient] = useState<string | null>(null);
@@ -105,7 +128,22 @@ export default function CreateSchedulePage() {
     "Saturday",
   ];
 
-  const dummyMissedShifts = ["Visit with Mr. A (6/10)", "Office shift (6/5)"];
+  // const dummyMissedShifts = ["Visit with Mr. A (6/10)", "Office shift (6/5)"];
+  const [missedShifts, setMissedShifts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchMissed = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/missed-visits");
+        const data = await res.json();
+        setMissedShifts(data);
+      } catch (err) {
+        console.error("❌ Error fetching missed visits", err);
+      }
+    };
+
+    fetchMissed();
+  }, []);
 
   // 🔹 Fetch data from backend
   useEffect(() => {
@@ -410,28 +448,40 @@ export default function CreateSchedulePage() {
           </div>
           {reschedule && (
             <div>
-              <Label>Select Missed Shift</Label>
+              <Label>Select Missed Visit</Label>
               <div className="flex flex-wrap gap-2 mt-2">
-                {dummyMissedShifts.map((item) => (
-                  <button
-                    key={item}
-                    type="button"
-                    className={`px-3 py-1 rounded border ${
-                      selectedMissed.includes(item)
-                        ? "bg-primary text-white"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                    onClick={() =>
-                      handleCheckboxChange(
-                        item,
-                        selectedMissed,
-                        setSelectedMissed
-                      )
-                    }
-                  >
-                    {item}
-                  </button>
-                ))}
+                {missedShifts.length > 0 ? (
+                  missedShifts.map((m) => (
+                    <button
+                      key={m.id}
+                      type="button"
+                      className={`px-3 py-1 rounded border ${
+                        selectedMissed.includes(m.id)
+                          ? "bg-primary text-white"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                      onClick={() =>
+                        handleCheckboxChange(
+                          m.id,
+                          selectedMissed,
+                          setSelectedMissed
+                        )
+                      }
+                    >
+                      {m.client
+                        ? `Visit with ${m.client} (${new Date(
+                            m.scheduledTimeOut
+                          ).toLocaleDateString()})`
+                        : `Missed Shift (${new Date(
+                            m.scheduledTimeOut
+                          ).toLocaleDateString()})`}
+                    </button>
+                  ))
+                ) : (
+                  <p className="text-muted-foreground">
+                    No missed visits found.
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -549,58 +599,124 @@ export default function CreateSchedulePage() {
                   <Button
                     className="w-full"
                     onClick={async () => {
-                      const normalizedTimes = normalizeStartEnd(
-                        oneDay ? (selectedDate as Date) : (rangeStart as Date),
-                        startTime,
-                        endTime
-                      );
-
-                      if (!normalizedTimes) {
-                        alert(
-                          "❌ End time cannot be the same as start time. Please choose a different time."
-                        );
-                        return; // Stop submission
-                      }
                       try {
-                        const payload = {
-                          scheduleType: type, // office | visit | facility
-                          clientID: client || null,
-                          clientMedicaidId: "TEMP123", // ⚡️ you can fetch/set this properly later
-                          authorizations: authorization || null,
-                          serviceId: service || null,
-                          officeReason: type === "office" ? reason : null,
-                          eventCode: "EVT001", // ⚡️ placeholder until you define how codes are assigned
-                          authorizationBillUnitType: "Hourly", // ⚡️ make dropdown later
-                          eventStatus: "Confirmed", // ⚡️ default
-                          eventDate: oneDay ? selectedDate : rangeStart, // base date
-                          startTime: normalizedTimes.start.toISOString(),
-                          endTime: normalizedTimes.end.toISOString(),
+                        let scheduleBlocks: { start: Date; end: Date }[] = [];
 
-                          employeeID: visitEmployees[0] || null, // first employee for now
-                          repeatedEvent: !oneDay && recurring,
-                          dates: !oneDay
-                            ? weekdays.map((w) => w) // ⚡️ we can expand this to real ISO dates later
-                            : [],
-                          comments,
-                          billingOverride: false,
-                          rate: null,
-                          copay: null,
-                          billAmount: null,
-                        };
-
-                        const res = await fetch(
-                          "http://localhost:5000/api/schedules",
-                          {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify(payload),
+                        if (oneDay) {
+                          const normalized = normalizeStartEnd(
+                            selectedDate as Date,
+                            startTime,
+                            endTime
+                          );
+                          if (!normalized) {
+                            alert("❌ End time cannot equal start time.");
+                            return;
                           }
-                        );
+                          scheduleBlocks = [normalized];
+                        } else {
+                          if (!rangeStart || !rangeEnd) {
+                            alert("❌ Please select a valid date range.");
+                            return;
+                          }
 
-                        if (!res.ok)
-                          throw new Error("Failed to create schedule");
+                          // First block
+                          const initialBlock = generateSchedulesInRange(
+                            rangeStart,
+                            rangeEnd,
+                            weekdays,
+                            startTime,
+                            endTime
+                          );
+                          if (initialBlock.some((b) => !b)) {
+                            alert("❌ Invalid start or end time in range.");
+                            return;
+                          }
+                          scheduleBlocks.push(...initialBlock);
 
-                        alert("✅ Schedule created successfully!");
+                          // If recurring → duplicate block forward
+                          if (recurring) {
+                            const blockLength =
+                              Math.ceil(
+                                (rangeEnd.getTime() - rangeStart.getTime()) /
+                                  (1000 * 60 * 60 * 24)
+                              ) + 1;
+                            let nextStart = new Date(rangeStart);
+                            let nextEnd = new Date(rangeEnd);
+
+                            while (true) {
+                              nextStart = new Date(
+                                nextStart.getTime() +
+                                  blockLength * 24 * 60 * 60 * 1000
+                              );
+                              nextEnd = new Date(
+                                nextEnd.getTime() +
+                                  blockLength * 24 * 60 * 60 * 1000
+                              );
+
+                              // Stop condition: only generate until user turns recurring off later
+                              // For now we generate ONE extra block forward
+                              const nextBlock = generateSchedulesInRange(
+                                nextStart,
+                                nextEnd,
+                                weekdays,
+                                startTime,
+                                endTime
+                              );
+                              if (nextBlock.some((b) => !b)) {
+                                alert(
+                                  "❌ Invalid start or end time in recurring range."
+                                );
+                                return;
+                              }
+                              scheduleBlocks.push(...nextBlock);
+
+                              break; // ⚡️ remove this `break` later if you want indefinite recurrence until edited
+                            }
+                          }
+                        }
+
+                        // Send each schedule
+                        for (const block of scheduleBlocks) {
+                          if (!block || !block.start || !block.end) {
+                            alert("❌ Invalid schedule block detected.");
+                            return;
+                          }
+                          const payload = {
+                            scheduleType: type,
+                            clientID: client || null,
+                            clientMedicaidId: "TEMP123",
+                            authorizations: authorization || null,
+                            serviceId: service || null,
+                            officeReason: type === "office" ? reason : null,
+                            eventCode: "EVT001",
+                            authorizationBillUnitType: "Hourly",
+                            eventStatus: "Confirmed",
+                            eventDate: block.start.toISOString(),
+                            startTime: block.start.toISOString(),
+                            endTime: block.end.toISOString(),
+                            employeeID: visitEmployees[0] || null,
+                            repeatedEvent: !oneDay && recurring,
+                            comments,
+                            billingOverride: false,
+                            rate: null,
+                            copay: null,
+                            billAmount: null,
+                          };
+
+                          const res = await fetch(
+                            "http://localhost:5000/api/schedules",
+                            {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify(payload),
+                            }
+                          );
+
+                          if (!res.ok)
+                            throw new Error("Failed to create schedule");
+                        }
+
+                        alert("✅ Schedule(s) created successfully!");
                         window.location.href =
                           "/dashboard/scheduling/schedule-view";
                       } catch (err) {

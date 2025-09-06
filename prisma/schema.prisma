@@ -163,8 +163,11 @@ model Employee {
   registryID          String?
   isSupervisor        Boolean       @default(false)
   name                String
+  firstName           String        @default("No")
+  middleName          String?
+  lastName            String        @default("Name")
   addresses           Address[]
-  dateOfBirth         DateTime
+  dateOfBirth         DateTime      @default(now())    
   gender              String
   languages           String[]
   mainPhone           String
@@ -409,34 +412,34 @@ model Limitation {
 // ========================
 model Schedule {
   id                       String   @id @default(cuid())
-  scheduleType             String   // Office, Visit, or Facility
+  scheduleType             String
   clientID                 String
   client                   Client   @relation(fields: [clientID], references: [id])
   clientMedicaidId         String
-  authorizations           String?  // Can be a list of auth descriptions, could also be relation later
+  authorizations           String?
   authorizationNumber      String?
   serviceId                String?
   service                  Service? @relation(fields: [serviceId], references: [id])
   officeReason             String?
-  eventCode                String   // Required
-  authorizationBillUnitType String  // Hourly, Unit, Visit
-  eventStatus              String   // Hold, Confirmed, Pending
+  eventCode                String
+  authorizationBillUnitType String
+  eventStatus              String
   eventDate                DateTime
   startTime                DateTime
   endTime                  DateTime
   employeeID               String?
   employee                 Employee? @relation(fields: [employeeID], references: [id])
-  repeatedEvent            Boolean  @default(false)
-  dates                    String[] // Array of ISO strings for repeated dates
+  recurring                Boolean   @default(false)   // 🔄 renamed from repeatedEvent
+  dates                    String[]  // optional repeated dates
   comments                 String?
-  billingOverride          Boolean  @default(false)
+  billingOverride          Boolean   @default(false)
   rate                     Float?
   copay                    Float?
   billAmount               Float?
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
-  agencyID                 String   @default("UNITY124")
-  missedVisits  MissedVisit[]  @relation("ScheduleToMissedVisit")
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  agencyID                 String    @default("UNITY124")
+  missedVisits             MissedVisit[]  @relation("ScheduleToMissedVisit")
 }
 
 model ChatThread {

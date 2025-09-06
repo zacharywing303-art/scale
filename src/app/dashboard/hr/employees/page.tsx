@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,42 +12,8 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { employeeColumns } from "./columns";
-import { Employee } from "./employee";
 import { DataTable } from "@/components/data-table";
 import CreateEmployeeModal from "./CreateEmployeeModal";
-
-const mockEmployees: Employee[] = [
-  {
-    id: "1",
-    firstName: "John",
-    lastName: "Doe",
-    status: "active",
-    language: "English",
-    position: "Caregiver",
-    employeeId: "EMP001",
-    supervisor: "Jane Smith",
-    isOfficeStaff: false,
-    isManagement: false,
-    hireDate: "2023-01-15",
-    endDate: "",
-    updatedAt: "2025-06-29 10:00 AM",
-  },
-  {
-    id: "2",
-    firstName: "Lisa",
-    lastName: "Jones",
-    status: "vacation",
-    language: "Spanish",
-    position: "Nurse",
-    employeeId: "EMP002",
-    supervisor: "John Clark",
-    isOfficeStaff: true,
-    isManagement: true,
-    hireDate: "2021-06-20",
-    endDate: "",
-    updatedAt: "2025-06-29 09:45 AM",
-  },
-];
 
 export default function EmployeesPage() {
   const [filters, setFilters] = useState({
@@ -62,26 +28,63 @@ export default function EmployeesPage() {
     management: false,
   });
 
-  const [data] = useState(mockEmployees);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const filteredData = data.filter((employee) => {
+  useEffect(() => {
+    const fetchEmployees = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/employees", {
+          credentials: "include",
+        });
+        const data = await res.json();
+        setEmployees(data);
+      } catch (error) {
+        console.error("Failed to fetch employees:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEmployees();
+  }, []);
+
+  const filteredData = employees.filter((employee) => {
+    // Use firstName/lastName if available, else fall back to name
+    const firstName =
+      employee.firstName || (employee.name ? employee.name.split(" ")[0] : "");
+    const lastName =
+      employee.lastName ||
+      (employee.name ? employee.name.split(" ").slice(1).join(" ") : "");
+
+    // Helper to normalize strings: trim, lowercase, collapse whitespace
+    const normalize = (str: string = "") =>
+      str.trim().toLowerCase().replace(/\s+/g, " ");
+
     return (
-      employee.firstName
-        .toLowerCase()
-        .includes(filters.firstName.toLowerCase()) &&
-      employee.lastName
-        .toLowerCase()
-        .includes(filters.lastName.toLowerCase()) &&
-      (filters.status ? employee.status === filters.status : true) &&
-      (filters.language ? employee.language === filters.language : true) &&
-      (filters.position ? employee.position === filters.position : true) &&
+      normalize(firstName).includes(normalize(filters.firstName)) &&
+      normalize(lastName).includes(normalize(filters.lastName)) &&
+      (filters.status
+        ? normalize(employee.status) === normalize(filters.status)
+        : true) &&
+      (filters.language
+        ? (employee.languages || [])
+            .map(normalize)
+            .some((lang: string) => lang.includes(normalize(filters.language)))
+        : true) &&
+      (filters.position
+        ? normalize(employee.position) === normalize(filters.position)
+        : true) &&
       (filters.employeeId
-        ? employee.employeeId.includes(filters.employeeId)
+        ? employee.employeeID &&
+          normalize(employee.employeeID).includes(normalize(filters.employeeId))
         : true) &&
       (filters.supervisor
-        ? employee.supervisor.includes(filters.supervisor)
+        ? employee.supervisor &&
+          normalize(employee.supervisor).includes(normalize(filters.supervisor))
         : true) &&
-      (filters.officeStaff ? employee.isOfficeStaff : true) &&
+      (filters.officeStaff
+        ? normalize(employee.position) === "office"
+        : true) &&
       (filters.management ? employee.isManagement : true)
     );
   });
@@ -114,9 +117,9 @@ export default function EmployeesPage() {
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="active">Active</SelectItem>
-            <SelectItem value="inactive">Inactive</SelectItem>
-            <SelectItem value="vacation">Vacation</SelectItem>
+            <SelectItem value="Active">Active</SelectItem>
+            <SelectItem value="Inactive">Inactive</SelectItem>
+            <SelectItem value="Vacation">Vacation</SelectItem>
           </SelectContent>
         </Select>
         <Input
@@ -124,11 +127,22 @@ export default function EmployeesPage() {
           value={filters.language}
           onChange={(e) => setFilters({ ...filters, language: e.target.value })}
         />
-        <Input
-          placeholder="Position"
+        <Select
           value={filters.position}
-          onChange={(e) => setFilters({ ...filters, position: e.target.value })}
-        />
+          onValueChange={(value) => setFilters({ ...filters, position: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Position" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="Office">Office</SelectItem>
+            <SelectItem value="Caregiver">Caregiver</SelectItem>
+            <SelectItem value="Registered_Nurse">Registered Nurse</SelectItem>
+            <SelectItem value="Licensed_Practical_Nurse">
+              Licensed Practical Nurse
+            </SelectItem>
+          </SelectContent>
+        </Select>
         <Input
           placeholder="Employee ID"
           value={filters.employeeId}
@@ -164,7 +178,11 @@ export default function EmployeesPage() {
       </div>
 
       {/* Table */}
-      <DataTable columns={employeeColumns} data={filteredData} />
+      {loading ? (
+        <p>Loading employees...</p>
+      ) : (
+        <DataTable columns={employeeColumns} data={filteredData} />
+      )}
     </div>
   );
 }

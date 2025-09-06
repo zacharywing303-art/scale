@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   DialogContent,
   DialogHeader,
@@ -27,7 +27,7 @@ import {
 } from "@/components/ui/select";
 
 type Schedule = {
-  id: number;
+  id: string;
   employee: string;
   type: string;
   client: string | null;
@@ -44,10 +44,6 @@ type EditScheduleModalProps = {
   onClose: () => void;
 };
 
-const mockEmployees = ["Jane Doe", "Mark Johnson", "Alice Smith"];
-const mockClients = ["John Smith", "Martha Wayne", "Bruce Banner"];
-const mockServices = ["IHCS Level 1", "Team Meeting", "Wound Care"];
-
 export default function EditScheduleModal({
   schedule,
   onClose,
@@ -58,10 +54,87 @@ export default function EditScheduleModal({
     dateTo: new Date(schedule.dateTo),
   });
 
-  const handleSave = () => {
-    alert(`Schedule for ${formData.employee} updated (not yet saved)`);
-    onClose();
+  // New: dynamic options
+  const [employees, setEmployees] = useState<{ id: string; name: string }[]>(
+    []
+  );
+  const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+  const [services, setServices] = useState<{ id: string; name: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchOptions() {
+      try {
+        const [empRes, clientRes, serviceRes] = await Promise.all([
+          fetch("http://localhost:5000/api/employees"),
+          fetch("http://localhost:5000/api/clients"),
+          fetch("http://localhost:5000/api/services"),
+        ]);
+
+        if (!empRes.ok || !clientRes.ok || !serviceRes.ok) {
+          throw new Error("Failed to fetch dropdown data");
+        }
+
+        const [empData, clientData, serviceData] = await Promise.all([
+          empRes.json(),
+          clientRes.json(),
+          serviceRes.json(),
+        ]);
+
+        setEmployees(empData);
+        setClients(clientData);
+        setServices(serviceData);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchOptions();
+  }, []);
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/schedules/${formData.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: formData.type,
+            employee: formData.employee,
+            client: formData.client,
+            service: formData.service,
+            startTime: formData.scheduledIn,
+            endTime: formData.scheduledOut,
+            dateFrom: formData.dateFrom,
+            dateTo: formData.dateTo,
+            recurring: formData.recurring,
+          }),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to update schedule");
+
+      alert("Schedule updated successfully!");
+      onClose();
+    } catch (err) {
+      console.error(err);
+      alert("Error saving schedule");
+    }
   };
+
+  if (loading) {
+    return (
+      <DialogContent>
+        <DialogHeader>
+          <h2 className="text-lg font-semibold">Edit Schedule</h2>
+        </DialogHeader>
+        <p>Loading options...</p>
+      </DialogContent>
+    );
+  }
 
   return (
     <DialogContent>
@@ -70,6 +143,7 @@ export default function EditScheduleModal({
       </DialogHeader>
 
       <div className="space-y-4">
+        {/* Employee */}
         <div>
           <Label className="mb-1 block">Employee</Label>
           <Select
@@ -80,23 +154,16 @@ export default function EditScheduleModal({
               <SelectValue placeholder="Select Employee" />
             </SelectTrigger>
             <SelectContent>
-              {mockEmployees.map((emp) => (
-                <SelectItem key={emp} value={emp}>
-                  {emp}
+              {employees.map((emp) => (
+                <SelectItem key={emp.id} value={emp.id}>
+                  {emp.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
-        <div>
-          <Label className="mb-1 block">Type</Label>
-          <Input
-            value={formData.type}
-            onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-          />
-        </div>
-
+        {/* Client */}
         <div>
           <Label className="mb-1 block">Client</Label>
           <Select
@@ -107,15 +174,16 @@ export default function EditScheduleModal({
               <SelectValue placeholder="Select Client" />
             </SelectTrigger>
             <SelectContent>
-              {mockClients.map((client) => (
-                <SelectItem key={client} value={client}>
-                  {client}
+              {clients.map((client) => (
+                <SelectItem key={client.id} value={client.id}>
+                  {client.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
+        {/* Service */}
         <div>
           <Label className="mb-1 block">Service / Reason</Label>
           <Select
@@ -126,15 +194,16 @@ export default function EditScheduleModal({
               <SelectValue placeholder="Select Service" />
             </SelectTrigger>
             <SelectContent>
-              {mockServices.map((service) => (
-                <SelectItem key={service} value={service}>
-                  {service}
+              {services.map((service) => (
+                <SelectItem key={service.id} value={service.id}>
+                  {service.name}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
 
+        {/* Time */}
         <div className="flex gap-4">
           <div className="flex-1">
             <Label className="mb-1 block">Scheduled In</Label>
@@ -158,6 +227,7 @@ export default function EditScheduleModal({
           </div>
         </div>
 
+        {/* Dates */}
         <div className="flex gap-4">
           <div className="flex-1">
             <Label className="mb-1 block">Date From</Label>
@@ -208,6 +278,7 @@ export default function EditScheduleModal({
           </div>
         </div>
 
+        {/* Recurring toggle */}
         <div className="flex items-center gap-2">
           <Switch
             checked={formData.recurring}

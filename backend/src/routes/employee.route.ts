@@ -5,7 +5,7 @@ const router = Router();
 
 router.get("/", employeeController.getEmployees);
 router.get("/:id", employeeController.getEmployee);
-router.post("/", employeeController.createEmployee);
+router.post("/", employeeController.createEmployee); // protected
 router.patch("/:id", employeeController.updateEmployee);
 router.delete("/:id", employeeController.deleteEmployee);
 

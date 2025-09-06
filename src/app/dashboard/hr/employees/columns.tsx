@@ -1,11 +1,11 @@
 "use client";
 
 import { ColumnDef } from "@tanstack/react-table";
-import { Employee } from "./employee";
 import { Button } from "@/components/ui/button";
 import { EditButton } from "./EditButton";
 
-export const employeeColumns: ColumnDef<Employee>[] = [
+// Replace 'any' with your backend employee type if available
+export const employeeColumns: ColumnDef<any>[] = [
   {
     accessorKey: "edit",
     header: "",
@@ -26,7 +26,11 @@ export const employeeColumns: ColumnDef<Employee>[] = [
     header: "Name",
     cell: ({ row }) => {
       const employee = row.original;
-      return `${employee.lastName}, ${employee.firstName}`;
+      // Prefer firstName + lastName, fallback to name
+      if (employee.firstName && employee.lastName) {
+        return `${employee.lastName}, ${employee.firstName}`;
+      }
+      return employee.name || "—";
     },
   },
   {
@@ -34,7 +38,7 @@ export const employeeColumns: ColumnDef<Employee>[] = [
     header: "Status",
   },
   {
-    accessorKey: "employeeId",
+    accessorKey: "employeeID", // ✅ match your schema (capital D)
     header: "Employee ID",
   },
   {
@@ -44,13 +48,43 @@ export const employeeColumns: ColumnDef<Employee>[] = [
   {
     accessorKey: "hireDate",
     header: "Hire Date",
+    cell: ({ row }) => {
+      const date = row.original.hireDate;
+      if (!date) return "—";
+      const d = new Date(date);
+      return d.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    },
   },
   {
     accessorKey: "endDate",
     header: "End Date",
+    cell: ({ row }) => {
+      const date = row.original.endDate;
+      if (!date) return "—";
+      const d = new Date(date);
+      return d.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    },
   },
   {
     accessorKey: "updatedAt",
     header: "Updated As Of",
+    cell: ({ row }) => {
+      const date = row.original.updatedAt;
+      if (!date) return "—";
+      const d = new Date(date);
+      return d.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    },
   },
 ];
