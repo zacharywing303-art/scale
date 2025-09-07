@@ -1,4 +1,4 @@
-import { PrismaClient } from "../backend/generated/prisma";
+import { PrismaClient } from "../backend/src/generated/prisma";
 import { addDays, setHours, setMinutes } from "date-fns";
 
 const prisma = new PrismaClient();
