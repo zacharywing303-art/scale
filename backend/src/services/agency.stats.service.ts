@@ -33,13 +33,17 @@ export const getSystemStats = async () => {
       totalAgencies > 0
         ? Math.round((totalHours._sum.durationMinutes || 0) / totalAgencies)
         : 0,
-    subscriptionBreakdown: subscriptionBreakdown.map((item) => ({
-      name: item.subscriptionPlan,
-      value: item._count,
-    })),
-    agenciesPerState: agenciesPerState.map((item) => ({
-      state: item.state,
-      count: item._count,
-    })),
+    subscriptionBreakdown: subscriptionBreakdown.map(
+      (item: { subscriptionPlan: string; _count: number }) => ({
+        name: item.subscriptionPlan,
+        value: item._count,
+      })
+    ),
+    agenciesPerState: agenciesPerState.map(
+      (item: { state: string; _count: number }) => ({
+        state: item.state,
+        count: item._count,
+      })
+    ),
   };
 };

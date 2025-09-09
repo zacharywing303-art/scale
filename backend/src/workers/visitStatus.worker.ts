@@ -61,7 +61,7 @@ cron.schedule("5 1 * * *", async () => {
   });
 
   if (toMiss.length) {
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: typeof prisma) => {
       for (const v of toMiss) {
         await tx.visitException.create({
           data: {

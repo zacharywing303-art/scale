@@ -28,9 +28,14 @@ async function getExceptionsCount(start?: Date, end?: Date) {
     where,
   });
 
+  type GroupedException = {
+    exceptionType: string;
+    _count: { exceptionType: number };
+  };
+
   return {
     total,
-    types: grouped.map((g) => ({
+    types: grouped.map((g: GroupedException) => ({
       type: g.exceptionType,
       count: g._count.exceptionType,
     })),
@@ -64,9 +69,14 @@ async function getStatusesSummary(start?: Date, end?: Date) {
     where,
   });
 
+  type GroupedStatus = {
+    visitStatus: string;
+    _count: { visitStatus: number };
+  };
+
   return {
     total: totalVisits,
-    statuses: groupedStatuses.map((g) => ({
+    statuses: groupedStatuses.map((g: GroupedStatus) => ({
       status: g.visitStatus,
       count: g._count.visitStatus,
     })),
@@ -119,7 +129,7 @@ export async function getDailySchedules(agencyID: string, date: string) {
     },
   });
 
-  return schedules.map((sch) => ({
+  return schedules.map((sch: (typeof schedules)[number]) => ({
     id: sch.id,
     scheduleType: sch.scheduleType,
     title: sch.scheduleType?.toLowerCase() === "office" ? "Office" : "Visit",

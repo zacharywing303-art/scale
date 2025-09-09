@@ -18,7 +18,7 @@ export async function listThreadsForUser(
   });
 
   // Shape for inbox list
-  return threads.map((t) => ({
+  return threads.map((t: (typeof threads)[number]) => ({
     id: t.id,
     title:
       t.title ??

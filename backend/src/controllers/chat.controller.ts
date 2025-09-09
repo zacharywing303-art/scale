@@ -83,18 +83,26 @@ export async function getPendingRequests(req: Request, res: Response) {
       orderBy: { startedAt: "desc" },
     });
 
-    const data = threads.map((t) => ({
+    type ChatThreadWithParticipants = (typeof threads)[number];
+
+    const data = threads.map((t: ChatThreadWithParticipants) => ({
       threadId: t.id,
-      from: t.participants.find((p) => p.participantType !== "SYSTEM_ADMIN") // requester
+      from: t.participants.find(
+        (p: (typeof t.participants)[number]) =>
+          p.participantType !== "SYSTEM_ADMIN"
+      ) // requester
         ? {
             userId: t.participants.find(
-              (p) => p.participantType !== "SYSTEM_ADMIN"
+              (p: (typeof t.participants)[number]) =>
+                p.participantType !== "SYSTEM_ADMIN"
             )!.participantId,
             displayName: t.participants.find(
-              (p) => p.participantType !== "SYSTEM_ADMIN"
+              (p: (typeof t.participants)[number]) =>
+                p.participantType !== "SYSTEM_ADMIN"
             )!.displayName,
             participantType: t.participants.find(
-              (p) => p.participantType !== "SYSTEM_ADMIN"
+              (p: (typeof t.participants)[number]) =>
+                p.participantType !== "SYSTEM_ADMIN"
             )!.participantType,
           }
         : null,

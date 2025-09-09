@@ -36,8 +36,10 @@ export const getAllSchedules = async () => {
   });
 };
 
+import type { Prisma } from "@prisma/client";
+
 export async function createScheduleAndVisit(input: CreateScheduleInput) {
-  return await prisma.$transaction(async (tx) => {
+  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
     // Validation
     if (input.endTime <= input.startTime) {
       throw new Error("End time must be after start time");
