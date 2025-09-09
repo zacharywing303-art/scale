@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import { PrismaClient } from "./src/generated/prisma"; // adjust path if needed
+import { PrismaClient } from "@prisma/client";
 
 dotenv.config();
 

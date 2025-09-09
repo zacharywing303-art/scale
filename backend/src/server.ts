@@ -79,7 +79,7 @@ setInterval(async () => {
     where: { status: "closed", endedAt: { lte: cutoff } },
     select: { id: true },
   });
-  const ids = threads.map((t) => t.id);
+  const ids = threads.map((t: { id: string }) => t.id);
   if (ids.length) {
     await prisma.chatMessage.deleteMany({ where: { threadId: { in: ids } } });
   }
