@@ -68,3 +68,5 @@ backend/node_modules
 # Mac system files
 Icon?
 
+# Deploy script
+deploy.sh
