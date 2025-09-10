@@ -24,8 +24,16 @@ dotenv.config();
 
 const app = express();
 
+const allowedOrigins = [
+  "http://localhost:3000", // local Next.js dev
+  "http://localhost:19006", // Expo Go default dev
+  "https://unitycarehcm.com", // your main website
+  "https://www.unitycarehcm.com", // www version
+  "https://api.unitycarehcm.com", // your backend API domain
+];
+
 // Middleware
-app.use(cors({ origin: ["http://localhost:3000"], credentials: true }));
+app.use(cors({ origin: allowedOrigins, credentials: true }));
 app.use(express.json());
 app.use(morgan("dev"));
 
@@ -45,13 +53,13 @@ app.use("/api/missed-visits", missedVisitsRoutes);
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: ["http://localhost:3000"],
+    origin: allowedOrigins,
     credentials: true,
   },
 });
 
 // sockets
-registerChatNamespace;
+registerChatNamespace(io);
 
 // Register socket.io namespaces
 registerChatNamespace(io);
