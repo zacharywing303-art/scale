@@ -34,9 +34,12 @@ export default function EmployeesPage() {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/employees", {
-          credentials: "include",
-        });
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/employees`,
+          {
+            credentials: "include",
+          }
+        );
         const data = await res.json();
         setEmployees(data);
       } catch (error) {

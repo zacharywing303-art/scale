@@ -31,7 +31,9 @@ export default function SystemAdminLiveChatPage() {
   // ---- Fetch pending chat requests periodically ----
   const fetchChatRequests = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/chat/requests");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/chat/requests`
+      );
       const data: ChatRequest[] = await res.json();
       setChatRequests(data);
     } catch (err) {

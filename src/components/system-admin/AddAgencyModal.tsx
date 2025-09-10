@@ -41,7 +41,7 @@ export default function AddAgencyModal({ open, onClose }: AddAgencyModalProps) {
 
     try {
       const res = await fetch(
-        "http://localhost:5000/api/agencies/create_with_admin",
+        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies/create_with_admin`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

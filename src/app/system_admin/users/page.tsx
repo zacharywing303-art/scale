@@ -52,7 +52,7 @@ export default function SystemUsersPage() {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/users");
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users`);
         if (!res.ok) throw new Error("Failed to fetch users");
         const data = await res.json();
         setUsers(data);

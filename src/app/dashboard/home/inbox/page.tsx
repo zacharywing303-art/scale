@@ -75,7 +75,7 @@ export default function InboxPage() {
   // Load threads list
   const loadThreads = async () => {
     const res = await fetch(
-      `http://localhost:5000/api/chat/threads?agencyCode=${AGENCY_CODE}&me=${ME.id}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/chat/threads?agencyCode=${AGENCY_CODE}&me=${ME.id}`
     );
     const data = await res.json();
     setThreads(data);
@@ -83,7 +83,9 @@ export default function InboxPage() {
 
   // Load one thread
   const loadThreadDetail = async (id: string) => {
-    const res = await fetch(`http://localhost:5000/api/chat/threads/${id}`);
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/chat/threads/${id}`
+    );
     const data = await res.json();
     setSelectedThread(data);
     // join room
@@ -225,7 +227,7 @@ export default function InboxPage() {
     targetName: string,
     targetType: "USER" | "MOBILE_EMPLOYEE"
   ) => {
-    await fetch("http://localhost:5000/api/chat/threads/direct", {
+    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat/threads/direct`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

@@ -31,12 +31,14 @@ export default function DeleteSystemUserModal({
   const handleDelete = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`http://localhost:5000/api/users/${userId}`, {
-        method: "DELETE",
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/${userId}`,
+        {
+          method: "DELETE",
+        }
+      );
 
-      if (!res.ok) throw new Error("Failed to delete agency");
-
+      if (!res.ok) throw new Error("Failed to delete user");
       toast.success(`Agency deleted successfully.`);
       window.location.reload();
       if (onConfirm) onConfirm(); // refetch list

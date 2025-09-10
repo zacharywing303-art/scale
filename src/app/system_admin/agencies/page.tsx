@@ -45,7 +45,9 @@ export default function AgenciesPage() {
   useEffect(() => {
     const fetchAgencies = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/agencies");
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies`
+        );
         if (!res.ok) throw new Error("Failed to fetch agencies");
         const data = await res.json();
         setAgencies(data);

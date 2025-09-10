@@ -134,7 +134,9 @@ export default function CreateSchedulePage() {
   useEffect(() => {
     const fetchMissed = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/missed-visits");
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/missed-visits`
+        );
         const data = await res.json();
         setMissedShifts(data);
       } catch (err) {
@@ -150,9 +152,9 @@ export default function CreateSchedulePage() {
     const fetchData = async () => {
       try {
         const [clientsRes, servicesRes, employeesRes] = await Promise.all([
-          fetch("http://localhost:5000/api/clients"),
-          fetch("http://localhost:5000/api/services"),
-          fetch("http://localhost:5000/api/employees"),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/services`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/employees`),
         ]);
 
         const [clientsData, servicesData, employeesData] = await Promise.all([
@@ -704,7 +706,7 @@ export default function CreateSchedulePage() {
                           };
 
                           const res = await fetch(
-                            "http://localhost:5000/api/schedules",
+                            `${process.env.NEXT_PUBLIC_API_URL}/api/schedules`,
                             {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },

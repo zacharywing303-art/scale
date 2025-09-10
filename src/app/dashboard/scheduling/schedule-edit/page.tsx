@@ -250,7 +250,7 @@ export default function EditSchedulePage() {
 //   const fetchSchedules = async () => {
 //     setLoading(true);
 //     try {
-//       const res = await fetch("http://localhost:5000/api/schedules"); // Adjust path if different
+//       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/schedules`); // Adjust path if different
 //       if (!res.ok) throw new Error("Failed to fetch schedules");
 //       const data = await res.json();
 //       setSchedules(data);

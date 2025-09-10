@@ -66,9 +66,9 @@ export default function EditScheduleModal({
     async function fetchOptions() {
       try {
         const [empRes, clientRes, serviceRes] = await Promise.all([
-          fetch("http://localhost:5000/api/employees"),
-          fetch("http://localhost:5000/api/clients"),
-          fetch("http://localhost:5000/api/services"),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/employees`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients`),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/services`),
         ]);
 
         if (!empRes.ok || !clientRes.ok || !serviceRes.ok) {
@@ -97,7 +97,7 @@ export default function EditScheduleModal({
   const handleSave = async () => {
     try {
       const res = await fetch(
-        `http://localhost:5000/api/schedules/${formData.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/schedules/${formData.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

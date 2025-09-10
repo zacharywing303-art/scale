@@ -47,7 +47,9 @@ export default function SystemUserDetailPage() {
   useEffect(() => {
     const fetchUser = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/users/${id}`);
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/users/${id}`
+        );
         if (!res.ok) throw new Error("Failed to fetch user");
         const data = await res.json();
         setUser(data);
@@ -66,11 +68,14 @@ export default function SystemUserDetailPage() {
 
   const handleSave = async () => {
     try {
-      const res = await fetch(`http://localhost:5000/api/users/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, isActive }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/${id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, isActive }),
+        }
+      );
 
       if (!res.ok) throw new Error("Failed to update user");
 

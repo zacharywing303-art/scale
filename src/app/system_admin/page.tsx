@@ -22,7 +22,7 @@
 
 //   const fetchChatRequests = async () => {
 //     try {
-//       const res = await fetch("http://localhost:5000/api/chat/requests"); // Backend endpoint returning pending requests
+//       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat/requests`); // Backend endpoint returning pending requests
 //       const data: ChatRequest[] = await res.json();
 //       setChatRequests(data);
 //     } catch (err) {
@@ -134,7 +134,7 @@ export default function SystemAdminDashboardPage() {
         if (!user) return;
 
         const res = await fetch(
-          "http://localhost:5000/api/chat/pending-count",
+          `${process.env.NEXT_PUBLIC_API_URL}/api/chat/pending-count`,
           {
             headers: {
               "Content-Type": "application/json",

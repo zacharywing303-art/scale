@@ -169,7 +169,9 @@ export default function AgencyStatisticsPage() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const res = await fetch("http://localhost:5000/api/system/stats");
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/system/stats`
+        );
         if (!res.ok) throw new Error("Failed to fetch agency statistics");
         const data = await res.json();
         setStats(data);

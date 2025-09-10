@@ -39,7 +39,7 @@ export default function SystemSettingsForm({
 
     try {
       const res = await fetch(
-        `http://localhost:5000/api/agencies/${agency.id}/settings`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/agencies/${agency.id}/settings`,
         {
           method: "PATCH",
           headers: {

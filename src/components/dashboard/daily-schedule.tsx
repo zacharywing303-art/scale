@@ -23,7 +23,7 @@ export default function DailySchedule() {
     const user = await getLoggedInUser();
     const agencyId = user?.agency?.code; // Replace with actual agency ID logic
     const res = await fetch(
-      `http://localhost:5000/api/dashboard/daily-schedules?agencyID=${agencyId}&date=${dateStr}`
+      `${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/daily-schedules?agencyID=${agencyId}&date=${dateStr}`
     );
     const data = await res.json();
     setSchedules(data);

@@ -24,7 +24,9 @@ export default function ViewSchedulePage() {
 
   const fetchSchedules = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/schedules");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/schedules`
+      );
       if (!res.ok) throw new Error("Failed to fetch schedules");
       const data = await res.json();
       setSchedules(data);

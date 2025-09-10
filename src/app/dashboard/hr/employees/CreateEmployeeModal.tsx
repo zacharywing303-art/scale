@@ -60,27 +60,30 @@ export default function CreateEmployeeModal() {
         console.log("Generated password for mobile employee:", password);
       }
 
-      const res = await fetch("http://localhost:5000/api/employees", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          firstName,
-          lastName,
-          last5SSN,
-          dateOfBirth,
-          gender,
-          language,
-          phone,
-          supervisor,
-          position,
-          nationalProviderId,
-          email,
-          mobileUser,
-          agencyID,
-          password,
-        }),
-      });
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/employees`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            firstName,
+            lastName,
+            last5SSN,
+            dateOfBirth,
+            gender,
+            language,
+            phone,
+            supervisor,
+            position,
+            nationalProviderId,
+            email,
+            mobileUser,
+            agencyID,
+            password,
+          }),
+        }
+      );
 
       if (!res.ok) throw new Error("Failed to create employee");
       const newEmployee = await res.json();
