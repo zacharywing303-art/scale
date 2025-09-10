@@ -30,6 +30,7 @@ const allowedOrigins = [
   "https://unitycarehcm.com", // your main website
   "https://www.unitycarehcm.com", // www version
   "https://api.unitycarehcm.com", // your backend API domain
+  "exp://192.168.1.156:8081", // Expo Go on local network
 ];
 
 // Middleware
