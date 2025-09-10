@@ -34,8 +34,8 @@ export const getSystemStats = async () => {
         ? Math.round((totalHours._sum.durationMinutes || 0) / totalAgencies)
         : 0,
     subscriptionBreakdown: subscriptionBreakdown.map(
-      (item: { subscriptionPlan: string; _count: number }) => ({
-        name: item.subscriptionPlan,
+      (item: { subscriptionPlan: string | null; _count: number }) => ({
+        name: item.subscriptionPlan ?? "None",
         value: item._count,
       })
     ),
