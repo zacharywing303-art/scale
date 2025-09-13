@@ -446,14 +446,9 @@ model ChatThread {
   id          String       @id @default(cuid())
   agencyCode  String
   title       String?
-  type        ChatType     // "user", "employee", "systemAdmin"
-  status      ChatStatus   @default(active) // "pending", "active", "closed"
   startedAt   DateTime     @default(now())
-  endedAt     DateTime?
   participants ChatParticipant[]
   messages    ChatMessage[]
-
-  @@index([agencyCode, status, type])
 }
 
 model ChatParticipant {
@@ -466,7 +461,6 @@ model ChatParticipant {
   mobileEmployeeId String?
   thread    ChatThread @relation(fields: [threadId], references: [id])
 
-  @@index([threadId])
   @@unique([threadId, participantId])
 }
 

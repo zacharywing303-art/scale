@@ -15,7 +15,7 @@ import SummaryCard from "@/components/dashboard/exceptionsAndStatuses";
 export default function DashboardPage() {
   const router = useRouter();
   return (
-    <ProtectedRoute>
+    <ProtectedRoute allowedRoles={["AGENCY_ADMIN", "AGENCY_USER"]}>
       <div className="min-h-screen flex bg-gray-50">
         {/* Main content */}
         <main className="flex-1 p-6 space-y-6">

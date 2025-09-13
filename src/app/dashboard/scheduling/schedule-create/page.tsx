@@ -221,9 +221,9 @@ export default function CreateSchedulePage() {
             <SelectValue placeholder="Select type" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="office">Office</SelectItem>
-            <SelectItem value="visit">Visit</SelectItem>
-            <SelectItem value="facility">Facility</SelectItem>
+            <SelectItem value="Office">Office</SelectItem>
+            <SelectItem value="Visit">Visit</SelectItem>
+            <SelectItem value="Facility">Facility</SelectItem>
           </SelectContent>
         </Select>
       </div>

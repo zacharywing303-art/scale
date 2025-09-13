@@ -1,70 +1,45 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils"; // if you use clsx helper
-import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, SendIcon, InboxIcon } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getChatSocket } from "@/lib/socket/chat";
+import { getChatSocket, disconnectChatSocket } from "@/lib/socket/chat";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
+import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
-type ThreadListItem = {
-  id: string;
-  title: string;
-  status: "pending" | "active" | "closed";
-  lastPreview: string;
-  startedAt: string;
-};
-
-type Participant = {
-  id: string;
-  participantId: string;
-  participantType: "USER" | "MOBILE_EMPLOYEE" | "SYSTEM_ADMIN";
-  displayName: string;
-};
-
+type ThreadListItem = { id: string; lastPreview: string; startedAt: string };
 type Message = {
   id: string;
   senderId: string;
+  senderType: string;
   content: string;
   createdAt: string;
-  senderName?: string;
 };
-
-type ThreadDetail = {
-  id: string;
-  status: "pending" | "active" | "closed";
-  type: "user" | "systemAdmin";
-  participants: Participant[];
-  messages: Message[];
-  startedAt: string;
-  endedAt?: string;
-};
+type ThreadDetail = { id: string; participants: any[]; messages: Message[] };
 
 const AGENCY_CODE = "UNITY124";
-
-// TEMP current user; wire this to your auth context
 const user = getLoggedInUser();
-const allowedRoles = ["SYSTEM_ADMIN", "AGENCY_ADMIN", "AGENCY_USER"] as const;
-type AllowedRole = (typeof allowedRoles)[number];
-const fallbackRole: AllowedRole = "AGENCY_USER";
-const userRole = allowedRoles.includes(user?.role as AllowedRole)
-  ? (user?.role as AllowedRole)
-  : fallbackRole;
 
 const ME = {
   id: user?.id ?? "",
   name: user?.name ?? "",
-  role: userRole,
   participantType: "USER" as const,
   agencyCode: user?.agency?.code ?? AGENCY_CODE,
+  role: user?.role ?? "AGENCY_USER",
 };
 
 export default function InboxPage() {
   const router = useRouter();
-
   const [threads, setThreads] = useState<ThreadListItem[]>([]);
   const [selectedThread, setSelectedThread] = useState<ThreadDetail | null>(
     null
@@ -72,123 +47,129 @@ export default function InboxPage() {
   const [newMessage, setNewMessage] = useState("");
   const socketRef = useRef<ReturnType<typeof getChatSocket> | null>(null);
 
-  // Load threads list
+  const [participants, setParticipants] = useState<any[]>([]);
+  const [loadingParticipants, setLoadingParticipants] = useState(false);
+  const [search, setSearch] = useState("");
+
   const loadThreads = async () => {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/chat/threads?agencyCode=${AGENCY_CODE}&me=${ME.id}`
-    );
-    const data = await res.json();
-    setThreads(data);
+    try {
+      const url = `${
+        process.env.NEXT_PUBLIC_API_URL
+      }/api/chat/threads?agencyCode=${encodeURIComponent(
+        ME.agencyCode
+      )}&me=${encodeURIComponent(ME.id)}&meType=${encodeURIComponent(
+        ME.participantType
+      )}`;
+
+      const res = await fetch(url);
+      if (!res.ok) {
+        const txt = await res.text();
+        console.error("Failed to load threads:", res.status, txt);
+        setThreads([]);
+        return;
+      }
+
+      const data = await res.json();
+      if (!Array.isArray(data)) {
+        console.error(
+          "Expected an array from /api/chat/threads but got:",
+          data
+        );
+        setThreads([]);
+        return;
+      }
+
+      setThreads(data);
+    } catch (err) {
+      console.error("Load threads error:", err);
+      setThreads([]);
+    }
   };
 
-  // Load one thread
   const loadThreadDetail = async (id: string) => {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/chat/threads/${id}`
-    );
-    const data = await res.json();
-    setSelectedThread(data);
-    // join room
-    socketRef.current?.emit("joinThread", { threadId: id });
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/chat/threads/${id}`
+      );
+      if (!res.ok) {
+        const txt = await res.text();
+        console.error("Failed to load thread detail:", res.status, txt);
+        setSelectedThread(null);
+        return;
+      }
+      const data = await res.json();
+      setSelectedThread(data);
+    } catch (err) {
+      console.error("Load thread detail error:", err);
+      setSelectedThread(null);
+    }
   };
 
+  const loadParticipants = async () => {
+    setLoadingParticipants(true);
+    try {
+      const url = `${
+        process.env.NEXT_PUBLIC_API_URL
+      }/api/chat/participants?agencyCode=${encodeURIComponent(
+        ME.agencyCode
+      )}&excludeId=${encodeURIComponent(ME.id)}`;
+
+      const res = await fetch(url);
+      if (!res.ok) {
+        console.error("Failed to load participants:", await res.text());
+        setParticipants([]);
+        return;
+      }
+      setParticipants(await res.json());
+    } catch (err) {
+      console.error("loadParticipants error:", err);
+      setParticipants([]);
+    } finally {
+      setLoadingParticipants(false);
+    }
+  };
+
+  // Initialize socket once
   useEffect(() => {
     const socket = getChatSocket({
       userId: ME.id,
-      role: ME.role,
-      participantType: ME.participantType,
       displayName: ME.name,
+      participantType: ME.participantType,
       agencyCode: ME.agencyCode,
+      role: ME.role,
     });
     socketRef.current = socket;
 
-    const handleChatRequest = ({ threadId }: { threadId: string }) => {
-      if (ME.role === "SYSTEM_ADMIN") loadThreads();
-    };
-    const handleNewMessage = ({
-      threadId,
-      message,
-    }: {
-      threadId: string;
-      message: Message;
-    }) => {
-      if (selectedThread?.id === threadId) {
-        setSelectedThread((prev) =>
-          prev ? { ...prev, messages: [...prev.messages, message] } : prev
-        );
-      }
-      loadThreads();
-    };
-
-    socket.on("chatRequest", () => {
-      if (ME.role === "SYSTEM_ADMIN") loadThreads();
-    });
-    socket.on("chatStarted", ({ threadId }: { threadId: string }) => {
-      loadThreads();
-      loadThreadDetail(threadId);
-    });
-    socket.on(
-      "chatAccepted",
-      ({
-        threadId,
-        participants,
-      }: {
-        threadId: string;
-        participants?: Participant[];
-      }) => {
-        // If we are a participant in this thread, open it (join + load messages)
-        const amParticipant = participants?.some(
-          (p) => p.participantId === ME.id
-        );
-
-        if (amParticipant) {
-          // this will fetch thread detail from the server and emit joinThread
-          loadThreadDetail(threadId);
-        } else if (selectedThread?.id === threadId) {
-          // already viewing it — refresh details
-          loadThreadDetail(threadId);
-        }
-
-        loadThreads();
-      }
-    );
-    socket.on("joinedThread", (thread: ThreadDetail) => {
-      if (!thread) return;
-      // If the joined thread is currently selected (or just opened), set it
-      if (
-        selectedThread?.id === thread.id ||
-        thread.participants?.some((p) => p.participantId === ME.id)
-      ) {
-        setSelectedThread(thread);
-      }
-    });
-
-    socket.on("chatEnded", ({ threadId }: { threadId: string }) => {
-      if (selectedThread?.id === threadId) loadThreadDetail(threadId);
-      loadThreads();
-    });
     socket.on(
       "newMessage",
-      ({
-        threadId,
-        message,
-      }: {
-        threadId: string;
-        message: Message & { senderName: string; senderType: string };
-      }) => {
-        if (selectedThread?.id === threadId) {
-          setSelectedThread((prev) =>
-            prev ? { ...prev, messages: [...prev.messages, message] } : prev
-          );
-        }
+      ({ threadId, message }: { threadId: string; message: Message }) => {
+        setSelectedThread((prev) =>
+          prev && prev.id === threadId
+            ? { ...prev, messages: [...prev.messages, message] }
+            : prev
+        );
         loadThreads();
       }
     );
 
+    socket.on("connect_error", (err: any) => {
+      console.error("Socket connect error:", err.message);
+    });
+
+    socket.on("disconnect", (reason: string) => {
+      console.warn("Socket disconnected:", reason);
+    });
+
     return () => {
-      socket.off();
-      socket.disconnect();
+      disconnectChatSocket();
     };
+  }, []);
+
+  // Join the selected thread
+  useEffect(() => {
+    if (selectedThread?.id && socketRef.current) {
+      socketRef.current.emit("joinThread", { threadId: selectedThread.id });
+    }
   }, [selectedThread?.id]);
 
   useEffect(() => {
@@ -197,115 +178,127 @@ export default function InboxPage() {
 
   const handleSend = () => {
     if (!newMessage.trim() || !selectedThread || !socketRef.current) return;
-
     socketRef.current.emit("sendMessage", {
       threadId: selectedThread.id,
       content: newMessage.trim(),
-      senderType: ME.participantType, // pass participantType from ME object
+      senderType: ME.participantType,
     });
-
     setNewMessage("");
-  };
-
-  const startSystemAdminChat = () => {
-    socketRef.current?.emit("startChat", { type: "systemAdmin" });
-  };
-
-  const acceptChat = () => {
-    if (!selectedThread || !socketRef.current) return;
-
-    socketRef.current.emit("acceptChat", { threadId: selectedThread.id });
-  };
-
-  const endChat = () => {
-    if (!selectedThread) return;
-    socketRef.current?.emit("endChat", { threadId: selectedThread.id });
-  };
-
-  const startDirectChat = async (
-    targetId: string,
-    targetName: string,
-    targetType: "USER" | "MOBILE_EMPLOYEE"
-  ) => {
-    await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/chat/threads/direct`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        agencyCode: AGENCY_CODE,
-        me: ME.id,
-        meName: ME.name,
-        meType: ME.participantType,
-        targetId,
-        targetName,
-        targetType,
-      }),
-    });
-    await loadThreads();
   };
 
   return (
     <div className="flex h-[calc(100vh-4rem)]">
-      {/* List */}
-      <div className="w-80 border-r overflow-y-auto bg-white dark:bg-background">
-        <div className="flex items-center p-4 border-b">
+      {/* Thread List */}
+      <div className="w-80 border-r overflow-y-auto bg-white">
+        <div className="flex items-center justify-between p-4 border-b">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-sm text-muted-foreground hover:text-primary"
+            className="flex items-center text-sm"
           >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to Dashboard
+            <ArrowLeft className="w-4 h-4 mr-1" /> Back
           </button>
-        </div>
 
-        <div className="p-4 border-b flex items-center justify-between">
-          <div className="font-semibold text-lg">Inbox</div>
-          <Button size="sm" onClick={startSystemAdminChat}>
-            Start System Admin Chat
-          </Button>
-        </div>
-
-        {threads.map((t) => (
-          <div
-            key={t.id}
-            className={cn(
-              "px-4 py-3 cursor-pointer border-b hover:bg-muted",
-              selectedThread?.id === t.id && "bg-muted font-medium"
-            )}
-            onClick={() => loadThreadDetail(t.id)}
+          <Dialog
+            onOpenChange={(open) => {
+              if (open) {
+                // Load only mobile employees with same agency code
+                setLoadingParticipants(true);
+                fetch(
+                  `${
+                    process.env.NEXT_PUBLIC_API_URL
+                  }/api/chat/participants?agencyCode=${encodeURIComponent(
+                    ME.agencyCode
+                  )}&excludeId=${encodeURIComponent(
+                    ME.id
+                  )}&participantType=MOBILE_EMPLOYEE`
+                )
+                  .then(async (res) => {
+                    if (!res.ok) {
+                      setParticipants([]);
+                      return;
+                    }
+                    setParticipants(await res.json());
+                  })
+                  .catch(() => setParticipants([]))
+                  .finally(() => setLoadingParticipants(false));
+              }
+            }}
           >
-            <div className="flex justify-between items-center">
-              <span>{t.title}</span>
-              <span className="text-xs uppercase">{t.status}</span>
-            </div>
-            <div className="text-sm text-muted-foreground truncate">
-              {t.lastPreview}
-            </div>
+            <DialogTrigger asChild>
+              <Button size="sm">New Chat</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Start a new chat</DialogTitle>
+              </DialogHeader>
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name"
+                className="mb-2"
+              />
+              <div className="max-h-60 overflow-y-auto space-y-2">
+                {loadingParticipants ? (
+                  <div className="text-sm text-muted-foreground">
+                    Loading...
+                  </div>
+                ) : (
+                  participants
+                    .filter((p) =>
+                      p.displayName.toLowerCase().includes(search.toLowerCase())
+                    )
+                    .map((p) => (
+                      <div
+                        key={p.id}
+                        className="p-2 border rounded cursor-pointer hover:bg-muted"
+                        onClick={() => {
+                          // create thread and open it
+                          socketRef.current?.emit("startChat", {
+                            me: ME,
+                            other: p,
+                          });
+                        }}
+                      >
+                        {p.displayName}{" "}
+                        <span className="text-xs opacity-60">
+                          ({p.participantType})
+                        </span>
+                      </div>
+                    ))
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
+        </div>
+        {threads.length === 0 ? (
+          <div className="p-4 text-sm text-muted-foreground">
+            No conversations yet.
+            <br />
+            Click <strong>New Chat</strong> to start one.
           </div>
-        ))}
+        ) : (
+          threads.map((t) => (
+            <div
+              key={t.id}
+              className={cn(
+                "px-4 py-3 cursor-pointer border-b hover:bg-muted",
+                selectedThread?.id === t.id && "bg-muted font-medium"
+              )}
+              onClick={() => loadThreadDetail(t.id)}
+            >
+              <div className="text-sm truncate">{t.lastPreview}</div>
+            </div>
+          ))
+        )}
       </div>
 
-      {/* Chat */}
+      {/* Chat Window */}
       <div className="flex-1 flex flex-col">
-        <div className="border-b px-6 py-4 flex items-center justify-between">
-          <div className="font-semibold">
-            {selectedThread ? selectedThread.id : "Select a thread"}
-          </div>
-          <div className="flex gap-2">
-            {selectedThread?.status === "pending" &&
-              ME.role === "SYSTEM_ADMIN" && (
-                <Button size="sm" onClick={acceptChat}>
-                  Accept
-                </Button>
-              )}
-            {selectedThread && selectedThread.status !== "closed" && (
-              <Button variant="destructive" size="sm" onClick={endChat}>
-                End Chat
-              </Button>
-            )}
-          </div>
+        <div className="border-b px-6 py-4 font-semibold">
+          {selectedThread ? "Chat" : "Select a thread"}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50 dark:bg-background">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
           {selectedThread?.messages.map((msg) => {
             const mine = msg.senderId === ME.id;
             return (
@@ -319,39 +312,24 @@ export default function InboxPage() {
                 )}
               >
                 {msg.content}
-                <div className="text-xs text-right mt-1 opacity-50">
+                <div className="text-xs mt-1 opacity-50">
                   {new Date(msg.createdAt).toLocaleTimeString()}
                 </div>
               </div>
             );
           })}
-          {!selectedThread && (
-            <div className="text-sm text-muted-foreground">
-              No thread selected
-            </div>
-          )}
         </div>
-
-        <div className="border-t p-4 flex gap-2">
-          <Textarea
-            placeholder="Type your message..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1 resize-none"
-            disabled={!selectedThread || selectedThread.status === "closed"}
-          />
-          <Button
-            onClick={handleSend}
-            disabled={
-              !newMessage.trim() ||
-              !selectedThread ||
-              selectedThread.status === "closed"
-            }
-          >
-            <SendIcon className="w-4 h-4 mr-1" />
-            Send
-          </Button>
-        </div>
+        {selectedThread && (
+          <div className="border-t p-4 flex gap-2">
+            <Textarea
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              className="flex-1 resize-none"
+              placeholder="Type a message..."
+            />
+            <Button onClick={handleSend}>Send</Button>
+          </div>
+        )}
       </div>
     </div>
   );
