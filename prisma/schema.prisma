@@ -489,12 +489,6 @@ model MissedVisit {
   @@index([expiresAt])
 }
 
-
-enum ChatType {
-  user
-  systemAdmin
-}
-
 enum ChatStatus {
   pending
   active

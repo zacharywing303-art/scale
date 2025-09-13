@@ -39,6 +39,7 @@ export function registerChatNamespace(io: Server) {
           thread = await prisma.chatThread.create({
             data: {
               agencyCode: me.agencyCode,
+              type: "user",
               participants: {
                 create: [
                   {
