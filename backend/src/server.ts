@@ -82,16 +82,3 @@ const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });
-
-setInterval(async () => {
-  const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
-  // delete messages for threads closed >= 48h ago
-  const threads = await prisma.chatThread.findMany({
-    where: { endedAt: { lte: cutoff } },
-    select: { id: true },
-  });
-  const ids = threads.map((t: { id: string }) => t.id);
-  if (ids.length) {
-    await prisma.chatMessage.deleteMany({ where: { threadId: { in: ids } } });
-  }
-}, 60 * 60 * 1000); // every hour
