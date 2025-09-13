@@ -87,7 +87,7 @@ setInterval(async () => {
   const cutoff = new Date(Date.now() - 48 * 60 * 60 * 1000);
   // delete messages for threads closed >= 48h ago
   const threads = await prisma.chatThread.findMany({
-    where: { status: "closed", endedAt: { lte: cutoff } },
+    where: { endedAt: { lte: cutoff } },
     select: { id: true },
   });
   const ids = threads.map((t: { id: string }) => t.id);
