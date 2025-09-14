@@ -19,18 +19,15 @@ export function registerChatNamespace(io: Server) {
           where: {
             agencyCode: me.agencyCode,
             participants: {
-              every: {
-                OR: [
-                  {
-                    participantId: me.id,
-                    participantType: me.participantType,
-                  },
-                  {
-                    participantId: other.participantId,
-                    participantType: other.participantType,
-                  },
-                ],
+              some: {
+                participantId: { in: [me.id, other.participantId] },
               },
+            },
+          },
+          include: {
+            participants: true,
+            messages: {
+              orderBy: { createdAt: "asc" },
             },
           },
         });
@@ -65,10 +62,14 @@ export function registerChatNamespace(io: Server) {
                 ],
               },
             },
+            include: {
+              participants: true,
+              messages: true,
+            },
           });
         }
 
-        socket.emit("chatStarted", { threadId: thread.id });
+        socket.emit("chatStarted", thread); // ✅ send full thread
       } catch (err) {
         console.error("Error starting chat:", err);
         socket.emit("error", "Failed to start chat");
