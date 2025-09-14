@@ -75,6 +75,7 @@ export default function InboxPage() {
   const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [search, setSearch] = useState("");
   const [pendingChat, setPendingChat] = useState<any | null>(null);
+  const [starting, setStarting] = useState(false);
 
   // Normalize thread data safely
   const normalizeThread = (t: any): ThreadListItem => {
@@ -193,6 +194,7 @@ export default function InboxPage() {
           ? prev.map((t) => (t.id === thread.id ? normalizeThread(thread) : t))
           : [normalizeThread(thread), ...prev];
       });
+      setStarting(false);
       setPendingChat(null);
     });
 
@@ -364,16 +366,23 @@ export default function InboxPage() {
               Cancel
             </Button>
             <Button
+              disabled={starting}
               onClick={() => {
                 if (socketRef.current && pendingChat) {
+                  setStarting(true);
                   socketRef.current.emit("startChat", {
                     me: ME,
-                    other: pendingChat,
+                    other: {
+                      participantId:
+                        pendingChat.participantId || pendingChat.id,
+                      participantType: pendingChat.participantType,
+                      displayName: pendingChat.displayName,
+                    },
                   });
                 }
               }}
             >
-              Start Chat
+              {starting ? "Starting..." : "Start Chat"}
             </Button>
           </div>
         </DialogContent>
@@ -414,7 +423,12 @@ export default function InboxPage() {
 //   content: string;
 //   createdAt: string;
 // };
-// type ThreadDetail = { id: string; participants: any[]; messages: Message[] };
+
+// type ThreadDetail = {
+//   id: string;
+//   participants: any[];
+//   messages: Message[];
+// };
 
 // const AGENCY_CODE = "UNITY124";
 // const user = getLoggedInUser();
@@ -454,6 +468,22 @@ export default function InboxPage() {
 //   const [search, setSearch] = useState("");
 //   const [pendingChat, setPendingChat] = useState<any | null>(null);
 
+//   // Normalize thread data safely
+//   const normalizeThread = (t: any): ThreadListItem => {
+//     const others = Array.isArray(t.participants)
+//       ? t.participants.filter((p: any) => p.participantId !== ME.id)
+//       : [];
+//     return {
+//       id: t.id,
+//       title: others.map((p: any) => p.displayName).join(", ") || "Unknown",
+//       lastMessage: t.messages?.[t.messages.length - 1]?.content ?? "",
+//       lastTime:
+//         t.messages?.[t.messages.length - 1]?.createdAt ??
+//         t.startedAt ??
+//         new Date().toISOString(),
+//     };
+//   };
+
 //   // Load threads
 //   const loadThreads = async () => {
 //     try {
@@ -468,20 +498,7 @@ export default function InboxPage() {
 //       );
 //       if (!res.ok) throw new Error(await res.text());
 //       const data = await res.json();
-//       setThreads(
-//         data.map((t: any) => ({
-//           id: t.id,
-//           title: t.participants
-//             .filter((p: any) => p.participantId !== ME.id)
-//             .map((p: any) => p.displayName)
-//             .join(", "),
-//           lastMessage: t.messages?.[t.messages.length - 1]?.content ?? "",
-//           lastTime:
-//             t.messages?.[t.messages.length - 1]?.createdAt ??
-//             t.startedAt ??
-//             new Date().toISOString(),
-//         }))
-//       );
+//       setThreads(data.map(normalizeThread));
 //     } catch (err) {
 //       console.error("Load threads error:", err);
 //       setThreads([]);
@@ -536,18 +553,7 @@ export default function InboxPage() {
 //     });
 //     socketRef.current = socket;
 
-//     // socket.on(
-//     //   "newMessage",
-//     //   ({ threadId, message }: { threadId: string; message: Message }) => {
-//     //     setSelectedThread((prev) =>
-//     //       prev && prev.id === threadId
-//     //         ? { ...prev, messages: [...prev.messages, message] }
-//     //         : prev
-//     //     );
-//     //     loadThreads();
-//     //   }
-//     // );
-//     socket.off("newMessage"); // clear old listener before adding
+//     socket.removeAllListeners("newMessage");
 //     socket.on(
 //       "newMessage",
 //       ({ threadId, message }: { threadId: string; message: Message }) => {
@@ -561,8 +567,8 @@ export default function InboxPage() {
 //             t.id === threadId
 //               ? {
 //                   ...t,
-//                   lastPreview: message.content,
-//                   startedAt: message.createdAt,
+//                   lastMessage: message.content,
+//                   lastTime: message.createdAt,
 //                 }
 //               : t
 //           )
@@ -570,9 +576,15 @@ export default function InboxPage() {
 //       }
 //     );
 
+//     socket.removeAllListeners("chatStarted");
 //     socket.on("chatStarted", (thread: ThreadDetail) => {
 //       setSelectedThread(thread);
-//       loadThreads();
+//       setThreads((prev) => {
+//         const exists = prev.some((t) => t.id === thread.id);
+//         return exists
+//           ? prev.map((t) => (t.id === thread.id ? normalizeThread(thread) : t))
+//           : [normalizeThread(thread), ...prev];
+//       });
 //       setPendingChat(null);
 //     });
 
@@ -643,7 +655,7 @@ export default function InboxPage() {
 //                     )
 //                     .map((p) => (
 //                       <div
-//                         key={p.id}
+//                         key={p.participantId || p.id}
 //                         className="p-2 border rounded cursor-pointer hover:bg-muted"
 //                         onClick={() => setPendingChat(p)}
 //                       >
@@ -690,7 +702,7 @@ export default function InboxPage() {
 //         <div className="border-b px-6 py-4 font-semibold">
 //           {selectedThread
 //             ? selectedThread.participants
-//                 .filter((p) => p.participantId !== ME.id)
+//                 ?.filter((p) => p.participantId !== ME.id)
 //                 .map((p) => p.displayName)
 //                 .join(", ")
 //             : "Select a thread"}
