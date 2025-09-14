@@ -17,7 +17,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 
-type ThreadListItem = { id: string; lastPreview: string; startedAt: string };
+type ThreadListItem = {
+  id: string;
+  title: string;
+  lastMessage: string;
+  lastTime: string;
+};
+
 type Message = {
   id: string;
   senderId: string;
@@ -25,7 +31,12 @@ type Message = {
   content: string;
   createdAt: string;
 };
-type ThreadDetail = { id: string; participants: any[]; messages: Message[] };
+
+type ThreadDetail = {
+  id: string;
+  participants: any[];
+  messages: Message[];
+};
 
 const AGENCY_CODE = "UNITY124";
 const user = getLoggedInUser();
@@ -65,6 +76,22 @@ export default function InboxPage() {
   const [search, setSearch] = useState("");
   const [pendingChat, setPendingChat] = useState<any | null>(null);
 
+  // Normalize thread data safely
+  const normalizeThread = (t: any): ThreadListItem => {
+    const others = Array.isArray(t.participants)
+      ? t.participants.filter((p: any) => p.participantId !== ME.id)
+      : [];
+    return {
+      id: t.id,
+      title: others.map((p: any) => p.displayName).join(", ") || "Unknown",
+      lastMessage: t.messages?.[t.messages.length - 1]?.content ?? "",
+      lastTime:
+        t.messages?.[t.messages.length - 1]?.createdAt ??
+        t.startedAt ??
+        new Date().toISOString(),
+    };
+  };
+
   // Load threads
   const loadThreads = async () => {
     try {
@@ -79,7 +106,7 @@ export default function InboxPage() {
       );
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-      setThreads(Array.isArray(data) ? data : []);
+      setThreads(data.map(normalizeThread));
     } catch (err) {
       console.error("Load threads error:", err);
       setThreads([]);
@@ -134,6 +161,7 @@ export default function InboxPage() {
     });
     socketRef.current = socket;
 
+    socket.removeAllListeners("newMessage");
     socket.on(
       "newMessage",
       ({ threadId, message }: { threadId: string; message: Message }) => {
@@ -142,13 +170,29 @@ export default function InboxPage() {
             ? { ...prev, messages: [...prev.messages, message] }
             : prev
         );
-        loadThreads();
+        setThreads((prev) =>
+          prev.map((t) =>
+            t.id === threadId
+              ? {
+                  ...t,
+                  lastMessage: message.content,
+                  lastTime: message.createdAt,
+                }
+              : t
+          )
+        );
       }
     );
 
+    socket.removeAllListeners("chatStarted");
     socket.on("chatStarted", (thread: ThreadDetail) => {
       setSelectedThread(thread);
-      loadThreads();
+      setThreads((prev) => {
+        const exists = prev.some((t) => t.id === thread.id);
+        return exists
+          ? prev.map((t) => (t.id === thread.id ? normalizeThread(thread) : t))
+          : [normalizeThread(thread), ...prev];
+      });
       setPendingChat(null);
     });
 
@@ -219,7 +263,7 @@ export default function InboxPage() {
                     )
                     .map((p) => (
                       <div
-                        key={p.id}
+                        key={p.participantId || p.id}
                         className="p-2 border rounded cursor-pointer hover:bg-muted"
                         onClick={() => setPendingChat(p)}
                       >
@@ -249,7 +293,13 @@ export default function InboxPage() {
               )}
               onClick={() => loadThreadDetail(t.id)}
             >
-              <div className="text-sm truncate">{t.lastPreview}</div>
+              <div className="flex justify-between">
+                <span className="font-medium">{t.title}</span>
+                <span className="text-xs opacity-60">
+                  {new Date(t.lastTime).toLocaleTimeString()}
+                </span>
+              </div>
+              <div className="text-sm truncate">{t.lastMessage}</div>
             </div>
           ))
         )}
@@ -258,7 +308,12 @@ export default function InboxPage() {
       {/* Chat Window */}
       <div className="flex-1 flex flex-col">
         <div className="border-b px-6 py-4 font-semibold">
-          {selectedThread ? "Chat" : "Select a thread"}
+          {selectedThread
+            ? selectedThread.participants
+                ?.filter((p) => p.participantId !== ME.id)
+                .map((p) => p.displayName)
+                .join(", ")
+            : "Select a thread"}
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
@@ -347,9 +402,11 @@ export default function InboxPage() {
 
 // type ThreadListItem = {
 //   id: string;
-//   lastPreview: string;
-//   startedAt: string;
+//   title: string;
+//   lastMessage: string;
+//   lastTime: string;
 // };
+
 // type Message = {
 //   id: string;
 //   senderId: string;
@@ -357,11 +414,7 @@ export default function InboxPage() {
 //   content: string;
 //   createdAt: string;
 // };
-// type ThreadDetail = {
-//   id: string;
-//   participants: any[];
-//   messages: Message[];
-// };
+// type ThreadDetail = { id: string; participants: any[]; messages: Message[] };
 
 // const AGENCY_CODE = "UNITY124";
 // const user = getLoggedInUser();
@@ -376,7 +429,6 @@ export default function InboxPage() {
 //   ) {
 //     return role;
 //   }
-//   // fallback for "MAIN_ADMIN" or any other invalid role
 //   return "AGENCY_USER";
 // };
 
@@ -400,10 +452,9 @@ export default function InboxPage() {
 //   const [participants, setParticipants] = useState<any[]>([]);
 //   const [loadingParticipants, setLoadingParticipants] = useState(false);
 //   const [search, setSearch] = useState("");
+//   const [pendingChat, setPendingChat] = useState<any | null>(null);
 
-//   // ========================
-//   // Load Threads + Thread Detail
-//   // ========================
+//   // Load threads
 //   const loadThreads = async () => {
 //     try {
 //       const res = await fetch(
@@ -417,7 +468,20 @@ export default function InboxPage() {
 //       );
 //       if (!res.ok) throw new Error(await res.text());
 //       const data = await res.json();
-//       setThreads(Array.isArray(data) ? data : []);
+//       setThreads(
+//         data.map((t: any) => ({
+//           id: t.id,
+//           title: t.participants
+//             .filter((p: any) => p.participantId !== ME.id)
+//             .map((p: any) => p.displayName)
+//             .join(", "),
+//           lastMessage: t.messages?.[t.messages.length - 1]?.content ?? "",
+//           lastTime:
+//             t.messages?.[t.messages.length - 1]?.createdAt ??
+//             t.startedAt ??
+//             new Date().toISOString(),
+//         }))
+//       );
 //     } catch (err) {
 //       console.error("Load threads error:", err);
 //       setThreads([]);
@@ -438,9 +502,7 @@ export default function InboxPage() {
 //     }
 //   };
 
-//   // ========================
-//   // Load Participants
-//   // ========================
+//   // Load participants
 //   const loadParticipants = async () => {
 //     setLoadingParticipants(true);
 //     try {
@@ -463,9 +525,7 @@ export default function InboxPage() {
 //     }
 //   };
 
-//   // ========================
-//   // Init Socket
-//   // ========================
+//   // Init socket
 //   useEffect(() => {
 //     const socket = getChatSocket({
 //       userId: ME.id,
@@ -476,6 +536,18 @@ export default function InboxPage() {
 //     });
 //     socketRef.current = socket;
 
+//     // socket.on(
+//     //   "newMessage",
+//     //   ({ threadId, message }: { threadId: string; message: Message }) => {
+//     //     setSelectedThread((prev) =>
+//     //       prev && prev.id === threadId
+//     //         ? { ...prev, messages: [...prev.messages, message] }
+//     //         : prev
+//     //     );
+//     //     loadThreads();
+//     //   }
+//     // );
+//     socket.off("newMessage"); // clear old listener before adding
 //     socket.on(
 //       "newMessage",
 //       ({ threadId, message }: { threadId: string; message: Message }) => {
@@ -484,24 +556,24 @@ export default function InboxPage() {
 //             ? { ...prev, messages: [...prev.messages, message] }
 //             : prev
 //         );
-//         loadThreads();
+//         setThreads((prev) =>
+//           prev.map((t) =>
+//             t.id === threadId
+//               ? {
+//                   ...t,
+//                   lastPreview: message.content,
+//                   startedAt: message.createdAt,
+//                 }
+//               : t
+//           )
+//         );
 //       }
 //     );
 
-//     socket.on("threadStarted", (thread: ThreadDetail) => {
-//       const threadListItem: ThreadListItem = {
-//         id: thread.id,
-//         lastPreview:
-//           thread.messages.length > 0
-//             ? thread.messages[thread.messages.length - 1].content
-//             : "",
-//         startedAt:
-//           thread.messages.length > 0
-//             ? thread.messages[0].createdAt
-//             : new Date().toISOString(),
-//       };
-//       setThreads((prev) => [threadListItem, ...prev]);
+//     socket.on("chatStarted", (thread: ThreadDetail) => {
 //       setSelectedThread(thread);
+//       loadThreads();
+//       setPendingChat(null);
 //     });
 
 //     socket.on("connect_error", (err: any) => {
@@ -511,27 +583,24 @@ export default function InboxPage() {
 //     return () => disconnectChatSocket();
 //   }, []);
 
-//   // Join socket room when switching threads
 //   useEffect(() => {
 //     if (selectedThread?.id && socketRef.current) {
 //       socketRef.current.emit("joinThread", { threadId: selectedThread.id });
 //     }
 //   }, [selectedThread?.id]);
 
-//   // Load threads on first render
 //   useEffect(() => {
 //     loadThreads();
 //   }, []);
 
-//   // ========================
-//   // Send Message
-//   // ========================
+//   // Send message
 //   const handleSend = () => {
 //     if (!newMessage.trim() || !selectedThread || !socketRef.current) return;
 //     socketRef.current.emit("sendMessage", {
 //       threadId: selectedThread.id,
 //       content: newMessage.trim(),
 //       senderType: ME.participantType,
+//       senderId: ME.id,
 //     });
 //     setNewMessage("");
 //   };
@@ -576,12 +645,7 @@ export default function InboxPage() {
 //                       <div
 //                         key={p.id}
 //                         className="p-2 border rounded cursor-pointer hover:bg-muted"
-//                         onClick={() =>
-//                           socketRef.current?.emit("startChat", {
-//                             me: ME,
-//                             other: p,
-//                           })
-//                         }
+//                         onClick={() => setPendingChat(p)}
 //                       >
 //                         {p.displayName}{" "}
 //                         <span className="text-xs opacity-60">
@@ -594,6 +658,7 @@ export default function InboxPage() {
 //             </DialogContent>
 //           </Dialog>
 //         </div>
+
 //         {threads.length === 0 ? (
 //           <div className="p-4 text-sm text-muted-foreground">
 //             No conversations yet. Click <strong>New Chat</strong> to start one.
@@ -608,7 +673,13 @@ export default function InboxPage() {
 //               )}
 //               onClick={() => loadThreadDetail(t.id)}
 //             >
-//               <div className="text-sm truncate">{t.lastPreview}</div>
+//               <div className="flex justify-between">
+//                 <span className="font-medium">{t.title}</span>
+//                 <span className="text-xs opacity-60">
+//                   {new Date(t.lastTime).toLocaleTimeString()}
+//                 </span>
+//               </div>
+//               <div className="text-sm truncate">{t.lastMessage}</div>
 //             </div>
 //           ))
 //         )}
@@ -617,7 +688,12 @@ export default function InboxPage() {
 //       {/* Chat Window */}
 //       <div className="flex-1 flex flex-col">
 //         <div className="border-b px-6 py-4 font-semibold">
-//           {selectedThread ? "Chat" : "Select a thread"}
+//           {selectedThread
+//             ? selectedThread.participants
+//                 .filter((p) => p.participantId !== ME.id)
+//                 .map((p) => p.displayName)
+//                 .join(", ")
+//             : "Select a thread"}
 //         </div>
 
 //         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
@@ -654,6 +730,34 @@ export default function InboxPage() {
 //           </div>
 //         )}
 //       </div>
+
+//       {/* Confirmation dialog for starting chat */}
+//       <Dialog open={!!pendingChat} onOpenChange={() => setPendingChat(null)}>
+//         <DialogContent>
+//           <DialogHeader>
+//             <DialogTitle>
+//               Start chat with {pendingChat?.displayName}?
+//             </DialogTitle>
+//           </DialogHeader>
+//           <div className="flex justify-end gap-2">
+//             <Button variant="outline" onClick={() => setPendingChat(null)}>
+//               Cancel
+//             </Button>
+//             <Button
+//               onClick={() => {
+//                 if (socketRef.current && pendingChat) {
+//                   socketRef.current.emit("startChat", {
+//                     me: ME,
+//                     other: pendingChat,
+//                   });
+//                 }
+//               }}
+//             >
+//               Start Chat
+//             </Button>
+//           </div>
+//         </DialogContent>
+//       </Dialog>
 //     </div>
 //   );
 // }
