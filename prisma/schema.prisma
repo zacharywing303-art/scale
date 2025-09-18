@@ -443,24 +443,27 @@ model Schedule {
 }
 
 model ChatThread {
-  id          String       @id @default(cuid())
-  agencyCode  String
-  title       String?
-  startedAt   DateTime     @default(now())
+  id           String           @id @default(cuid())
+  agencyCode   String
+  title        String?
+  startedAt    DateTime         @default(now())
   participants ChatParticipant[]
-  messages    ChatMessage[]
+  messages     ChatMessage[]
+
+  @@index([agencyCode, startedAt])
 }
 
 model ChatParticipant {
-  id        String    @id @default(cuid())
-  threadId  String
-  participantId String
-  participantType ParticpantType
-  displayName String
-  userId    String?
+  id              String          @id @default(cuid())
+  threadId        String
+  participantId   String
+  participantType ParticipantType
+  displayName     String
+  userId          String?
   mobileEmployeeId String?
-  thread    ChatThread @relation(fields: [threadId], references: [id])
+  thread          ChatThread @relation(fields: [threadId], references: [id])
 
+  // ✅ Keep this to prevent duplicates inside one thread
   @@unique([threadId, participantId])
 }
 
@@ -472,6 +475,8 @@ model ChatMessage {
   content   String
   createdAt DateTime  @default(now())
   thread    ChatThread @relation(fields: [threadId], references: [id])
+
+  @@index([threadId, createdAt]) // better ordering performance
 }
 
 model MissedVisit {
@@ -495,7 +500,7 @@ enum ChatStatus {
   closed
 }
 
-enum ParticpantType {
+enum ParticipantType {
   USER
   MOBILE_EMPLOYEE
   SYSTEM_ADMIN
