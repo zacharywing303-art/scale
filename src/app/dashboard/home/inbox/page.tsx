@@ -108,18 +108,29 @@ export default function InboxPage() {
   );
 
   // Normalize thread data safely
+  // const normalizeThread = (t: any, me: typeof ME): ThreadListItem => {
+  //   const others = Array.isArray(t.participants)
+  //     ? t.participants.filter((p: any) => p.participantId !== me.id)
+  //     : [];
+  //   return {
+  //     id: t.id,
+  //     title: others.map((p: any) => p.displayName).join(", ") || "Unknown",
+  //     lastMessage: t.messages?.[t.messages.length - 1]?.content ?? "",
+  //     lastTime:
+  //       t.messages?.[t.messages.length - 1]?.createdAt ??
+  //       t.startedAt ??
+  //       new Date().toISOString(),
+  //   };
+  // };
   const normalizeThread = (t: any, me: typeof ME): ThreadListItem => {
-    const others = Array.isArray(t.participants)
-      ? t.participants.filter((p: any) => p.participantId !== me.id)
-      : [];
+    const others = (t.participants || []).filter(
+      (p: any) => p.participantId !== me.id
+    );
     return {
       id: t.id,
       title: others.map((p: any) => p.displayName).join(", ") || "Unknown",
-      lastMessage: t.messages?.[t.messages.length - 1]?.content ?? "",
-      lastTime:
-        t.messages?.[t.messages.length - 1]?.createdAt ??
-        t.startedAt ??
-        new Date().toISOString(),
+      lastMessage: t.messages?.[0]?.content ?? "",
+      lastTime: t.messages?.[0]?.createdAt ?? t.startedAt,
     };
   };
 
@@ -183,64 +194,58 @@ export default function InboxPage() {
 
   // Init socket
   useEffect(() => {
-    if (!user) return;
+    if (!user || socketRef.current) return;
 
-    if (!socketRef.current) {
-      const socket = getChatSocket({
-        userId: user?.id ?? "",
-        displayName: user?.name ?? "",
-        participantType: "USER",
-        agencyCode: user?.agency?.code ?? AGENCY_CODE,
-        role: mapRole(user?.role),
-      });
-      socketRef.current = socket;
+    const socket = getChatSocket({
+      userId: user?.id ?? "",
+      displayName: user?.name ?? "",
+      participantType: "USER",
+      agencyCode: user?.agency?.code ?? AGENCY_CODE,
+      role: mapRole(user?.role),
+    });
+    socketRef.current = socket;
 
-      socket.on(
-        "newMessage",
-        ({ threadId, message }: { threadId: string; message: Message }) => {
-          setSelectedThread((prev) =>
-            prev &&
-            prev.id === threadId &&
-            !prev.messages.find((m) => m.id === message.id)
-              ? { ...prev, messages: [...prev.messages, message] }
-              : prev
-          );
-          setThreads((prev) =>
-            prev.map((t) =>
-              t.id === threadId
-                ? {
-                    ...t,
-                    lastMessage: message.content,
-                    lastTime: message.createdAt,
-                  }
-                : t
+    socket.on(
+      "newMessage",
+      ({ threadId, message }: { threadId: string; message: Message }) => {
+        setSelectedThread((prev) =>
+          prev &&
+          prev.id === threadId &&
+          !prev.messages.find((m) => m.id === message.id)
+            ? { ...prev, messages: [...prev.messages, message] }
+            : prev
+        );
+        setThreads((prev) =>
+          prev.map((t) =>
+            t.id === threadId
+              ? {
+                  ...t,
+                  lastMessage: message.content,
+                  lastTime: message.createdAt,
+                }
+              : t
+          )
+        );
+      }
+    );
+
+    // ✅ once instead of on
+    socket.once("chatStarted", (thread: ThreadDetail) => {
+      setSelectedThread(thread);
+      setThreads((prev) => {
+        const exists = prev.some((t) => t.id === thread.id);
+        return exists
+          ? prev.map((t) =>
+              t.id === thread.id ? normalizeThread(thread, ME) : t
             )
-          );
-        }
-      );
-
-      // ✅ once instead of on
-      socket.once("chatStarted", (thread: ThreadDetail) => {
-        setSelectedThread(thread);
-        setThreads((prev) => {
-          const exists = prev.some((t) => t.id === thread.id);
-          return exists
-            ? prev.map((t) =>
-                t.id === thread.id ? normalizeThread(thread, ME) : t
-              )
-            : [normalizeThread(thread, ME), ...prev];
-        });
-        setPendingChat(null);
+          : [normalizeThread(thread, ME), ...prev];
       });
-    }
+      setPendingChat(null);
+    });
 
     return () => {
-      if (socketRef.current) {
-        socketRef.current.off("newMessage");
-        socketRef.current.off("chatStarted");
-        disconnectChatSocket();
-        socketRef.current = null;
-      }
+      socket.disconnect(); // <- ensure it fully disconnects
+      socketRef.current = null;
     };
   }, [user]);
 
@@ -439,7 +444,7 @@ export default function InboxPage() {
             >
               Cancel
             </Button>
-            <Button
+            {/* <Button
               onClick={async () => {
                 setStartChatError(null);
                 setStartChatLoading(true);
@@ -466,6 +471,17 @@ export default function InboxPage() {
               }}
             >
               {startChatLoading ? "Starting..." : "Start Chat"}
+            </Button> */}
+            <Button
+              onClick={() => {
+                if (!pendingChat || !socketRef.current) return;
+                socketRef.current.emit("startChat", {
+                  me: ME,
+                  other: pendingChat,
+                });
+              }}
+            >
+              Start Chat
             </Button>
           </div>
         </DialogContent>

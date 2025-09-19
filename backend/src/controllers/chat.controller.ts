@@ -17,8 +17,13 @@ export async function fetchThreads(req: Request, res: Response) {
     res.json(
       threads.map((t) => ({
         id: t.id,
-        lastPreview: t.messages[0]?.content ?? "",
         startedAt: t.startedAt,
+        messages: t.messages,
+        participants: t.participants.map((p) => ({
+          participantId: p.participantId,
+          displayName: p.displayName,
+          participantType: p.participantType,
+        })),
       }))
     );
   } catch (err) {

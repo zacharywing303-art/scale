@@ -1,6 +1,5 @@
 import prisma from "../lib/db";
 
-// Fetch threads for a user
 export async function getThreads(
   agencyCode: string,
   me: string,
@@ -14,6 +13,7 @@ export async function getThreads(
       },
     },
     include: {
+      participants: true, // ✅ add this
       messages: { orderBy: { createdAt: "desc" }, take: 1 },
     },
     orderBy: { startedAt: "desc" },
