@@ -1,8 +1,8 @@
 import { Server, Socket } from "socket.io";
 import prisma from "../lib/db";
 
-const lastThreadStart: Record<string, number> = {};
-const lastMessageSent: Record<string, number> = {};
+const lastThreadStart: Record<string, number> = Object.create(null);
+const lastMessageSent: Record<string, number> = Object.create(null);
 
 export function registerChatNamespace(io: Server) {
   const chat = io.of("/chat");
@@ -17,16 +17,17 @@ export function registerChatNamespace(io: Server) {
 
     // Start or find a chat thread
     socket.on("startChat", async ({ me, other }, ack) => {
-      const key = `${me.participantType}:${me.id}`;
+      const participantKey = `${me.participantType}:${me.participantId}`;
       const now = Date.now();
+      const last = lastThreadStart[participantKey] ?? 0;
 
-      // ⏳ block if this participant started a thread in the last 5 seconds
-      if (lastThreadStart[key] && now - lastThreadStart[key] < 5000) {
+      console.log("startChat throttle", participantKey, now - last);
+
+      if (now - last < 5000) {
         const msg = "Please wait 5 seconds before starting another chat.";
-        if (ack) return ack({ error: msg });
-        return socket.emit("error", msg);
+        return ack?.({ error: msg });
       }
-      lastThreadStart[key] = now;
+      lastThreadStart[participantKey] = now;
 
       try {
         const thread = await prisma.chatThread.findFirst({
@@ -124,16 +125,17 @@ export function registerChatNamespace(io: Server) {
     socket.on(
       "sendMessage",
       async ({ threadId, content, senderId, senderType }, ack) => {
-        const key = `${senderType}:${senderId}`;
+        const msgKey = `${senderType}:${senderId}`;
         const now = Date.now();
+        const last = lastMessageSent[msgKey] ?? 0;
 
-        // ⏳ block if this participant sent a message in the last 3 seconds
-        if (lastMessageSent[key] && now - lastMessageSent[key] < 3000) {
+        console.log("sendMessage throttle", msgKey, now - last);
+
+        if (now - last < 3000) {
           const msg = "You are sending messages too quickly. Please wait.";
-          if (ack) return ack({ error: msg });
-          return socket.emit("error", msg);
+          return ack?.({ error: msg });
         }
-        lastMessageSent[key] = now;
+        lastMessageSent[msgKey] = now;
 
         try {
           const message = await prisma.chatMessage.create({
