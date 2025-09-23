@@ -1,6 +1,9 @@
 import { Server, Socket } from "socket.io";
 import prisma from "../lib/db";
 
+const lastThreadStart: Record<string, number> = {};
+const lastMessageSent: Record<string, number> = {};
+
 export function registerChatNamespace(io: Server) {
   const chat = io.of("/chat");
 
@@ -14,6 +17,17 @@ export function registerChatNamespace(io: Server) {
 
     // Start or find a chat thread
     socket.on("startChat", async ({ me, other }, ack) => {
+      const key = `${me.participantType}:${me.id}`;
+      const now = Date.now();
+
+      // ⏳ block if this participant started a thread in the last 5 seconds
+      if (lastThreadStart[key] && now - lastThreadStart[key] < 5000) {
+        const msg = "Please wait 5 seconds before starting another chat.";
+        if (ack) return ack({ error: msg });
+        return socket.emit("error", msg);
+      }
+      lastThreadStart[key] = now;
+
       try {
         const thread = await prisma.chatThread.findFirst({
           where: {
@@ -109,7 +123,18 @@ export function registerChatNamespace(io: Server) {
     // Send message
     socket.on(
       "sendMessage",
-      async ({ threadId, content, senderId, senderType }) => {
+      async ({ threadId, content, senderId, senderType }, ack) => {
+        const key = `${senderType}:${senderId}`;
+        const now = Date.now();
+
+        // ⏳ block if this participant sent a message in the last 3 seconds
+        if (lastMessageSent[key] && now - lastMessageSent[key] < 3000) {
+          const msg = "You are sending messages too quickly. Please wait.";
+          if (ack) return ack({ error: msg });
+          return socket.emit("error", msg);
+        }
+        lastMessageSent[key] = now;
+
         try {
           const message = await prisma.chatMessage.create({
             data: { threadId, senderId, senderType, content },
@@ -117,8 +142,10 @@ export function registerChatNamespace(io: Server) {
 
           // Broadcast to everyone in the thread room
           chat.to(threadId).emit("newMessage", { threadId, message });
+          if (ack) ack({ success: true });
         } catch (err) {
           console.error("Error sending message:", err);
+          if (ack) ack({ error: "Failed to send message" });
           socket.emit("error", "Failed to send message");
         }
       }

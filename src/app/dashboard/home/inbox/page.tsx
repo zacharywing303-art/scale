@@ -16,6 +16,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { toast } from "sonner";
 
 type ThreadListItem = {
   id: string;
@@ -263,12 +264,18 @@ export default function InboxPage() {
   // Send message
   const handleSend = useCallback(() => {
     if (!newMessage.trim() || !selectedThread || !socketRef.current) return;
-    socketRef.current.emit("sendMessage", {
-      threadId: selectedThread.id,
-      content: newMessage.trim(),
-      senderType: ME.participantType,
-      senderId: ME.id,
-    });
+    socketRef.current.emit(
+      "sendMessage",
+      {
+        threadId: selectedThread.id,
+        content: newMessage.trim(),
+        senderType: ME.participantType,
+        senderId: ME.id,
+      },
+      (resp: any) => {
+        if (resp?.error) toast.error(resp.error);
+      }
+    );
     setNewMessage("");
   }, [newMessage, selectedThread, ME.participantType, ME.id]);
 
@@ -475,10 +482,16 @@ export default function InboxPage() {
             <Button
               onClick={() => {
                 if (!pendingChat || !socketRef.current) return;
-                socketRef.current.emit("startChat", {
-                  me: ME,
-                  other: pendingChat,
-                });
+                socketRef.current.emit(
+                  "startChat",
+                  {
+                    me: ME,
+                    other: pendingChat,
+                  },
+                  (resp: any) => {
+                    if (resp?.error) setStartChatError(resp.error);
+                  }
+                );
               }}
             >
               Start Chat
