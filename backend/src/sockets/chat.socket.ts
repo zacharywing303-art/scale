@@ -17,7 +17,7 @@ export function registerChatNamespace(io: Server) {
 
     // Start or find a chat thread
     socket.on("startChat", async ({ me, other }, ack) => {
-      const participantKey = `${me.participantType}:${me.participantId}`;
+      const participantKey = `${me.participantType}:${me.id}`;
       const now = Date.now();
       const last = lastThreadStart[participantKey] ?? 0;
 

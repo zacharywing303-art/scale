@@ -64,9 +64,6 @@ const io = new Server(server, {
 // sockets
 registerChatNamespace(io);
 
-// Register socket.io namespaces
-registerChatNamespace(io);
-
 // Root endpoint
 app.get("/", (_req, res) => {
   res.send("Unity Care API is running");
