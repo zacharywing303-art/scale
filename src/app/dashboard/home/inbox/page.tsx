@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { getChatSocket, disconnectChatSocket } from "@/lib/socket/chat";
+import { getChatSocket } from "@/lib/socket/chat";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
 import { cn } from "@/lib/utils";
 import {
@@ -60,10 +60,6 @@ const mapRole = (
   return "AGENCY_USER";
 };
 
-/**
- * InboxPage component displays a list of chat threads and allows users to view, send messages, and start new chats with participants.
- * It manages chat state, handles socket events, and provides a UI for messaging within the dashboard.
- */
 export default function InboxPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
@@ -79,15 +75,12 @@ export default function InboxPage() {
   const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [search, setSearch] = useState("");
   const [pendingChat, setPendingChat] = useState<any | null>(null);
-  const [startChatLoading, setStartChatLoading] = useState(false);
   const [startChatError, setStartChatError] = useState<string | null>(null);
 
-  // Get user on mount
   useEffect(() => {
     setUser(getLoggedInUser());
   }, []);
 
-  // Memoize ME so it updates when user changes
   const ME = useMemo(
     () =>
       user
@@ -108,34 +101,22 @@ export default function InboxPage() {
     [user]
   );
 
-  // Normalize thread data safely
-  // const normalizeThread = (t: any, me: typeof ME): ThreadListItem => {
-  //   const others = Array.isArray(t.participants)
-  //     ? t.participants.filter((p: any) => p.participantId !== me.id)
-  //     : [];
-  //   return {
-  //     id: t.id,
-  //     title: others.map((p: any) => p.displayName).join(", ") || "Unknown",
-  //     lastMessage: t.messages?.[t.messages.length - 1]?.content ?? "",
-  //     lastTime:
-  //       t.messages?.[t.messages.length - 1]?.createdAt ??
-  //       t.startedAt ??
-  //       new Date().toISOString(),
-  //   };
-  // };
   const normalizeThread = (t: any, me: typeof ME): ThreadListItem => {
     const others = (t.participants || []).filter(
       (p: any) => p.participantId !== me.id
     );
+    const lastMsg =
+      Array.isArray(t.messages) && t.messages.length > 0
+        ? t.messages[t.messages.length - 1]
+        : null;
     return {
       id: t.id,
       title: others.map((p: any) => p.displayName).join(", ") || "Unknown",
-      lastMessage: t.messages?.[0]?.content ?? "",
-      lastTime: t.messages?.[0]?.createdAt ?? t.startedAt,
+      lastMessage: lastMsg?.content ?? "",
+      lastTime: lastMsg?.createdAt ?? t.startedAt,
     };
   };
 
-  // Load threads
   const loadThreads = async () => {
     try {
       const res = await fetch(
@@ -170,7 +151,6 @@ export default function InboxPage() {
     }
   };
 
-  // Load participants
   const loadParticipants = async (me: typeof ME) => {
     setLoadingParticipants(true);
     try {
@@ -193,7 +173,6 @@ export default function InboxPage() {
     }
   };
 
-  // Init socket
   useEffect(() => {
     if (!user || socketRef.current) return;
 
@@ -230,8 +209,8 @@ export default function InboxPage() {
       }
     );
 
-    // ✅ once instead of on
-    socket.once("chatStarted", (thread: ThreadDetail) => {
+    // ✅ switched from once → on
+    socket.on("chatStarted", (thread: ThreadDetail) => {
       setSelectedThread(thread);
       setThreads((prev) => {
         const exists = prev.some((t) => t.id === thread.id);
@@ -245,7 +224,7 @@ export default function InboxPage() {
     });
 
     return () => {
-      socket.disconnect(); // <- ensure it fully disconnects
+      socket.disconnect();
       socketRef.current = null;
     };
   }, [user]);
@@ -258,10 +237,8 @@ export default function InboxPage() {
 
   useEffect(() => {
     if (user) loadThreads();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, ME]);
 
-  // Send message
   const handleSend = useCallback(() => {
     if (!newMessage.trim() || !selectedThread || !socketRef.current) return;
     socketRef.current.emit(
@@ -287,7 +264,6 @@ export default function InboxPage() {
     );
   }
 
-  // Helper to safely format date
   const formatTime = (dateStr: string) => {
     const d = new Date(dateStr);
     return isNaN(d.getTime()) ? "" : d.toLocaleTimeString();
@@ -421,13 +397,12 @@ export default function InboxPage() {
         )}
       </div>
 
-      {/* Confirmation dialog for starting chat */}
+      {/* Confirmation dialog */}
       <Dialog
         open={!!pendingChat}
         onOpenChange={() => {
           setPendingChat(null);
           setStartChatError(null);
-          setStartChatLoading(false);
         }}
       >
         <DialogContent>
@@ -445,40 +420,10 @@ export default function InboxPage() {
               onClick={() => {
                 setPendingChat(null);
                 setStartChatError(null);
-                setStartChatLoading(false);
               }}
-              disabled={startChatLoading}
             >
               Cancel
             </Button>
-            {/* <Button
-              onClick={async () => {
-                setStartChatError(null);
-                setStartChatLoading(true);
-                try {
-                  if (socketRef.current && pendingChat) {
-                    await new Promise<void>((resolve, reject) => {
-                      socketRef.current!.emit(
-                        "startChat",
-                        { me: ME, other: pendingChat },
-                        (resp: any) => {
-                          if (resp?.error) reject(new Error(resp.error));
-                          else resolve();
-                        }
-                      );
-                    });
-                  }
-                } catch (err: any) {
-                  setStartChatError(
-                    err?.message || "Failed to start chat. Please try again."
-                  );
-                } finally {
-                  setStartChatLoading(false);
-                }
-              }}
-            >
-              {startChatLoading ? "Starting..." : "Start Chat"}
-            </Button> */}
             <Button
               onClick={() => {
                 if (!pendingChat || !socketRef.current) return;

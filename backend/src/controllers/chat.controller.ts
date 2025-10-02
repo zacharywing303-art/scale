@@ -45,12 +45,16 @@ export async function fetchThreadDetail(req: Request, res: Response) {
 
 export async function fetchParticipants(req: Request, res: Response) {
   try {
-    const { agencyCode, excludeId, participantType } = req.query;
+    const { agencyCode, excludeId } = req.query;
+    if (!agencyCode || !excludeId) {
+      return res.status(400).send("Missing agencyCode or excludeId");
+    }
+
     const participants = await getParticipants(
       String(agencyCode),
-      String(excludeId),
-      participantType as string
+      String(excludeId)
     );
+
     res.json(participants);
   } catch (err) {
     console.error(err);
