@@ -32,35 +32,109 @@ export async function getThreadDetail(id: string) {
 }
 
 // Get participants for new chat
-export async function getParticipants(agencyCode: string, excludeId: string) {
-  // Fetch all users in this agency except me
-  const users = await prisma.user.findMany({
-    where: { agency: { code: agencyCode }, id: { not: excludeId } },
-  });
+export async function getParticipants(
+  agencyCode: string,
+  excludeId: string,
+  participantType?: string
+) {
+  let participants: any[] = [];
 
-  // Fetch all mobile employees in this agency except me
-  const employees = await prisma.mobileEmployee.findMany({
-    where: { agencyCode, id: { not: excludeId } },
-    include: { employee: true },
-  });
+  if (!participantType || participantType === "USER") {
+    const users = await prisma.user.findMany({
+      where: { agency: { code: agencyCode }, id: { not: excludeId } },
+    });
+    participants.push(
+      ...users.map((u) => ({
+        id: u.id,
+        participantId: u.id,
+        participantType: "USER",
+        displayName: u.name,
+        userId: u.id,
+      }))
+    );
+  }
 
-  // Normalize into common participant format
-  const participants = [
-    ...users.map((u) => ({
-      id: u.id,
-      participantId: u.id,
-      participantType: "USER",
-      displayName: u.name,
-      userId: u.id,
-    })),
-    ...employees.map((e) => ({
-      id: e.id,
-      participantId: e.id,
-      participantType: "MOBILE_EMPLOYEE",
-      displayName: e.employee?.name || "Unnamed",
-      mobileEmployeeId: e.id,
-    })),
-  ];
+  if (!participantType || participantType === "MOBILE_EMPLOYEE") {
+    const employees = await prisma.mobileEmployee.findMany({
+      where: { agencyCode, id: { not: excludeId } },
+      include: { employee: true },
+    });
+    participants.push(
+      ...employees.map((e) => ({
+        id: e.id,
+        participantId: e.id,
+        participantType: "MOBILE_EMPLOYEE",
+        displayName: e.employee.name,
+        mobileEmployeeId: e.id,
+      }))
+    );
+  }
 
   return participants;
 }
+// import prisma from "../lib/db";
+
+// export async function getThreads(
+//   agencyCode: string,
+//   me: string,
+//   meType: string
+// ) {
+//   return prisma.chatThread.findMany({
+//     where: {
+//       agencyCode,
+//       participants: {
+//         some: { participantId: me, participantType: meType as any },
+//       },
+//     },
+//     include: {
+//       participants: true, // ✅ add this
+//       messages: { orderBy: { createdAt: "desc" }, take: 1 },
+//     },
+//     orderBy: { startedAt: "desc" },
+//   });
+// }
+
+// // Fetch single thread detail
+// export async function getThreadDetail(id: string) {
+//   return prisma.chatThread.findUnique({
+//     where: { id },
+//     include: {
+//       participants: true,
+//       messages: { orderBy: { createdAt: "asc" } },
+//     },
+//   });
+// }
+
+// // Get participants for new chat
+// export async function getParticipants(agencyCode: string, excludeId: string) {
+//   // Fetch all users in this agency except me
+//   const users = await prisma.user.findMany({
+//     where: { agency: { code: agencyCode }, id: { not: excludeId } },
+//   });
+
+//   // Fetch all mobile employees in this agency except me
+//   const employees = await prisma.mobileEmployee.findMany({
+//     where: { agencyCode, id: { not: excludeId } },
+//     include: { employee: true },
+//   });
+
+//   // Normalize into common participant format
+//   const participants = [
+//     ...users.map((u) => ({
+//       id: u.id,
+//       participantId: u.id,
+//       participantType: "USER",
+//       displayName: u.name,
+//       userId: u.id,
+//     })),
+//     ...employees.map((e) => ({
+//       id: e.id,
+//       participantId: e.id,
+//       participantType: "MOBILE_EMPLOYEE",
+//       displayName: e.employee?.name || "Unnamed",
+//       mobileEmployeeId: e.id,
+//     })),
+//   ];
+
+//   return participants;
+// }
