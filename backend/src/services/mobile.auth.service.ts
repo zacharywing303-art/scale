@@ -41,6 +41,10 @@ export async function loginMobileEmployee(
       id: user.id,
       email: user.email,
       agencyCode: user.agencyCode,
+      participantType: "MOBILE_EMPLOYEE", // 👈 Needed for chat
+      name: user.employee?.name || "Unnamed Employee", // 👈 Display name for chat
+      displayName: user.employee?.name || user.email, // 👈 For participants
+      role: "MOBILE_EMPLOYEE", // 👈 Optional, helps for role-based logic
       employee: user.employee,
     },
   };
