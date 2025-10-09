@@ -450,6 +450,7 @@ model ChatThread {
   updatedAt    DateTime         @default(now())
   participants ChatParticipant[]
   messages     ChatMessage[]
+  readReceipts ChatReadReceipt[]
 
   @@index([agencyCode, startedAt])
 }
@@ -479,6 +480,18 @@ model ChatMessage {
 
   @@index([threadId, createdAt]) // better ordering performance
 }
+
+model ChatReadReceipt {
+  id              String   @id @default(cuid())
+  threadId        String
+  participantId   String
+  lastReadAt      DateTime @default(now())
+
+  thread          ChatThread @relation(fields: [threadId], references: [id])
+
+  @@unique([threadId, participantId])
+}
+
 
 model MissedVisit {
   id                    String    @id @default(cuid())

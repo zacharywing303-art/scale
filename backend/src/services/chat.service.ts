@@ -5,7 +5,8 @@ export async function getThreads(
   me: string,
   meType: string
 ) {
-  return prisma.chatThread.findMany({
+  // Fetch all threads the user participates in
+  const threads = await prisma.chatThread.findMany({
     where: {
       agencyCode,
       participants: {
@@ -13,11 +14,36 @@ export async function getThreads(
       },
     },
     include: {
-      participants: true, // ✅ add this
-      messages: { orderBy: { createdAt: "desc" }, take: 1 },
+      participants: true,
+      messages: { orderBy: { createdAt: "asc" } }, // include all messages for unread calc
+      _count: { select: { messages: true } },
     },
     orderBy: { startedAt: "desc" },
   });
+
+  // Add unread count per thread
+  const threadsWithUnread = await Promise.all(
+    threads.map(async (thread) => {
+      // Find user's last read receipt for this thread
+      const receipt = await prisma.chatReadReceipt.findUnique({
+        where: {
+          threadId_participantId: {
+            threadId: thread.id,
+            participantId: me,
+          },
+        },
+      });
+
+      // Count messages sent after the last read timestamp
+      const unreadCount = thread.messages.filter(
+        (m) => !receipt || new Date(m.createdAt) > new Date(receipt.lastReadAt)
+      ).length;
+
+      return { ...thread, unreadCount };
+    })
+  );
+
+  return threadsWithUnread;
 }
 
 // Fetch single thread detail
@@ -72,69 +98,36 @@ export async function getParticipants(
 
   return participants;
 }
-// import prisma from "../lib/db";
 
-// export async function getThreads(
-//   agencyCode: string,
-//   me: string,
-//   meType: string
-// ) {
-//   return prisma.chatThread.findMany({
-//     where: {
-//       agencyCode,
-//       participants: {
-//         some: { participantId: me, participantType: meType as any },
-//       },
-//     },
-//     include: {
-//       participants: true, // ✅ add this
-//       messages: { orderBy: { createdAt: "desc" }, take: 1 },
-//     },
-//     orderBy: { startedAt: "desc" },
-//   });
-// }
+export async function getUnreadCountForUser(userId: string) {
+  // Fetch all receipts for this user
+  const receipts = await prisma.chatReadReceipt.findMany({
+    where: { participantId: userId },
+  });
 
-// // Fetch single thread detail
-// export async function getThreadDetail(id: string) {
-//   return prisma.chatThread.findUnique({
-//     where: { id },
-//     include: {
-//       participants: true,
-//       messages: { orderBy: { createdAt: "asc" } },
-//     },
-//   });
-// }
+  // Fetch all threads that include this user
+  const threads = await prisma.chatThread.findMany({
+    where: {
+      participants: {
+        some: { participantId: userId },
+      },
+    },
+    include: {
+      messages: true,
+    },
+  });
 
-// // Get participants for new chat
-// export async function getParticipants(agencyCode: string, excludeId: string) {
-//   // Fetch all users in this agency except me
-//   const users = await prisma.user.findMany({
-//     where: { agency: { code: agencyCode }, id: { not: excludeId } },
-//   });
+  let totalUnread = 0;
 
-//   // Fetch all mobile employees in this agency except me
-//   const employees = await prisma.mobileEmployee.findMany({
-//     where: { agencyCode, id: { not: excludeId } },
-//     include: { employee: true },
-//   });
+  for (const thread of threads) {
+    const receipt = receipts.find(
+      (r: (typeof receipts)[number]) => r.threadId === thread.id
+    );
+    const unreadInThread = thread.messages.filter(
+      (m) => !receipt || new Date(m.createdAt) > new Date(receipt.lastReadAt)
+    ).length;
+    totalUnread += unreadInThread;
+  }
 
-//   // Normalize into common participant format
-//   const participants = [
-//     ...users.map((u) => ({
-//       id: u.id,
-//       participantId: u.id,
-//       participantType: "USER",
-//       displayName: u.name,
-//       userId: u.id,
-//     })),
-//     ...employees.map((e) => ({
-//       id: e.id,
-//       participantId: e.id,
-//       participantType: "MOBILE_EMPLOYEE",
-//       displayName: e.employee?.name || "Unnamed",
-//       mobileEmployeeId: e.id,
-//     })),
-//   ];
-
-//   return participants;
-// }
+  return totalUnread;
+}

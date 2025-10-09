@@ -23,6 +23,7 @@ type ThreadListItem = {
   title: string;
   lastMessage: string;
   lastTime: string;
+  unreadCount: number;
 };
 
 type Message = {
@@ -133,6 +134,7 @@ export default function InboxPage() {
       title: others.map((p: any) => p.displayName).join(", ") || "Unknown",
       lastMessage: lastMsg?.content ?? "",
       lastTime: lastMsg?.createdAt ?? t.startedAt,
+      unreadCount: t.unreadCount || 0,
     };
   };
 
@@ -168,6 +170,21 @@ export default function InboxPage() {
     } catch (err) {
       console.error("Load thread detail error:", err);
       setSelectedThread(null);
+    }
+  };
+
+  const markThreadAsRead = async (threadId: string) => {
+    try {
+      await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/chat/threads/${threadId}/read`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ participantId: ME.id }),
+        }
+      );
+    } catch (err) {
+      console.error("Failed to mark as read:", err);
     }
   };
 
@@ -449,18 +466,33 @@ export default function InboxPage() {
             <div
               key={t.id}
               className={cn(
-                "px-4 py-3 cursor-pointer border-b hover:bg-muted",
+                "px-4 py-3 cursor-pointer border-b hover:bg-muted flex justify-between items-center",
                 selectedThread?.id === t.id && "bg-muted font-medium"
               )}
-              onClick={() => loadThreadDetail(t.id)}
+              onClick={() => {
+                loadThreadDetail(t.id);
+                markThreadAsRead(t.id);
+              }}
             >
-              <div className="flex justify-between">
-                <span className="font-medium">{t.title}</span>
-                <span className="text-xs opacity-60">
-                  {formatThreadTime(t.lastTime)}
-                </span>
+              <div className="flex-1">
+                <div className="flex justify-between">
+                  <span className="font-medium flex items-center gap-2">
+                    {t.title}
+                    {t.unreadCount > 0 && (
+                      <span className="w-2 h-2 bg-blue-500 rounded-full inline-block"></span>
+                    )}
+                  </span>
+                  <span className="text-xs opacity-60">
+                    {formatThreadTime(t.lastTime)}
+                  </span>
+                </div>
+                <div className="text-sm truncate">{t.lastMessage}</div>
               </div>
-              <div className="text-sm truncate">{t.lastMessage}</div>
+              {t.unreadCount > 0 && (
+                <span className="ml-2 text-xs text-blue-600 font-semibold">
+                  {t.unreadCount}
+                </span>
+              )}
             </div>
           ))
         )}
