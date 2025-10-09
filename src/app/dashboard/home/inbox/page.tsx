@@ -127,11 +127,12 @@ export default function InboxPage() {
     const others = (t.participants || []).filter(
       (p: any) => p.participantId !== me.id
     );
+    const lastMsg = t.messages?.[t.messages.length - 1];
     return {
       id: t.id,
       title: others.map((p: any) => p.displayName).join(", ") || "Unknown",
-      lastMessage: t.messages?.[0]?.content ?? "",
-      lastTime: t.messages?.[0]?.createdAt ?? t.startedAt,
+      lastMessage: lastMsg?.content ?? "",
+      lastTime: lastMsg?.createdAt ?? t.startedAt,
     };
   };
 
@@ -230,6 +231,40 @@ export default function InboxPage() {
       }
     );
 
+    // ✅ Update thread list order in real time when any thread gets a new message
+    socket.on(
+      "threadUpdated",
+      ({
+        threadId,
+        lastMessage,
+      }: {
+        threadId: string;
+        lastMessage: { content: string; createdAt: string };
+      }) => {
+        setThreads((prev) => {
+          const updated = prev.map((t) =>
+            t.id === threadId
+              ? {
+                  ...t,
+                  lastMessage: lastMessage.content,
+                  lastTime: lastMessage.createdAt,
+                }
+              : t
+          );
+
+          // ✅ If thread doesn’t exist in list, skip reordering
+          const exists = updated.some((t) => t.id === threadId);
+          if (!exists) return updated;
+
+          // ✅ Reorder so most recent is on top
+          return [...updated].sort(
+            (a, b) =>
+              new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime()
+          );
+        });
+      }
+    );
+
     // ✅ once instead of on
     socket.once("chatStarted", (thread: ThreadDetail) => {
       setSelectedThread(thread);
@@ -245,7 +280,8 @@ export default function InboxPage() {
     });
 
     return () => {
-      socket.disconnect(); // <- ensure it fully disconnects
+      socket.off("threadUpdated");
+      socket.disconnect();
       socketRef.current = null;
     };
   }, [user]);

@@ -109,12 +109,7 @@ export function registerChatNamespace(io: Server) {
           socket.join(thread.id);
 
           // ✅ Always acknowledge with the thread itself
-          ack?.({ success: true, thread });
-
-          if (isNew) {
-            // ✅ Only emit "chatStarted" if this is a *new* thread
-            chat.to(thread.id).emit("chatStarted", thread);
-          }
+          ack?.({ success: true, thread, isNew });
 
           console.log(
             `Chat ${isNew ? "created" : "found"} between ${me.id} and ${
@@ -147,16 +142,27 @@ export function registerChatNamespace(io: Server) {
         lastMessageSent[msgKey] = now;
 
         try {
+          // ✅ Create the message
           const message = await prisma.chatMessage.create({
             data: { threadId, senderId, senderType, content },
           });
 
-          // Broadcast to everyone in the thread room
+          // ✅ Update thread’s "updatedAt" timestamp
+          await prisma.chatThread.update({
+            where: { id: threadId },
+            data: { updatedAt: new Date() },
+          });
+
+          // ✅ Broadcast to everyone in the thread room
           chat.to(threadId).emit("newMessage", { threadId, message });
-          if (ack) ack({ success: true });
+
+          // ✅ Also emit a lightweight event for thread list updates (optional)
+          chat.emit("threadUpdated", { threadId, lastMessage: message });
+
+          ack?.({ success: true });
         } catch (err) {
           console.error("Error sending message:", err);
-          if (ack) ack({ error: "Failed to send message" });
+          ack?.({ error: "Failed to send message" });
           socket.emit("error", "Failed to send message");
         }
       }
