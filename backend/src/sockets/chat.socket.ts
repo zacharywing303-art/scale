@@ -30,7 +30,8 @@ export function registerChatNamespace(io: Server) {
       lastThreadStart[participantKey] = now;
 
       try {
-        const thread = await prisma.chatThread.findFirst({
+        // 🔍 First, find existing thread
+        let thread = await prisma.chatThread.findFirst({
           where: {
             agencyCode: me.agencyCode,
             AND: [
@@ -58,11 +59,12 @@ export function registerChatNamespace(io: Server) {
           },
         });
 
-        let finalThread = thread;
+        let isNew = false;
 
-        if (!finalThread) {
-          // ✅ Use a transaction to avoid race duplicates
-          finalThread = await prisma.$transaction(async (tx) => {
+        if (!thread) {
+          isNew = true;
+          // ✅ Use transaction to avoid race duplicates
+          thread = await prisma.$transaction(async (tx) => {
             const t = await tx.chatThread.create({
               data: {
                 agencyCode: me.agencyCode,
@@ -92,7 +94,7 @@ export function registerChatNamespace(io: Server) {
                 },
               },
             });
-            // Fetch the thread with participants and messages included
+
             return tx.chatThread.findUnique({
               where: { id: t.id },
               include: {
@@ -103,21 +105,28 @@ export function registerChatNamespace(io: Server) {
           });
         }
 
-        if (finalThread) {
-          socket.join(finalThread.id);
-          // ✅ emit to the *room* so all members get one event
-          chat.to(finalThread.id).emit("chatStarted", finalThread);
+        if (thread) {
+          socket.join(thread.id);
 
-          // Acknowledge to caller so they don’t re-emit
-          if (ack) ack({ success: true, threadId: finalThread.id });
+          // ✅ Always acknowledge with the thread itself
+          ack?.({ success: true, thread });
+
+          if (isNew) {
+            // ✅ Only emit "chatStarted" if this is a *new* thread
+            chat.to(thread.id).emit("chatStarted", thread);
+          }
+
+          console.log(
+            `Chat ${isNew ? "created" : "found"} between ${me.id} and ${
+              other.id
+            }`
+          );
         } else {
-          if (ack) ack({ error: "Failed to start chat" });
-          socket.emit("error", "Failed to start chat");
+          ack?.({ error: "Failed to start chat" });
         }
       } catch (err) {
         console.error("Error starting chat:", err);
-        if (ack) ack({ error: "Failed to start chat" });
-        socket.emit("error", "Failed to start chat");
+        ack?.({ error: "Failed to start chat" });
       }
     });
 
