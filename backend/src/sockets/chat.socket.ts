@@ -147,27 +147,16 @@ export function registerChatNamespace(io: Server) {
         lastMessageSent[msgKey] = now;
 
         try {
-          // ✅ Create the message
           const message = await prisma.chatMessage.create({
             data: { threadId, senderId, senderType, content },
           });
 
-          // ✅ Trigger update to update "updatedAt" timestamp automatically
-          await prisma.chatThread.update({
-            where: { id: threadId },
-            data: {},
-          });
-
-          // ✅ Broadcast to everyone in the thread room
+          // Broadcast to everyone in the thread room
           chat.to(threadId).emit("newMessage", { threadId, message });
-
-          // ✅ Also emit a lightweight event for thread list updates (optional)
-          chat.emit("threadUpdated", { threadId, lastMessage: message });
-
-          ack?.({ success: true });
+          if (ack) ack({ success: true });
         } catch (err) {
           console.error("Error sending message:", err);
-          ack?.({ error: "Failed to send message" });
+          if (ack) ack({ error: "Failed to send message" });
           socket.emit("error", "Failed to send message");
         }
       }
