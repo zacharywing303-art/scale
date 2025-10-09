@@ -157,7 +157,13 @@ export function registerChatNamespace(io: Server) {
           chat.to(threadId).emit("newMessage", { threadId, message });
 
           // ✅ Also emit a lightweight event for thread list updates (optional)
-          chat.emit("threadUpdated", { threadId, lastMessage: message });
+          chat.emit("threadUpdated", {
+            threadId,
+            lastMessage: {
+              content: message.content,
+              createdAt: message.createdAt,
+            },
+          });
 
           ack?.({ success: true });
         } catch (err) {

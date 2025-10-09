@@ -183,6 +183,10 @@ export default function InboxPage() {
           body: JSON.stringify({ participantId: ME.id }),
         }
       );
+      // Update UI immediately
+      setThreads((prev) =>
+        prev.map((t) => (t.id === threadId ? { ...t, unreadCount: 0 } : t))
+      );
     } catch (err) {
       console.error("Failed to mark as read:", err);
     }
@@ -211,10 +215,112 @@ export default function InboxPage() {
     }
   };
 
-  // Init socket
-  useEffect(() => {
-    if (!user || socketRef.current) return;
+  // // Init socket
+  // useEffect(() => {
+  //   if (!user) return;
 
+  //   // Disconnect old socket
+  //   if (socketRef.current) {
+  //     socketRef.current.disconnect();
+  //   }
+
+  //   const socket = getChatSocket({
+  //     userId: user?.id ?? "",
+  //     displayName: user?.name ?? "",
+  //     participantType: "USER",
+  //     agencyCode: user?.agency?.code ?? AGENCY_CODE,
+  //     role: mapRole(user?.role),
+  //   });
+  //   socketRef.current = socket;
+
+  //   const handleIncomingMessage = ({
+  //     threadId,
+  //     message,
+  //   }: {
+  //     threadId: string;
+  //     message: Message;
+  //   }) => {
+  //     setSelectedThread((prev) =>
+  //       prev &&
+  //       prev.id === threadId &&
+  //       !prev.messages.find((m) => m.id === message.id)
+  //         ? { ...prev, messages: [...prev.messages, message] }
+  //         : prev
+  //     );
+  //     setThreads((prev) =>
+  //       prev.map((t) =>
+  //         t.id === threadId
+  //           ? {
+  //               ...t,
+  //               lastMessage: message.content,
+  //               lastTime: message.createdAt,
+  //             }
+  //           : t
+  //       )
+  //     );
+  //   };
+
+  //   socket.on("newMessage", handleIncomingMessage);
+
+  //   // ✅ Update thread list order in real time when any thread gets a new message
+  //   const handleThreadUpdated = ({
+  //     threadId,
+  //     lastMessage,
+  //   }: {
+  //     threadId: string;
+  //     lastMessage: { content: string; createdAt: string };
+  //   }) => {
+  //     setThreads((prev) => {
+  //       const updated = prev.map((t) =>
+  //         t.id === threadId
+  //           ? {
+  //               ...t,
+  //               lastMessage: lastMessage.content,
+  //               lastTime: lastMessage.createdAt,
+  //             }
+  //           : t
+  //       );
+
+  //       // ✅ If thread doesn’t exist in list, skip reordering
+  //       const exists = updated.some((t) => t.id === threadId);
+  //       if (!exists) return updated;
+
+  //       // ✅ Reorder so most recent is on top
+  //       return [...updated].sort(
+  //         (a, b) =>
+  //           new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime()
+  //       );
+  //     });
+  //   };
+
+  //   socket.on("threadUpdated", handleThreadUpdated);
+
+  //   // ✅ once instead of on
+  //   socket.once("chatStarted", (thread: ThreadDetail) => {
+  //     setSelectedThread(thread);
+  //     setThreads((prev) => {
+  //       const exists = prev.some((t) => t.id === thread.id);
+  //       return exists
+  //         ? prev.map((t) =>
+  //             t.id === thread.id ? normalizeThread(thread, ME) : t
+  //           )
+  //         : [normalizeThread(thread, ME), ...prev];
+  //     });
+  //     setPendingChat(null);
+  //   });
+
+  //   return () => {
+  //     socket.off("newMessage", handleIncomingMessage);
+  //     socket.off("threadUpdated", handleThreadUpdated);
+  //     socket.disconnect();
+  //     socketRef.current = null;
+  //   };
+  // }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    // Always create a fresh socket connection when page is mounted
     const socket = getChatSocket({
       userId: user?.id ?? "",
       displayName: user?.name ?? "",
@@ -224,42 +330,37 @@ export default function InboxPage() {
     });
     socketRef.current = socket;
 
-    socket.on(
-      "newMessage",
-      ({ threadId, message }: { threadId: string; message: Message }) => {
-        setSelectedThread((prev) =>
-          prev &&
-          prev.id === threadId &&
-          !prev.messages.find((m) => m.id === message.id)
-            ? { ...prev, messages: [...prev.messages, message] }
-            : prev
-        );
-        setThreads((prev) =>
-          prev.map((t) =>
-            t.id === threadId
-              ? {
-                  ...t,
-                  lastMessage: message.content,
-                  lastTime: message.createdAt,
-                }
-              : t
-          )
-        );
-      }
-    );
+    const handleIncomingMessage = ({ threadId, message }: any) => {
+      setSelectedThread((prev) =>
+        prev && prev.id === threadId
+          ? {
+              ...prev,
+              id: prev.id,
+              participants: prev.participants,
+              messages: [...prev.messages, message],
+            }
+          : prev
+      );
+      setThreads((prev) =>
+        prev.map((t) => {
+          if (t.id !== threadId) return t;
+          const isMine = message.senderId === ME.id;
+          return {
+            ...t,
+            lastMessage: message.content,
+            lastTime: message.createdAt,
+            unreadCount: isMine ? t.unreadCount : t.unreadCount + 1,
+          };
+        })
+      );
+    };
 
-    // ✅ Update thread list order in real time when any thread gets a new message
-    socket.on(
-      "threadUpdated",
-      ({
-        threadId,
-        lastMessage,
-      }: {
-        threadId: string;
-        lastMessage: { content: string; createdAt: string };
-      }) => {
-        setThreads((prev) => {
-          const updated = prev.map((t) =>
+    socket.on("newMessage", handleIncomingMessage);
+
+    socket.on("threadUpdated", ({ threadId, lastMessage }: any) => {
+      setThreads((prev) =>
+        [
+          ...prev.map((t) =>
             t.id === threadId
               ? {
                   ...t,
@@ -267,41 +368,26 @@ export default function InboxPage() {
                   lastTime: lastMessage.createdAt,
                 }
               : t
-          );
-
-          // ✅ If thread doesn’t exist in list, skip reordering
-          const exists = updated.some((t) => t.id === threadId);
-          if (!exists) return updated;
-
-          // ✅ Reorder so most recent is on top
-          return [...updated].sort(
-            (a, b) =>
-              new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime()
-          );
-        });
-      }
-    );
-
-    // ✅ once instead of on
-    socket.once("chatStarted", (thread: ThreadDetail) => {
-      setSelectedThread(thread);
-      setThreads((prev) => {
-        const exists = prev.some((t) => t.id === thread.id);
-        return exists
-          ? prev.map((t) =>
-              t.id === thread.id ? normalizeThread(thread, ME) : t
-            )
-          : [normalizeThread(thread, ME), ...prev];
-      });
-      setPendingChat(null);
+          ),
+        ].sort(
+          (a, b) =>
+            new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime()
+        )
+      );
     });
 
     return () => {
-      socket.off("threadUpdated");
       socket.disconnect();
       socketRef.current = null;
     };
-  }, [user]);
+    // 👇 intentionally NO dependency on [user]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (user) loadThreads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
 
   useEffect(() => {
     if (selectedThread?.id && socketRef.current) {
@@ -478,9 +564,6 @@ export default function InboxPage() {
                 <div className="flex justify-between">
                   <span className="font-medium flex items-center gap-2">
                     {t.title}
-                    {t.unreadCount > 0 && (
-                      <span className="w-2 h-2 bg-blue-500 rounded-full inline-block"></span>
-                    )}
                   </span>
                   <span className="text-xs opacity-60">
                     {formatThreadTime(t.lastTime)}
@@ -488,11 +571,6 @@ export default function InboxPage() {
                 </div>
                 <div className="text-sm truncate">{t.lastMessage}</div>
               </div>
-              {t.unreadCount > 0 && (
-                <span className="ml-2 text-xs text-blue-600 font-semibold">
-                  {t.unreadCount}
-                </span>
-              )}
             </div>
           ))
         )}
