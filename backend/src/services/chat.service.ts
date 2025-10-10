@@ -52,7 +52,7 @@ export async function getThreadDetail(id: string) {
     where: { id },
     include: {
       participants: true,
-      messages: { orderBy: { updatedAt: "asc" } },
+      messages: { orderBy: { createdAt: "desc" } },
     },
   });
 }
