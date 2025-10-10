@@ -215,112 +215,15 @@ export default function InboxPage() {
     }
   };
 
-  // // Init socket
-  // useEffect(() => {
-  //   if (!user) return;
-
-  //   // Disconnect old socket
-  //   if (socketRef.current) {
-  //     socketRef.current.disconnect();
-  //   }
-
-  //   const socket = getChatSocket({
-  //     userId: user?.id ?? "",
-  //     displayName: user?.name ?? "",
-  //     participantType: "USER",
-  //     agencyCode: user?.agency?.code ?? AGENCY_CODE,
-  //     role: mapRole(user?.role),
-  //   });
-  //   socketRef.current = socket;
-
-  //   const handleIncomingMessage = ({
-  //     threadId,
-  //     message,
-  //   }: {
-  //     threadId: string;
-  //     message: Message;
-  //   }) => {
-  //     setSelectedThread((prev) =>
-  //       prev &&
-  //       prev.id === threadId &&
-  //       !prev.messages.find((m) => m.id === message.id)
-  //         ? { ...prev, messages: [...prev.messages, message] }
-  //         : prev
-  //     );
-  //     setThreads((prev) =>
-  //       prev.map((t) =>
-  //         t.id === threadId
-  //           ? {
-  //               ...t,
-  //               lastMessage: message.content,
-  //               lastTime: message.createdAt,
-  //             }
-  //           : t
-  //       )
-  //     );
-  //   };
-
-  //   socket.on("newMessage", handleIncomingMessage);
-
-  //   // ✅ Update thread list order in real time when any thread gets a new message
-  //   const handleThreadUpdated = ({
-  //     threadId,
-  //     lastMessage,
-  //   }: {
-  //     threadId: string;
-  //     lastMessage: { content: string; createdAt: string };
-  //   }) => {
-  //     setThreads((prev) => {
-  //       const updated = prev.map((t) =>
-  //         t.id === threadId
-  //           ? {
-  //               ...t,
-  //               lastMessage: lastMessage.content,
-  //               lastTime: lastMessage.createdAt,
-  //             }
-  //           : t
-  //       );
-
-  //       // ✅ If thread doesn’t exist in list, skip reordering
-  //       const exists = updated.some((t) => t.id === threadId);
-  //       if (!exists) return updated;
-
-  //       // ✅ Reorder so most recent is on top
-  //       return [...updated].sort(
-  //         (a, b) =>
-  //           new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime()
-  //       );
-  //     });
-  //   };
-
-  //   socket.on("threadUpdated", handleThreadUpdated);
-
-  //   // ✅ once instead of on
-  //   socket.once("chatStarted", (thread: ThreadDetail) => {
-  //     setSelectedThread(thread);
-  //     setThreads((prev) => {
-  //       const exists = prev.some((t) => t.id === thread.id);
-  //       return exists
-  //         ? prev.map((t) =>
-  //             t.id === thread.id ? normalizeThread(thread, ME) : t
-  //           )
-  //         : [normalizeThread(thread, ME), ...prev];
-  //     });
-  //     setPendingChat(null);
-  //   });
-
-  //   return () => {
-  //     socket.off("newMessage", handleIncomingMessage);
-  //     socket.off("threadUpdated", handleThreadUpdated);
-  //     socket.disconnect();
-  //     socketRef.current = null;
-  //   };
-  // }, [user]);
-
+  // Init socket
   useEffect(() => {
     if (!user) return;
 
-    // Always create a fresh socket connection when page is mounted
+    // Disconnect old socket
+    if (socketRef.current) {
+      socketRef.current.disconnect();
+    }
+
     const socket = getChatSocket({
       userId: user?.id ?? "",
       displayName: user?.name ?? "",
@@ -330,64 +233,89 @@ export default function InboxPage() {
     });
     socketRef.current = socket;
 
-    const handleIncomingMessage = ({ threadId, message }: any) => {
+    const handleIncomingMessage = ({
+      threadId,
+      message,
+    }: {
+      threadId: string;
+      message: Message;
+    }) => {
       setSelectedThread((prev) =>
-        prev && prev.id === threadId
-          ? {
-              ...prev,
-              id: prev.id,
-              participants: prev.participants,
-              messages: [...prev.messages, message],
-            }
+        prev &&
+        prev.id === threadId &&
+        !prev.messages.find((m) => m.id === message.id)
+          ? { ...prev, messages: [...prev.messages, message] }
           : prev
       );
       setThreads((prev) =>
-        prev.map((t) => {
-          if (t.id !== threadId) return t;
-          const isMine = message.senderId === ME.id;
-          return {
-            ...t,
-            lastMessage: message.content,
-            lastTime: message.createdAt,
-            unreadCount: isMine ? t.unreadCount : t.unreadCount + 1,
-          };
-        })
+        prev.map((t) =>
+          t.id === threadId
+            ? {
+                ...t,
+                lastMessage: message.content,
+                lastTime: message.createdAt,
+              }
+            : t
+        )
       );
     };
 
     socket.on("newMessage", handleIncomingMessage);
 
-    socket.on("threadUpdated", ({ threadId, lastMessage }: any) => {
-      setThreads((prev) =>
-        [
-          ...prev.map((t) =>
-            t.id === threadId
-              ? {
-                  ...t,
-                  lastMessage: lastMessage.content,
-                  lastTime: lastMessage.createdAt,
-                }
-              : t
-          ),
-        ].sort(
+    // ✅ Update thread list order in real time when any thread gets a new message
+    const handleThreadUpdated = ({
+      threadId,
+      lastMessage,
+    }: {
+      threadId: string;
+      lastMessage: { content: string; createdAt: string };
+    }) => {
+      setThreads((prev) => {
+        const updated = prev.map((t) =>
+          t.id === threadId
+            ? {
+                ...t,
+                lastMessage: lastMessage.content,
+                lastTime: lastMessage.createdAt,
+              }
+            : t
+        );
+
+        // ✅ If thread doesn’t exist in list, skip reordering
+        const exists = updated.some((t) => t.id === threadId);
+        if (!exists) return updated;
+
+        // ✅ Reorder so most recent is on top
+        return [...updated].sort(
           (a, b) =>
             new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime()
-        )
-      );
+        );
+      });
+    };
+
+    socket.on("threadUpdated", handleThreadUpdated);
+
+    // ✅ once instead of on
+    socket.once("chatStarted", (thread: ThreadDetail) => {
+      setSelectedThread(thread);
+      setThreads((prev) => {
+        const exists = prev.some((t) => t.id === thread.id);
+        return exists
+          ? prev.map((t) =>
+              t.id === thread.id ? normalizeThread(thread, ME) : t
+            )
+          : [normalizeThread(thread, ME), ...prev];
+      });
+      setPendingChat(null);
     });
 
     return () => {
+      socket.off("newMessage", handleIncomingMessage);
+      socket.off("threadUpdated", handleThreadUpdated);
       socket.disconnect();
       socketRef.current = null;
     };
-    // 👇 intentionally NO dependency on [user]
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    if (user) loadThreads();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [router]);
+  }, [user]);
 
   useEffect(() => {
     if (selectedThread?.id && socketRef.current) {
