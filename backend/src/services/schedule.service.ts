@@ -27,13 +27,20 @@ type CreateScheduleInput = {
 };
 
 export const getAllSchedules = async () => {
-  return prisma.schedule.findMany({
+  const schedules = await prisma.schedule.findMany({
     include: {
       client: true,
       employee: true,
       service: true,
     },
   });
+
+  return schedules.map((s) => ({
+    ...s,
+    startTime: s.startTime ? new Date(s.startTime).toISOString() : null,
+    endTime: s.endTime ? new Date(s.endTime).toISOString() : null,
+    eventDate: s.eventDate ? new Date(s.eventDate).toISOString() : null,
+  }));
 };
 
 export async function getScheduleById(id: string) {

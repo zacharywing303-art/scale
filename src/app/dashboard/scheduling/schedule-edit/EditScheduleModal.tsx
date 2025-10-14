@@ -117,7 +117,6 @@ export default function EditScheduleModal({
 
       if (!res.ok) throw new Error("Failed to update schedule");
 
-      alert("Schedule updated successfully!");
       onClose();
     } catch (err) {
       console.error(err);
