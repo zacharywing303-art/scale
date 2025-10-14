@@ -28,15 +28,34 @@ import {
 
 type Schedule = {
   id: string;
-  employee: string;
-  type: string;
-  client: string | null;
-  service: string;
-  scheduledIn: string;
-  scheduledOut: string;
-  dateFrom: string;
-  dateTo: string;
+  scheduleType: string;
+  clientID: string;
+  client: string; // store client id or object as needed
+  clientMedicaidId: string;
+  authorizations?: string;
+  authorizationNumber?: string;
+  serviceId?: string;
+  service?: string; // store service id or object as needed
+  officeReason?: string;
+  eventCode: string;
+  authorizationBillUnitType: string;
+  eventStatus: string;
+  eventDate: Date;
+  startTime: Date;
+  endTime: Date;
+  employeeID?: string;
+  employee?: string; // store employee id or object as needed
   recurring: boolean;
+  dates?: string[];
+  comments?: string;
+  billingOverride: boolean;
+  rate?: number;
+  copay?: number;
+  billAmount?: number;
+  createdAt: Date;
+  updatedAt: Date;
+  agencyID: string;
+  // missedVisits omitted for brevity
 };
 
 type EditScheduleModalProps = {
@@ -50,8 +69,8 @@ export default function EditScheduleModal({
 }: EditScheduleModalProps) {
   const [formData, setFormData] = useState({
     ...schedule,
-    dateFrom: new Date(schedule.dateFrom),
-    dateTo: new Date(schedule.dateTo),
+    dateFrom: new Date(schedule.startTime),
+    dateTo: new Date(schedule.endTime),
   });
 
   // New: dynamic options
@@ -102,12 +121,12 @@ export default function EditScheduleModal({
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            type: formData.type,
+            type: formData.scheduleType,
             employee: formData.employee,
             client: formData.client,
             service: formData.service,
-            startTime: formData.scheduledIn,
-            endTime: formData.scheduledOut,
+            startTime: formData.startTime,
+            endTime: formData.endTime,
             dateFrom: formData.dateFrom,
             dateTo: formData.dateTo,
             recurring: formData.recurring,
@@ -208,9 +227,33 @@ export default function EditScheduleModal({
             <Label className="mb-1 block">Scheduled In</Label>
             <Input
               type="time"
-              value={formData.scheduledIn}
+              value={
+                formData.startTime instanceof Date
+                  ? formData.startTime.toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })
+                  : formData.startTime
+              }
               onChange={(e) =>
-                setFormData({ ...formData, scheduledIn: e.target.value })
+                setFormData({
+                  ...formData,
+                  startTime: (() => {
+                    const [hours, minutes] = e.target.value
+                      .split(":")
+                      .map(Number);
+                    const date =
+                      formData.startTime instanceof Date
+                        ? new Date(formData.startTime)
+                        : new Date();
+                    date.setHours(hours);
+                    date.setMinutes(minutes);
+                    date.setSeconds(0);
+                    date.setMilliseconds(0);
+                    return date;
+                  })(),
+                })
               }
             />
           </div>
@@ -218,9 +261,33 @@ export default function EditScheduleModal({
             <Label className="mb-1 block">Scheduled Out</Label>
             <Input
               type="time"
-              value={formData.scheduledOut}
+              value={
+                formData.endTime instanceof Date
+                  ? formData.endTime.toLocaleTimeString("en-GB", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    })
+                  : formData.endTime
+              }
               onChange={(e) =>
-                setFormData({ ...formData, scheduledOut: e.target.value })
+                setFormData({
+                  ...formData,
+                  endTime: (() => {
+                    const [hours, minutes] = e.target.value
+                      .split(":")
+                      .map(Number);
+                    const date =
+                      formData.endTime instanceof Date
+                        ? new Date(formData.endTime)
+                        : new Date();
+                    date.setHours(hours);
+                    date.setMinutes(minutes);
+                    date.setSeconds(0);
+                    date.setMilliseconds(0);
+                    return date;
+                  })(),
+                })
               }
             />
           </div>

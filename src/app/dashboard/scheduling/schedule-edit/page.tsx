@@ -15,9 +15,96 @@ import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import EditScheduleModal from "./EditScheduleModal";
 import { Label } from "@/components/ui/label";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { DataTable } from "@/components/data-table";
+import type { ColumnDef } from "@tanstack/react-table";
+
+type Schedule = {
+  id: string;
+  employee?: { name: string } | null;
+  scheduleType?: string;
+  client?: { name: string } | null;
+  service?: { name: string } | null;
+  startTime?: string;
+  endTime?: string;
+  eventDate?: string;
+  recurring?: boolean;
+};
+
+const columns: ColumnDef<Schedule>[] = [
+  {
+    header: "Employee",
+    accessorFn: (row) => row.employee?.name || "N/A",
+    cell: (info) => info.getValue(),
+  },
+  {
+    header: "Type",
+    accessorKey: "scheduleType",
+    cell: (info) => info.getValue() || "N/A",
+  },
+  {
+    header: "Client",
+    accessorFn: (row) => row.client?.name || "N/A",
+    cell: (info) => info.getValue(),
+  },
+  {
+    header: "Service",
+    accessorFn: (row) => row.service?.name || "N/A",
+    cell: (info) => info.getValue(),
+  },
+  {
+    header: "Start Time",
+    accessorFn: (row) =>
+      row.startTime
+        ? new Date(row.startTime).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "N/A",
+    cell: (info) => info.getValue(),
+  },
+  {
+    header: "End Time",
+    accessorFn: (row) =>
+      row.endTime
+        ? new Date(row.endTime).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "N/A",
+    cell: (info) => info.getValue(),
+  },
+  {
+    header: "Date",
+    accessorFn: (row) =>
+      row.eventDate ? new Date(row.eventDate).toLocaleDateString() : "N/A",
+    cell: (info) => info.getValue(),
+  },
+  {
+    header: "Recurring",
+    accessorFn: (row) => (row.recurring ? "Yes" : "No"),
+    cell: (info) => info.getValue(),
+  },
+  {
+    header: "Action",
+    id: "action",
+    cell: ({ row }) => (
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button size="sm" variant="outline">
+            Edit
+          </Button>
+        </DialogTrigger>
+        <EditScheduleModal
+          schedule={row.original}
+          onClose={row.original.fetchSchedules}
+        />
+      </Dialog>
+    ),
+  },
+];
 
 export default function EditSchedulePage() {
-  const [schedules, setSchedules] = useState<any[]>([]);
+  const [schedules, setSchedules] = useState<Schedule[]>([]);
   const [filters, setFilters] = useState({
     type: "",
     service: "",
@@ -37,7 +124,9 @@ export default function EditSchedulePage() {
       );
       if (!res.ok) throw new Error("Failed to fetch schedules");
       const data = await res.json();
-      setSchedules(data);
+      setSchedules(
+        Array.isArray(data) ? data.map((s) => ({ ...s, fetchSchedules })) : []
+      );
     } catch (err) {
       console.error(err);
     } finally {
@@ -47,14 +136,39 @@ export default function EditSchedulePage() {
 
   useEffect(() => {
     fetchSchedules();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const paginatedSchedules = schedules.slice(
+  const filteredSchedules = schedules
+    .filter((s) => s.startTime && s.endTime)
+    .filter((s) => (filters.type ? s.scheduleType === filters.type : true))
+    .filter((s) =>
+      filters.service
+        ? s.service?.name?.toLowerCase().includes(filters.service.toLowerCase())
+        : true
+    )
+    .filter((s) =>
+      filters.employee
+        ? s.employee?.name
+            ?.toLowerCase()
+            .includes(filters.employee.toLowerCase())
+        : true
+    )
+    .filter((s) =>
+      filters.client
+        ? s.client?.name?.toLowerCase().includes(filters.client.toLowerCase())
+        : true
+    );
+
+  const paginatedSchedules = filteredSchedules.slice(
     (currentPage - 1) * parseInt(perPage),
     currentPage * parseInt(perPage)
   );
 
-  const totalPages = Math.ceil(schedules.length / parseInt(perPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredSchedules.length / parseInt(perPage))
+  );
 
   if (loading) return <p className="p-6 text-gray-500">Loading schedules...</p>;
 
@@ -67,6 +181,7 @@ export default function EditSchedulePage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Select
             onValueChange={(val) => setFilters({ ...filters, type: val })}
+            value={filters.type}
           >
             <SelectTrigger>
               <SelectValue placeholder="Type (Visit, Office, etc...)" />
@@ -80,80 +195,28 @@ export default function EditSchedulePage() {
 
           <Input
             placeholder="Service / Reason"
+            value={filters.service}
             onChange={(e) =>
               setFilters({ ...filters, service: e.target.value })
             }
           />
           <Input
             placeholder="Employee"
+            value={filters.employee}
             onChange={(e) =>
               setFilters({ ...filters, employee: e.target.value })
             }
           />
           <Input
             placeholder="Client"
+            value={filters.client}
             onChange={(e) => setFilters({ ...filters, client: e.target.value })}
           />
         </div>
 
         {/* Schedule Table */}
         <ScrollArea className="rounded border">
-          <table className="min-w-full table-auto text-left text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="p-3">Employee</th>
-                <th className="p-3">Type</th>
-                <th className="p-3">Client</th>
-                <th className="p-3">Service</th>
-                <th className="p-3">Start Time</th>
-                <th className="p-3">End Time</th>
-                <th className="p-3">Date</th>
-                <th className="p-3">Recurring</th>
-                <th className="p-3 text-right">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedSchedules.map((s) => (
-                <tr key={s.id} className="border-t">
-                  <td className="p-3">{s.employee?.name || "N/A"}</td>
-                  <td className="p-3">{s.scheduleType}</td>
-                  <td className="p-3">{s.client?.name || "N/A"}</td>
-                  <td className="p-3">{s.service?.name || "N/A"}</td>
-                  <td className="p-3">
-                    {new Date(s.startTime.replace(" ", "T")).toLocaleTimeString(
-                      [],
-                      { hour: "2-digit", minute: "2-digit" }
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {new Date(s.endTime.replace(" ", "T")).toLocaleTimeString(
-                      [],
-                      { hour: "2-digit", minute: "2-digit" }
-                    )}
-                  </td>
-                  <td className="p-3">
-                    {new Date(
-                      s.eventDate.replace(" ", "T")
-                    ).toLocaleDateString()}
-                  </td>
-                  <td className="p-3">{s.recurring ? "Yes" : "No"}</td>
-                  <td className="p-3 text-right">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button size="sm" variant="outline">
-                          Edit
-                        </Button>
-                      </DialogTrigger>
-                      <EditScheduleModal
-                        schedule={s}
-                        onClose={fetchSchedules}
-                      />
-                    </Dialog>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <DataTable columns={columns} data={paginatedSchedules} />
         </ScrollArea>
 
         {/* Pagination */}
@@ -225,7 +288,7 @@ export default function EditSchedulePage() {
 //   {
 //     id: "1",
 //     employee: "Jane Doe",
-//     type: "Visit",
+//     scheduleType: "Visit",
 //     client: "John Smith",
 //     service: "IHCS Level 1",
 //     scheduledIn: "9:00 AM",
@@ -237,7 +300,7 @@ export default function EditSchedulePage() {
 //   {
 //     id: "2",
 //     employee: "Mark Johnson",
-//     type: "Office",
+//     scheduleType: "Office",
 //     client: null,
 //     service: "Team Meeting",
 //     scheduledIn: "1:00 PM",
@@ -329,7 +392,7 @@ export default function EditSchedulePage() {
 //             {mockSchedules.map((s) => (
 //               <tr key={s.id} className="border-t">
 //                 <td className="p-3">{s.employee}</td>
-//                 <td className="p-3">{s.type}</td>
+//                 <td className="p-3">{s.scheduleType}</td>
 //                 <td className="p-3">{s.client ?? "N/A"}</td>
 //                 <td className="p-3">{s.service}</td>
 //                 <td className="p-3">{s.scheduledIn}</td>
