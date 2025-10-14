@@ -151,9 +151,9 @@ export const updateSchedule = async (id: string, data: any) => {
     where: { id },
     data: {
       scheduleType: data.type,
-      eventDate: data.dateFrom,
-      startTime: data.startTime,
-      endTime: data.endTime,
+      eventDate: (data.eventDate = new Date(data.dateFrom)),
+      startTime: (data.startTime = new Date(data.startTime)),
+      endTime: (data.endTime = new Date(data.endTime)),
       recurring: data.recurring,
       employee: data.employee
         ? { connect: { id: data.employee } }
