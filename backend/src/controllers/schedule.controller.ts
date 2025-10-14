@@ -3,6 +3,7 @@ import {
   getAllSchedules,
   createScheduleAndVisit,
   updateSchedule,
+  getScheduleById,
 } from "../services/schedule.service";
 
 export const getSchedulesController = async (req: Request, res: Response) => {
@@ -51,3 +52,13 @@ export const updateScheduleController = async (req: Request, res: Response) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export async function getScheduleByIdController(req: Request, res: Response) {
+  try {
+    const schedule = await getScheduleById(req.params.id);
+    if (!schedule) return res.status(404).json({ error: "Schedule not found" });
+    res.json(schedule);
+  } catch (err: any) {
+    res.status(500).json({ error: "Failed to fetch schedule" });
+  }
+}

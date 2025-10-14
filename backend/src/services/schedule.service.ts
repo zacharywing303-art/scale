@@ -36,6 +36,17 @@ export const getAllSchedules = async () => {
   });
 };
 
+export async function getScheduleById(id: string) {
+  return prisma.schedule.findUnique({
+    where: { id },
+    include: {
+      client: { select: { name: true } },
+      employee: { select: { name: true } },
+      service: { select: { name: true } },
+    },
+  });
+}
+
 import type { Prisma } from "@prisma/client";
 
 export async function createScheduleAndVisit(input: CreateScheduleInput) {
@@ -131,17 +142,18 @@ export const updateSchedule = async (id: string, data: any) => {
   return prisma.schedule.update({
     where: { id },
     data: {
-      scheduleType: data.scheduleType ?? data.type,
-      serviceId: data.serviceId ?? undefined,
-      officeReason: data.officeReason,
-      eventStatus: data.eventStatus,
-      eventDate: data.eventDate ? new Date(data.eventDate) : undefined,
-      startTime: data.startTime ? new Date(data.startTime) : undefined,
-      endTime: data.endTime ? new Date(data.endTime) : undefined,
-      employeeID: data.employeeID ?? undefined,
+      scheduleType: data.type,
+      eventDate: data.dateFrom,
+      startTime: data.startTime,
+      endTime: data.endTime,
       recurring: data.recurring,
-      dates: data.dates ?? [],
-      comments: data.comments,
+      employee: data.employee
+        ? { connect: { id: data.employee } }
+        : { disconnect: true },
+      client: data.client ? { connect: { id: data.client } } : undefined,
+      service: data.service
+        ? { connect: { id: data.service } }
+        : { disconnect: true },
     },
   });
 };

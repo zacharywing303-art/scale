@@ -79,6 +79,9 @@ export default function InboxPage() {
   const [participants, setParticipants] = useState<any[]>([]);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [search, setSearch] = useState("");
+  const [threadSearch, setThreadSearch] = useState("");
+  const [messageSearch, setMessageSearch] = useState("");
+
   const [pendingChat, setPendingChat] = useState<any | null>(null);
   const [startChatLoading, setStartChatLoading] = useState(false);
   const [startChatError, setStartChatError] = useState<string | null>(null);
@@ -471,36 +474,60 @@ export default function InboxPage() {
           </Dialog>
         </div>
 
+        {/* Search bar for threads and messages */}
+        <div className="p-2 border-b">
+          <Input
+            value={threadSearch}
+            onChange={(e) => setThreadSearch(e.target.value)}
+            placeholder="Search conversations by participant"
+            className="text-sm"
+          />
+        </div>
+
         {threads.length === 0 ? (
           <div className="p-4 text-sm text-muted-foreground">
             No conversations yet. Click <strong>New Chat</strong> to start one.
           </div>
         ) : (
-          threads.map((t) => (
-            <div
-              key={t.id}
-              className={cn(
-                "px-4 py-3 cursor-pointer border-b hover:bg-muted flex justify-between items-center",
-                selectedThread?.id === t.id && "bg-muted font-medium"
-              )}
-              onClick={() => {
-                loadThreadDetail(t.id);
-                markThreadAsRead(t.id);
-              }}
-            >
-              <div className="flex-1">
-                <div className="flex justify-between">
-                  <span className="font-medium flex items-center gap-2">
-                    {t.title}
-                  </span>
-                  <span className="text-xs opacity-60">
-                    {formatThreadTime(t.lastTime)}
-                  </span>
+          [...threads]
+            .filter((t) => {
+              const q = threadSearch.toLowerCase();
+              if (!q) return true;
+              return (
+                t.title.toLowerCase().includes(q) ||
+                t.lastMessage.toLowerCase().includes(q)
+              );
+            })
+
+            .sort(
+              (a, b) =>
+                new Date(b.lastTime).getTime() - new Date(a.lastTime).getTime()
+            )
+            .map((t) => (
+              <div
+                key={t.id}
+                className={cn(
+                  "px-4 py-3 cursor-pointer border-b hover:bg-muted flex justify-between items-center",
+                  selectedThread?.id === t.id && "bg-muted font-medium"
+                )}
+                onClick={() => {
+                  loadThreadDetail(t.id);
+                  markThreadAsRead(t.id);
+                }}
+              >
+                <div className="flex-1">
+                  <div className="flex justify-between">
+                    <span className="font-medium flex items-center gap-2">
+                      {t.title}
+                    </span>
+                    <span className="text-xs opacity-60">
+                      {formatThreadTime(t.lastTime)}
+                    </span>
+                  </div>
+                  <div className="text-sm truncate">{t.lastMessage}</div>
                 </div>
-                <div className="text-sm truncate">{t.lastMessage}</div>
               </div>
-            </div>
-          ))
+            ))
         )}
       </div>
 
@@ -515,12 +542,38 @@ export default function InboxPage() {
             : "Select a thread"}
         </div>
 
+        {/* Search bar for messages in selected thread */}
+        {selectedThread && (
+          <div className="p-2 border-b">
+            <Input
+              value={messageSearch}
+              onChange={(e) => setMessageSearch(e.target.value)}
+              placeholder="Search messages in this conversation"
+              className="text-sm"
+            />
+          </div>
+        )}
+
         <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
           {(() => {
             if (!selectedThread?.messages) return null;
 
             let lastDateLabel: string | null = null;
-            return selectedThread.messages.map((msg) => {
+            // Filter messages by search if search is not empty
+            const filteredMessages = messageSearch
+              ? selectedThread.messages.filter((msg) => {
+                  const q = messageSearch.toLowerCase();
+                  const sender = selectedThread.participants.find(
+                    (p) => p.participantId === msg.senderId
+                  );
+                  return (
+                    msg.content.toLowerCase().includes(q) ||
+                    sender?.displayName?.toLowerCase().includes(q)
+                  );
+                })
+              : selectedThread.messages;
+
+            return filteredMessages.map((msg) => {
               const msgDateLabel = formatDateLabel(msg.createdAt);
               const showDateHeader = msgDateLabel !== lastDateLabel;
               lastDateLabel = msgDateLabel;
@@ -597,23 +650,6 @@ export default function InboxPage() {
             >
               Cancel
             </Button>
-            {/* <Button
-              onClick={() => {
-                if (!pendingChat || !socketRef.current) return;
-                socketRef.current.emit(
-                  "startChat",
-                  {
-                    me: ME,
-                    other: pendingChat,
-                  },
-                  (resp: any) => {
-                    if (resp?.error) setStartChatError(resp.error);
-                  }
-                );
-              }}
-            >
-              Start Chat
-            </Button> */}
             <Button
               onClick={async () => {
                 if (!pendingChat || !socketRef.current) return;
@@ -630,7 +666,6 @@ export default function InboxPage() {
                         if (resp?.error) {
                           reject(new Error(resp.error));
                         } else if (resp?.thread) {
-                          // ✅ Backend returned an existing or new thread directly
                           setSelectedThread(resp.thread);
                           setThreads((prev) => {
                             const exists = prev.some(
@@ -646,7 +681,6 @@ export default function InboxPage() {
                           });
                           resolve();
                         } else {
-                          // ✅ Wait for chatStarted event (for new threads)
                           const handleStarted = (thread: ThreadDetail) => {
                             if (thread.id === resp?.threadId || thread.id) {
                               setSelectedThread(thread);
@@ -675,7 +709,6 @@ export default function InboxPage() {
                     );
                   });
 
-                  // ✅ Close modal once done
                   setPendingChat(null);
                   setStartChatLoading(false);
                 } catch (err: any) {

@@ -16,11 +16,18 @@ export default function ProtectedRoute({
   const { user, isAuthenticated } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+
+  const [mounted, setMounted] = useState(false);
   const [unauthorized, setUnauthorized] = useState(false);
   const hasHandled = useRef(false);
 
+  // ✅ Wait for client mount before checking anything
   useEffect(() => {
-    if (hasHandled.current) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted || hasHandled.current) return;
 
     if (!isAuthenticated) {
       router.push("/login");
@@ -32,7 +39,7 @@ export default function ProtectedRoute({
       setUnauthorized(true);
       hasHandled.current = true;
     }
-  }, [isAuthenticated, user, allowedRoles, router, pathname]);
+  }, [mounted, isAuthenticated, user, allowedRoles, router, pathname]);
 
   useEffect(() => {
     if (unauthorized) {
@@ -40,15 +47,15 @@ export default function ProtectedRoute({
         "You do not have permissions to access this page. Please contact the system administrator if you believe this is an error."
       );
 
-      // Go back and reload previous page only once
       if (confirmed || !confirmed) {
         router.back();
-        // Optional: reload page after going back
         setTimeout(() => window.location.reload(), 100);
       }
     }
   }, [unauthorized, router]);
 
+  // ✅ Don’t render until mounted (prevents SSR mismatch)
+  if (!mounted) return null;
   if (!isAuthenticated || unauthorized) return null;
 
   return <>{children}</>;
