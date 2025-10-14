@@ -59,7 +59,7 @@ type Schedule = {
 };
 
 type EditScheduleModalProps = {
-  schedule: Schedule & { fetchSchedules?: () => void };
+  schedule: Schedule;
   onClose: () => void;
 };
 
@@ -136,7 +136,6 @@ export default function EditScheduleModal({
 
       if (!res.ok) throw new Error("Failed to update schedule");
 
-      schedule.fetchSchedules?.(); // refresh list
       onClose();
     } catch (err) {
       console.error(err);
