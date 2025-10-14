@@ -36,12 +36,12 @@ export const getAllSchedules = async () => {
     orderBy: { eventDate: "desc" },
   });
 
-  // return schedules.map((s) => ({
-  //   ...s,
-  //   startTime: s.startTime ? new Date(s.startTime).toISOString() : null,
-  //   endTime: s.endTime ? new Date(s.endTime).toISOString() : null,
-  //   eventDate: s.eventDate ? new Date(s.eventDate).toISOString() : null,
-  // }));
+  return schedules.map((s) => ({
+    ...s,
+    startTime: s.startTime?.toISOString() ?? null,
+    endTime: s.endTime?.toISOString() ?? null,
+    eventDate: s.eventDate?.toISOString() ?? null,
+  }));
 };
 
 export async function getScheduleById(id: string) {
