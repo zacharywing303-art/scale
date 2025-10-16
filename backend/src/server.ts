@@ -19,6 +19,7 @@ import serviceRoutes from "./routes/services.route";
 import missedVisitsRoutes from "./routes/missed-visits.route";
 import "./workers/visitStatus.worker";
 import mobileAuthRoutes from "./routes/mobile.auth.route";
+import roleRoutes from "./routes/role.route";
 
 // Load env variables
 dotenv.config();
@@ -52,6 +53,7 @@ app.use("/api/employees", employeeRoutes);
 app.use("/api/services", serviceRoutes);
 app.use("/api/missed-visits", missedVisitsRoutes);
 app.use("/api/mobile/auth", mobileAuthRoutes);
+app.use("/api/roles", roleRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
