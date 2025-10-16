@@ -3,14 +3,12 @@ import prisma from "../lib/db";
 // ✅ Create new role with optional permissions
 export async function createRole(data: {
   name: string;
-  description?: string;
   agencyId: string;
   permissions?: { name: string; description?: string }[];
 }) {
   return prisma.roleType.create({
     data: {
       name: data.name,
-      description: data.description,
       agencyId: data.agencyId,
       permissions: data.permissions ? { create: data.permissions } : undefined,
     },
@@ -40,7 +38,6 @@ export async function updateRole(
   id: string,
   data: {
     name?: string;
-    description?: string;
     permissions?: { name: string; description?: string }[];
   }
 ) {
@@ -48,7 +45,6 @@ export async function updateRole(
     where: { id },
     data: {
       name: data.name,
-      description: data.description,
       permissions: data.permissions
         ? {
             deleteMany: {}, // remove old
