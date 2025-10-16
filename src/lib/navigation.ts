@@ -15,6 +15,7 @@ import {
   BarChart2,
   Plus,
   RefreshCcw,
+  Briefcase,
 } from "lucide-react";
 
 export const dashboardNavigation = [
@@ -71,6 +72,22 @@ export const dashboardNavigation = [
     label: "Employees",
     icon: UserCog,
     href: "/dashboard/hr/employees",
+  },
+  {
+    label: "Office",
+    icon: Briefcase,
+    children: [
+      { label: "Statistics", href: "/dashboard/hr/statistics" },
+      {
+        label: "Document Review",
+        href: "/dashboard/hr/document-review",
+      },
+      {
+        label: "Payroll",
+        href: "/dashboard/hr/payroll",
+      },
+      { label: "Employee Requests", href: "/dashboard/hr/requests" },
+    ],
   },
   {
     label: "Reports",

@@ -137,6 +137,10 @@ export default function EditScheduleModal({
       if (!res.ok) throw new Error("Failed to update schedule");
 
       onClose();
+      // Refresh the page after closing the modal
+      if (typeof window !== "undefined") {
+        window.location.reload();
+      }
     } catch (err) {
       console.error(err);
       alert("Error saving schedule");

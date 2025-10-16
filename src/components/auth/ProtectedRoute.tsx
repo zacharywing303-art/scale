@@ -34,7 +34,7 @@ export default function ProtectedRoute({
       hasHandled.current = true;
     } else if (
       allowedRoles.length > 0 &&
-      !allowedRoles.includes(user?.role ?? "")
+      !allowedRoles.includes(user?.role ?? user?.roleType?.name ?? "")
     ) {
       setUnauthorized(true);
       hasHandled.current = true;
