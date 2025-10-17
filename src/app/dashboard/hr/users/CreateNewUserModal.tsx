@@ -94,15 +94,17 @@ export default function CreateNewUserModal({
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2">
-                {availablePermissions.map((perm) => (
-                  <label key={perm.id} className="flex items-center gap-2">
-                    <Checkbox
-                      checked={selectedPermissions.includes(perm.name)}
-                      onCheckedChange={() => togglePermission(perm.name)}
-                    />
-                    <span className="text-sm">{perm.name}</span>
-                  </label>
-                ))}
+                {availablePermissions
+                  .filter((p: any) => p.roleId === null)
+                  .map((perm: any) => (
+                    <label key={perm.id} className="flex items-center gap-2">
+                      <Checkbox
+                        checked={selectedPermissions.includes(perm.name)}
+                        onCheckedChange={() => togglePermission(perm.name)}
+                      />
+                      <span className="text-sm">{perm.name}</span>
+                    </label>
+                  ))}
               </div>
             )}
           </div>

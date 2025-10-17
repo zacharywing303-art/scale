@@ -6,6 +6,7 @@ import {
   getSystemAdminUsers,
   getSystemAdminUsersById,
   getUserById,
+  createAgencyUser,
 } from "../services/users.service";
 import prisma from "../lib/db";
 import bcrypt from "bcryptjs";
@@ -116,6 +117,30 @@ export const updateSystemAdminUserController = async (
     });
 
     res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: "Internal server error" });
+  }
+};
+export const createAgencyUserController = async (
+  req: Request,
+  res: Response
+) => {
+  const { email, password, name, isActive, agencyId, roleTypeId } = req.body;
+  try {
+    if (!email || !password || !name) {
+      return res.status(400).json({
+        error: "Email, password, and name are required",
+      });
+    }
+    const user = await createAgencyUser({
+      email,
+      password,
+      name,
+      isActive,
+      agencyId,
+      roleTypeId,
+    });
+    res.status(201).json(user);
   } catch (error) {
     res.status(500).json({ error: "Internal server error" });
   }

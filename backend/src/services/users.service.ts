@@ -54,3 +54,25 @@ export const getSystemAdminUsersById = async (id: string) => {
     where: { id, role: { in: ["SYSTEM_ADMIN", "MAIN_ADMIN"] } },
   });
 };
+
+export const createAgencyUser = async (data: {
+  name: string;
+  email: string;
+  password: string;
+  isActive: boolean;
+  agencyId: string;
+  roleTypeId: string;
+}) => {
+  const passwordHash = await bcrypt.hash(data.password, 10);
+  return await prisma.user.create({
+    data: {
+      name: data.name,
+      email: data.email,
+      passwordHash,
+      isActive: data.isActive,
+      agencyId: data.agencyId,
+      roleTypeId: data.roleTypeId,
+      systemAdminUser: true,
+    },
+  });
+};
