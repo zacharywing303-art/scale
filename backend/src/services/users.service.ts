@@ -69,10 +69,11 @@ export const createAgencyUser = async (data: {
       name: data.name,
       email: data.email,
       passwordHash,
-      isActive: data.isActive,
+      isActive: data.isActive ?? true,
       agencyId: data.agencyId,
       roleTypeId: data.roleTypeId,
-      systemAdminUser: true,
+      systemAdminUser: false,
+      role: "AGENCY_USER",
     },
   });
 };
