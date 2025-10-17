@@ -102,6 +102,32 @@ export default function ManageUserRolesPage() {
     fetchRolesAndUsers();
   }, [currentUser]);
 
+  const handleCreateRole = async (title: string, permissions: string[]) => {
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/roles`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: title,
+          agencyId: currentUser.agency?.id,
+          permissions: permissions.map((p) => ({ name: p })),
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || "Failed to create role");
+      }
+
+      // close modal and reload the page to refresh data
+      setShowCreateUserModal(false);
+      if (typeof window !== "undefined") window.location.reload();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || "Error creating role");
+    }
+  };
+
   if (!currentUser) {
     return <p className="p-6 text-gray-500">Loading user...</p>;
   }
@@ -251,7 +277,7 @@ export default function ManageUserRolesPage() {
           <CreateNewUserModal
             open={showCreateUserModal}
             onClose={() => setShowCreateUserModal(false)}
-            onSave={() => {}}
+            onSave={handleCreateRole}
           />
         </div>
       </div>
