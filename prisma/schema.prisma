@@ -17,65 +17,65 @@ model Agency {
   status           String     @default("Active")
   subscriptionPlan String?
   paymentMethod    String?
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
   email            String?
+  numEmployees     Int        @default(0)
   phone            String?
+  santraxID        String?
   addressLine1     String     @default("N/A")
   addressLine2     String?
   addressLine3     String?
+  addressState     String     @default("N/A")
   city             String     @default("N/A")
   zipCode          String     @default("N/A")
-  addressState     String     @default("N/A")
-  numEmployees     Int        @default(0)
-  numVisits        Int        @default(0)
-  numClients       Int        @default(0)
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
-  users            User[]
-  agencyAdminId    String?    @unique
-  agencyAdmin      User?      @relation("AgencyAdminRelation", fields: [agencyAdminId], references: [id])
-  santraxID        String?
   billingEmail     String?
   billingPhone     String?
+  numClients       Int        @default(0)
+  numVisits        Int        @default(0)
   paymentStatus    String     @default("Not Required")
+  agencyAdminId    String?    @unique
+  agencyAdmin      User?      @relation("AgencyAdminRelation", fields: [agencyAdminId], references: [id])
   invoices         Invoice[]
   RoleType         RoleType[]
+  users            User[]
 }
 
 model User {
   id              String    @id @default(cuid())
   name            String
   email           String    @unique
-  phone           String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   agencyId        String?
   lastLogin       DateTime?
   passwordHash    String
   role            Role      @default(AGENCY_USER)
-  roleTypeId      String? // for agency-specific custom role
-  roleType        RoleType? @relation(fields: [roleTypeId], references: [id])
-  agency          Agency?   @relation(fields: [agencyId], references: [id])
-  adminOfAgency   Agency?   @relation("AgencyAdminRelation")
   isActive        Boolean   @default(true)
+  phone           String?
   systemAdminUser Boolean   @default(false)
+  roleTypeId      String?
+  adminOfAgency   Agency?   @relation("AgencyAdminRelation")
+  agency          Agency?   @relation(fields: [agencyId], references: [id])
+  roleType        RoleType? @relation(fields: [roleTypeId], references: [id])
 }
 
 model RoleType {
   id          String       @id @default(cuid())
-  name        String // e.g., "Supervisor"
-  agency      Agency       @relation(fields: [agencyId], references: [id])
+  name        String
   agencyId    String
-  permissions Permission[] // link to permissions
-  users       User[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
+  permissions Permission[]
+  agency      Agency       @relation(fields: [agencyId], references: [id])
+  users       User[]
 }
 
 model Permission {
   id     String    @id @default(cuid())
-  name   String // e.g., "Manage Clients"
-  role   RoleType? @relation(fields: [roleId], references: [id])
+  name   String
   roleId String?
+  role   RoleType? @relation(fields: [roleId], references: [id])
 }
 
 model Visit {
@@ -85,20 +85,18 @@ model Visit {
   adjustedIn                   DateTime?
   adjustedOut                  DateTime?
   approved                     Boolean?         @default(false)
-  clientSignature              String? // could store a file URL or base64 string
-  employeeSignature            String? // same as above
+  clientSignature              String?
+  employeeSignature            String?
   visitSource                  String?
   mileage                      Float?
   authorizationReferenceNumber String?
-  location                     String? // Home / Community, etc.
+  location                     String?
   latitudeIn                   Float?
   longitudeIn                  Float?
   latitudeOut                  Float?
   longitudeOut                 Float?
-  callType                     String? // MVV, Manual, etc.
-  user                         String? // user who entered the visit
-  exceptions                   VisitException[]
-  history                      VisitHistory[]
+  callType                     String?
+  user                         String?
   claimID                      String?
   billHours                    Float?
   callHours                    Float?
@@ -133,9 +131,11 @@ model Visit {
   units                        Int?
   visitFromDate                DateTime?
   sandataAgencyID              String?
-  visitStatus                  VisitStatus      @default(Scheduled)
   visitTimeZone                String?
-  missedVisits                 MissedVisit[]    @relation("VisitToMissedVisit")
+  visitStatus                  VisitStatus      @default(Scheduled)
+  missedVisits                 MissedVisit?     @relation("VisitToMissedVisit")
+  exceptions                   VisitException[]
+  history                      VisitHistory[]
 
   @@index([agencyID, scheduledTimeOut])
   @@index([agencyID, scheduledTimeIn])
@@ -149,7 +149,6 @@ model VisitException {
   exceptionType String
   date          DateTime
   createdAt     DateTime @default(now())
-  // Relation
   visit         Visit    @relation(fields: [visitId], references: [id])
 }
 
@@ -161,20 +160,15 @@ model VisitHistory {
   reason     String?
   dateTime   DateTime
   updatedBy  String
-  // Relation
   visit      Visit    @relation(fields: [visitId], references: [id])
 }
 
-// ========================
-// Employees & Related Info
-// ========================
 model Employee {
   id                    String                @id @default(cuid())
   last5SSN              String
-  status                String // Active, Vacation, Inactive
+  status                String
   effectiveDate         DateTime              @updatedAt
   employeeID            String
-  agencyID              String
   position              String
   hireDate              DateTime              @default(now())
   supervisor            String?
@@ -184,10 +178,6 @@ model Employee {
   registryID            String?
   isSupervisor          Boolean               @default(false)
   name                  String
-  firstName             String                @default("No")
-  middleName            String?
-  lastName              String                @default("Name")
-  addresses             Address[]
   dateOfBirth           DateTime              @default(now())
   gender                String
   languages             String[]
@@ -198,37 +188,41 @@ model Employee {
   email                 String
   mobileUser            Boolean               @default(false)
   rehire                Boolean               @default(false)
-  contacts              Contact[]
-  schedules             Schedule[] // will link later
-  certifications        Certification[]
-  employmentInfo        EmploymentInfo[]
-  assignedClients       Client[]              @relation("EmployeeClients")
-  medicalInfos          EmployeeMedicalInfo[]
   createdAt             DateTime              @default(now())
   updatedAt             DateTime              @updatedAt
-  mobileInfo            MobileEmployee? // One-to-one optional relation
+  agencyID              String
+  firstName             String                @default("No")
+  lastName              String                @default("Name")
+  middleName            String?
+  addresses             Address[]
+  certifications        Certification[]
+  contacts              Contact[]
+  medicalInfos          EmployeeMedicalInfo[]
+  employmentInfo        EmploymentInfo?
+  mobileInfo            MobileEmployee?
+  schedules             Schedule[]
+  assignedClients       Client[]              @relation("EmployeeClients")
 }
 
 model MobileEmployee {
   id           String   @id @default(cuid())
-  employee     Employee @relation(fields: [employeeID], references: [id])
-  employeeID   String   @unique // one-to-one relation with Employee
+  employeeID   String   @unique
   email        String   @unique
   agencyCode   String
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  employee     Employee @relation(fields: [employeeID], references: [id])
 }
 
 model EmploymentInfo {
   id                       String   @id @default(cuid())
-  employee                 Employee @relation(fields: [employeeID], references: [id])
   employeeID               String   @unique
-  driversLicenseNumber     String // **sensitive**
+  driversLicenseNumber     String
   driversLicenseExpiration DateTime
   insuranceStartDate       DateTime
   insuranceEndDate         DateTime
-  insurancePolicyNumber    String // **sensitive**
+  insurancePolicyNumber    String
   carModel                 String?
   carMake                  String?
   carYear                  Int?
@@ -238,33 +232,29 @@ model EmploymentInfo {
   physicalExamDate         DateTime
   tbShotDate               DateTime
   cprCertificationDate     DateTime
+  employee                 Employee @relation(fields: [employeeID], references: [id])
 }
 
 model EmployeeMedicalInfo {
   id            String   @id @default(cuid())
-  employee      Employee @relation(fields: [employeeID], references: [id])
   employeeID    String
   clearanceName String
   effectiveDate DateTime
+  employee      Employee @relation(fields: [employeeID], references: [id])
 }
 
 model Certification {
   id              String   @id @default(cuid())
-  employee        Employee @relation(fields: [employeeID], references: [id])
   employeeID      String
   name            String
   certificationID String?
   dateObtained    DateTime
+  employee        Employee @relation(fields: [employeeID], references: [id])
 }
 
-// ========================
-// Contacts & Addresses
-// ========================
 model Contact {
   id                   String    @id @default(cuid())
-  employee             Employee? @relation(fields: [employeeID], references: [id])
   employeeID           String?
-  client               Client?   @relation(fields: [clientID], references: [id])
   clientID             String?
   title                String?
   firstName            String
@@ -274,7 +264,7 @@ model Contact {
   gender               String?
   birthDate            DateTime?
   languages            String[]
-  type                 String // contact type
+  type                 String
   relation             String?
   mainEmergencyContact Boolean   @default(false)
   addressLine1         String
@@ -290,6 +280,8 @@ model Contact {
   phone3               String?
   phone4               String?
   email                String?
+  client               Client?   @relation(fields: [clientID], references: [id])
+  employee             Employee? @relation(fields: [employeeID], references: [id])
 }
 
 model Address {
@@ -302,15 +294,12 @@ model Address {
   zipcode      String
   state        String
   county       String?
-  employee     Employee? @relation(fields: [employeeID], references: [id])
   employeeID   String?
-  client       Client?   @relation(fields: [clientID], references: [id])
   clientID     String?
+  client       Client?   @relation(fields: [clientID], references: [id])
+  employee     Employee? @relation(fields: [employeeID], references: [id])
 }
 
-// ========================
-// Clients, Services, Program, Payer, Authorization
-// ========================
 model Client {
   id                String          @id @default(cuid())
   ssn               String
@@ -321,7 +310,6 @@ model Client {
   supervisor        String?
   medicaidID        String
   agencyID          String
-  contacts          Contact[]
   name              String
   dateOfBirth       DateTime
   gender            String
@@ -331,15 +319,16 @@ model Client {
   phone3            String?
   phone4            String?
   email             String
-  schedules         Schedule[] // will link later
-  assignedEmployees Employee[]      @relation("EmployeeClients")
-  services          Service[]       @relation("ClientServices")
-  program           Program?        @relation(fields: [programID], references: [id])
   programID         String?
-  payers            Payer[]
-  authorizations    Authorization[]
-  invoices          Invoice[]
   addresses         Address[]
+  program           Program?        @relation(fields: [programID], references: [id])
+  contacts          Contact[]
+  invoices          Invoice[]
+  schedules         Schedule[]
+  authorizations    Authorization[] @relation("AuthorizationToClient")
+  services          Service[]       @relation("ClientServices")
+  payers            Payer[]         @relation("ClientToPayer")
+  assignedEmployees Employee[]      @relation("EmployeeClients")
 }
 
 model Service {
@@ -348,9 +337,9 @@ model Service {
   code           String
   startDate      DateTime
   endDate        DateTime
-  assignedTo     Client[]        @relation("ClientServices")
   authorizations Authorization[]
   schedule       Schedule[]
+  assignedTo     Client[]        @relation("ClientServices")
 }
 
 model Program {
@@ -369,7 +358,6 @@ model Program {
 
 model Payer {
   id              String          @id @default(cuid())
-  assignedClients Client[]
   payerName       String
   medicaidID      String
   rank            Int
@@ -378,6 +366,7 @@ model Payer {
   startDate       DateTime
   endDate         DateTime
   authorizations  Authorization[]
+  assignedClients Client[]        @relation("ClientToPayer")
 }
 
 model Invoice {
@@ -385,22 +374,18 @@ model Invoice {
   clientID      String
   invoiceNumber String   @unique
   amount        Float
-  status        String   @default("Pending") // Pending, Paid, Overdue
+  status        String   @default("Pending")
   dueDate       DateTime
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
-
-  client   Client @relation(fields: [clientID], references: [id])
-  agency   Agency @relation(fields: [agencyId], references: [id])
-  agencyId String
+  agencyId      String
+  agency        Agency   @relation(fields: [agencyId], references: [id])
+  client        Client   @relation(fields: [clientID], references: [id])
 }
 
 model Authorization {
   id                  String       @id @default(cuid())
-  assignedClients     Client[]
-  payer               Payer?       @relation(fields: [payerID], references: [id])
   payerID             String?
-  service             Service?     @relation(fields: [serviceID], references: [id])
   serviceID           String?
   eventCode           String
   authorizationNumber String
@@ -413,62 +398,62 @@ model Authorization {
   startDate           DateTime
   endDate             DateTime
   comments            String?
-  visitsAllowed       String // unlimited / limited
+  visitsAllowed       String
+  payer               Payer?       @relation(fields: [payerID], references: [id])
+  service             Service?     @relation(fields: [serviceID], references: [id])
   limitations         Limitation[]
+  assignedClients     Client[]     @relation("AuthorizationToClient")
 }
 
 model Limitation {
   id              String        @id @default(cuid())
-  authorization   Authorization @relation(fields: [authorizationID], references: [id])
   authorizationID String
   total           Int
-  limitBy         String // day, week, month, year, none
+  limitBy         String
   count           Int
+  authorization   Authorization @relation(fields: [authorizationID], references: [id])
 }
 
-// ========================
-// Schedule
-// ========================
 model Schedule {
   id                        String        @id @default(cuid())
-  scheduleType              String
-  clientID                  String
-  client                    Client        @relation(fields: [clientID], references: [id])
-  clientMedicaidId          String
-  authorizations            String?
-  authorizationNumber       String?
-  serviceId                 String?
-  service                   Service?      @relation(fields: [serviceId], references: [id])
-  officeReason              String?
-  eventCode                 String
-  authorizationBillUnitType String
-  eventStatus               String
-  eventDate                 DateTime
   startTime                 DateTime
   endTime                   DateTime
-  employeeID                String?
-  employee                  Employee?     @relation(fields: [employeeID], references: [id])
-  recurring                 Boolean       @default(false) // 🔄 renamed from repeatedEvent
-  dates                     String[] // optional repeated dates
-  comments                  String?
-  billingOverride           Boolean       @default(false)
-  rate                      Float?
-  copay                     Float?
+  authorizationBillUnitType String
+  authorizationNumber       String?
+  authorizations            String?
   billAmount                Float?
+  billingOverride           Boolean       @default(false)
+  clientMedicaidId          String
+  comments                  String?
+  copay                     Float?
   createdAt                 DateTime      @default(now())
+  dates                     String[]
+  eventCode                 String
+  eventDate                 DateTime
+  eventStatus               String
+  officeReason              String?
+  rate                      Float?
+  scheduleType              String
+  serviceId                 String?
   updatedAt                 DateTime      @updatedAt
+  clientID                  String
+  employeeID                String?
   agencyID                  String        @default("UNITY124")
+  recurring                 Boolean       @default(false)
   missedVisits              MissedVisit[] @relation("ScheduleToMissedVisit")
+  client                    Client        @relation(fields: [clientID], references: [id])
+  employee                  Employee?     @relation(fields: [employeeID], references: [id])
+  service                   Service?      @relation(fields: [serviceId], references: [id])
 }
 
 model ChatThread {
   id           String            @id @default(cuid())
-  agencyCode   String
   title        String?
   startedAt    DateTime          @default(now())
+  agencyCode   String
   updatedAt    DateTime          @default(now())
-  participants ChatParticipant[]
   messages     ChatMessage[]
+  participants ChatParticipant[]
   readReceipts ChatReadReceipt[]
 
   @@index([agencyCode, startedAt])
@@ -477,14 +462,13 @@ model ChatThread {
 model ChatParticipant {
   id               String          @id @default(cuid())
   threadId         String
+  userId           String?
+  displayName      String
+  mobileEmployeeId String?
   participantId    String
   participantType  ParticipantType
-  displayName      String
-  userId           String?
-  mobileEmployeeId String?
   thread           ChatThread      @relation(fields: [threadId], references: [id])
 
-  // ✅ Keep this to prevent duplicates inside one thread
   @@unique([threadId, participantId])
 }
 
@@ -492,33 +476,31 @@ model ChatMessage {
   id         String     @id @default(cuid())
   threadId   String
   senderId   String
-  senderType String
   content    String
   createdAt  DateTime   @default(now())
+  senderType String
   thread     ChatThread @relation(fields: [threadId], references: [id])
 
-  @@index([threadId, createdAt]) // better ordering performance
+  @@index([threadId, createdAt])
 }
 
 model ChatReadReceipt {
-  id            String   @id @default(cuid())
+  id            String     @id @default(cuid())
   threadId      String
   participantId String
-  lastReadAt    DateTime @default(now())
-
-  thread ChatThread @relation(fields: [threadId], references: [id])
+  lastReadAt    DateTime   @default(now())
+  thread        ChatThread @relation(fields: [threadId], references: [id])
 
   @@unique([threadId, participantId])
 }
 
 model MissedVisit {
-  id          String   @id @default(cuid())
-  visitId     Int      @unique
-  reason      String   @default("No Show")
-  createdAt   DateTime @default(now())
-  expiresAt   DateTime
-  rescheduled Boolean  @default(false)
-
+  id                    String    @id @default(cuid())
+  visitId               Int       @unique
+  reason                String    @default("No Show")
+  createdAt             DateTime  @default(now())
+  expiresAt             DateTime
+  rescheduled           Boolean   @default(false)
   replacementScheduleId String?
   replacementSchedule   Schedule? @relation("ScheduleToMissedVisit", fields: [replacementScheduleId], references: [id])
   visit                 Visit     @relation("VisitToMissedVisit", fields: [visitId], references: [id])

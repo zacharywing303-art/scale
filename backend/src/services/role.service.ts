@@ -62,3 +62,37 @@ export async function deleteRole(id: string) {
     where: { id },
   });
 }
+
+// Create new permission
+export async function createPermission(data: {
+  name: string;
+  roleId?: string;
+}) {
+  return prisma.permission.create({ data });
+}
+
+// Get all permissions (optionally filtered by roleId)
+export async function getPermissions(roleId?: string) {
+  return prisma.permission.findMany({
+    where: roleId ? { roleId } : {},
+    orderBy: { name: "asc" },
+  });
+}
+
+// Get a single permission by ID
+export async function getPermissionById(id: string) {
+  return prisma.permission.findUnique({ where: { id } });
+}
+
+// Update permission name or role link
+export async function updatePermission(
+  id: string,
+  data: { name?: string; roleId?: string | null }
+) {
+  return prisma.permission.update({ where: { id }, data });
+}
+
+// Delete a permission
+export async function deletePermission(id: string) {
+  return prisma.permission.delete({ where: { id } });
+}
