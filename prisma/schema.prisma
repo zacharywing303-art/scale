@@ -39,6 +39,7 @@ model Agency {
   invoices         Invoice[]
   RoleType         RoleType[]
   users            User[]
+  Task             Task[]
 }
 
 model User {
@@ -69,6 +70,7 @@ model RoleType {
   permissions Permission[]
   agency      Agency       @relation(fields: [agencyId], references: [id])
   users       User[]
+  TaskRole    TaskRole[]
 }
 
 model Permission {
@@ -506,6 +508,40 @@ model MissedVisit {
   visit                 Visit     @relation("VisitToMissedVisit", fields: [visitId], references: [id])
 
   @@index([expiresAt])
+}
+
+model Task {
+  id            String     @id @default(uuid())
+  name          String
+  description   String?
+  agencyId      String
+  agency        Agency     @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  assignedRoles TaskRole[]
+  createdAt     DateTime   @default(now())
+  assignedDate  DateTime?  @default(now())
+  dueDate       DateTime
+  isDone        Boolean    @default(false)
+  isActive      Boolean    @default(true)
+  recurring     Boolean    @default(false)
+  frequency     Frequency?
+  unityTask     Boolean    @default(false) // true = Unity automated task
+}
+
+model TaskRole {
+  id     String   @id @default(uuid())
+  taskId String
+  task   Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  roleId String
+  role   RoleType @relation(fields: [roleId], references: [id])
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+  SPECIFIC_DATE
 }
 
 enum ChatStatus {
