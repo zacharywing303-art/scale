@@ -43,3 +43,16 @@ export const completeTask = async (req: Request, res: Response) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+export async function getTasksForUser(req: Request, res: Response) {
+  try {
+    const { userId } = req.params;
+
+    const tasks = await taskService.getTasksForUser(userId);
+
+    res.json(tasks);
+  } catch (error: any) {
+    console.error("Error fetching tasks:", error);
+    res.status(500).json({ error: error.message });
+  }
+}

@@ -90,3 +90,13 @@ export const completeTask = async (taskId: string) => {
     });
   }
 };
+
+export async function getTasksForUser(userId: string) {
+  return prisma.task.findMany({
+    where: {
+      assignedToUserId: userId, // or whatever field you're using
+      isActive: true,
+    },
+    orderBy: { createdAt: "desc" },
+  });
+}
