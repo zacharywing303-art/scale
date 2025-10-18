@@ -116,7 +116,7 @@ export async function getTasksForUser(user: {
     where: {
       assignedRoles: {
         some: {
-          roleTypeId: user.roleTypeId ?? "", // must match their roleType
+          roleId: user.roleTypeId ?? "", // must match their roleType
         },
       },
       isActive: true,
