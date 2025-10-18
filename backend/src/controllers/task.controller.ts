@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as taskService from "../services/task.service";
+import prisma from "../lib/db";
 
 export const createTask = async (req: Request, res: Response) => {
   try {
@@ -48,7 +49,22 @@ export async function getTasksForUser(req: Request, res: Response) {
   try {
     const { userId } = req.params;
 
-    const tasks = await taskService.getTasksForUser(userId);
+    // ✅ Get user with roleType & agency
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { roleType: true },
+    });
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const tasks = await taskService.getTasksForUser({
+      id: user.id,
+      agencyId: user.agencyId!,
+      role: user.role,
+      roleTypeId: user.roleType?.id,
+    });
 
     res.json(tasks);
   } catch (error: any) {

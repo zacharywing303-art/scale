@@ -91,11 +91,38 @@ export const completeTask = async (taskId: string) => {
   }
 };
 
-export async function getTasksForUser(userId: string) {
+export async function getTasksForUser(user: {
+  id: string;
+  agencyId: string;
+  role: string;
+  roleTypeId?: string;
+}) {
+  if (user.role === "AGENCY_ADMIN") {
+    // Admins see all tasks in agency
+    return prisma.task.findMany({
+      where: {
+        agencyId: user.agencyId,
+        isActive: true,
+      },
+      include: {
+        assignedRoles: true,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+  }
+
+  // Regular users see tasks assigned to their role type
   return prisma.task.findMany({
     where: {
-      assignedToUserId: userId, // or whatever field you're using
+      assignedRoles: {
+        some: {
+          roleTypeId: user.roleTypeId ?? "", // must match their roleType
+        },
+      },
       isActive: true,
+    },
+    include: {
+      assignedRoles: true,
     },
     orderBy: { createdAt: "desc" },
   });
