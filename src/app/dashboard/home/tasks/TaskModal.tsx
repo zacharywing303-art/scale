@@ -10,7 +10,7 @@ import { getLoggedInUser } from "@/lib/auth/authHelpers";
 type Task = {
   id: string;
   name: string;
-  assignedDate: string | Date;
+  assignedDate: string | Date | null;
   isDone: boolean;
 };
 
@@ -21,49 +21,38 @@ export default function TaskModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const user = getLoggedInUser();
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  // ✅ Fetch tasks for the logged-in user
   useEffect(() => {
-    if (!isOpen || !user) return;
-
-    const fetchTasks = async () => {
+    async function fetchTasks() {
       try {
-        const isAdmin = user.role === "AGENCY_ADMIN";
+        const user = await getLoggedInUser();
+        if (!user) return;
 
-        const endpoint = isAdmin
-          ? `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/agency/${user.agency?.id}`
-          : `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/user/${user.id}`;
-
-        const res = await fetch(endpoint);
-
-        if (!res.ok) throw new Error("Failed to load tasks");
+        const res = await fetch(`/api/tasks/user/${user.id}`);
         const data = await res.json();
-        setTasks(data);
+        setTasks(data || []);
       } catch (err) {
-        console.error("Failed to fetch tasks:", err);
+        console.error("Error fetching tasks:", err);
       } finally {
         setLoading(false);
       }
-    };
+    }
 
-    fetchTasks();
-  }, [isOpen, user]);
+    if (isOpen) {
+      fetchTasks();
+    }
+  }, [isOpen]);
 
-  const toggleDone = (id: string) => {
+  const toggleDone = (id: string) =>
     setTasks((prev) =>
       prev.map((t) => (t.id === id ? { ...t, isDone: !t.isDone } : t))
     );
-    // ✅ later: also PATCH to backend
-  };
 
-  const deleteTask = (id: string) => {
+  const deleteTask = (id: string) =>
     setTasks((prev) => prev.filter((t) => t.id !== id));
-    // ✅ later: also DELETE in backend
-  };
 
   if (!isOpen) return null;
 
@@ -79,15 +68,20 @@ export default function TaskModal({
 
         <h2 className="text-xl font-semibold mb-4">Task List</h2>
 
-        {/* ✅ Loading state */}
-        {loading ? (
-          <p className="text-center text-sm text-gray-500">Loading tasks...</p>
-        ) : tasks.length === 0 ? (
-          // ✅ Empty state
-          <p className="text-center text-sm text-gray-500">
-            You currently have no assigned tasks.
+        {/* While loading */}
+        {loading && (
+          <p className="text-sm text-muted-foreground">Loading tasks...</p>
+        )}
+
+        {/* No tasks */}
+        {!loading && tasks.length === 0 && (
+          <p className="text-sm text-center text-muted-foreground py-6">
+            There are no tasks currently assigned to you.
           </p>
-        ) : (
+        )}
+
+        {/* Tasks list */}
+        {!loading && tasks.length > 0 && (
           <div className="space-y-4">
             {tasks.map((task) => (
               <div
@@ -103,10 +97,12 @@ export default function TaskModal({
                     {task.name}
                   </h3>
                   <p className="text-xs text-muted-foreground">
-                    Assigned: {format(new Date(task.assignedDate), "PPP")}
+                    Assigned:{" "}
+                    {task.assignedDate
+                      ? format(new Date(task.assignedDate), "PPP")
+                      : "N/A"}
                   </p>
                 </div>
-
                 <div className="flex gap-2 items-center">
                   <Button
                     variant="ghost"
@@ -119,11 +115,9 @@ export default function TaskModal({
                       }`}
                     />
                   </Button>
-
                   <Button variant="ghost" size="icon">
                     <ArrowRight className="w-4 h-4" />
                   </Button>
-
                   <Button
                     variant="ghost"
                     size="icon"
@@ -147,15 +141,14 @@ export default function TaskModal({
         {showCreate && (
           <CreateTaskModal
             onClose={() => setShowCreate(false)}
-            onBack={() => {
-              setShowCreate(false);
-            }}
+            onBack={() => setShowCreate(false)}
           />
         )}
       </div>
     </div>
   );
 }
+
 // "use client";
 
 // import { useState } from "react";

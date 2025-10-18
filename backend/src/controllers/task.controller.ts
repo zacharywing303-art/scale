@@ -49,26 +49,30 @@ export async function getTasksForUser(req: Request, res: Response) {
   try {
     const { userId } = req.params;
 
-    // ✅ Get user with roleType & agency
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      include: { roleType: true },
+      include: {
+        roleType: true,
+        agency: true,
+      },
     });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-    const tasks = await taskService.getTasksForUser({
-      id: user.id,
-      agencyId: user.agencyId!,
-      role: user.role,
-      roleTypeId: user.roleType?.id,
+    const tasks = await prisma.task.findMany({
+      where: {
+        agencyId: user.agencyId || undefined,
+        assignedRoles: user.roleType
+          ? { some: { roleId: user.roleType.id } }
+          : undefined,
+        isActive: true,
+      },
+      orderBy: { createdAt: "desc" },
     });
 
     res.json(tasks);
-  } catch (error: any) {
-    console.error("Error fetching tasks:", error);
-    res.status(500).json({ error: error.message });
+  } catch (err) {
+    console.error("Error getting tasks:", err);
+    res.status(500).json({ error: "Server error" });
   }
 }
