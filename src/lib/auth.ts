@@ -11,6 +11,7 @@ export type User = {
     code: string;
     name: string;
   } | null;
+  roleTypeId?: string;
 };
 
 const SESSION_KEY = "unity_user";

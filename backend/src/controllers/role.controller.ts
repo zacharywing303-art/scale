@@ -106,3 +106,13 @@ export async function deletePermission(req: Request, res: Response) {
     res.status(500).json({ error: error.message });
   }
 }
+
+export async function getAvailableRolesForUser(req: Request, res: Response) {
+  try {
+    const { userId } = req.params;
+    const roles = await roleService.getAvailableRolesForUser(userId);
+    res.json(roles);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+}

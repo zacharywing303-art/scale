@@ -10,6 +10,8 @@ router.get("/permissions/:id", roleController.getPermissionById);
 router.patch("/permissions/:id", roleController.updatePermission);
 router.delete("/permissions/:id", roleController.deletePermission);
 
+router.get("/available/:userId", roleController.getAvailableRolesForUser);
+
 // Role routes
 router.post("/", roleController.createRole);
 router.get("/", roleController.getRoles);

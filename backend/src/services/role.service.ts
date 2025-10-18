@@ -96,3 +96,39 @@ export async function updatePermission(
 export async function deletePermission(id: string) {
   return prisma.permission.delete({ where: { id } });
 }
+
+export async function getAvailableRolesForUser(userId: string) {
+  // Fetch the user along with their agency + roleType
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: {
+      agency: true,
+      roleType: true,
+    },
+  });
+
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  // If the user is NOT an agency admin → return only their own roleType
+  if (user.role !== "AGENCY_ADMIN") {
+    return {
+      canManageRoles: false,
+      roles: user.roleType ? [user.roleType] : [],
+    };
+  }
+
+  // If user IS an AGENCY_ADMIN → fetch all roles for their agency
+  const agencyRoles = await prisma.roleType.findMany({
+    where: { agencyId: user.agencyId! },
+    include: {
+      permissions: true, // optional if you want role permissions too
+    },
+  });
+
+  return {
+    canManageRoles: true,
+    roles: agencyRoles,
+  };
+}
