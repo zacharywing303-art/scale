@@ -59,6 +59,16 @@ export const completeTask = async (taskId: string) => {
   const task = await prisma.task.findUnique({ where: { id: taskId } });
   if (!task) throw new Error("Task not found");
 
+  // ✅ TOGGLE LOGIC
+  if (task.isDone) {
+    // 🔄 If task already complete → revert to incomplete
+    return prisma.task.update({
+      where: { id: taskId },
+      data: { isDone: false, isActive: true },
+    });
+  }
+
+  // ✅ If marking as complete now
   if (task.recurring && task.frequency) {
     let newDueDate = new Date();
     switch (task.frequency) {
@@ -78,15 +88,24 @@ export const completeTask = async (taskId: string) => {
         newDueDate = addYears(new Date(), 1);
         break;
     }
+
+    // Mark as not done yet for next cycle (roll forward)
     return prisma.task.update({
       where: { id: taskId },
-      data: { dueDate: newDueDate, isDone: false },
+      data: {
+        dueDate: newDueDate,
+        isDone: false,
+        isActive: true,
+      },
     });
   } else {
-    // non-recurring -> mark inactive
+    // Non-recurring → mark done & deactivate
     return prisma.task.update({
       where: { id: taskId },
-      data: { isDone: true, isActive: false },
+      data: {
+        isDone: true,
+        isActive: false,
+      },
     });
   }
 };
@@ -132,6 +151,7 @@ export async function updateTask(taskId: string, data: any) {
   return prisma.task.update({
     where: { id: taskId },
     data: {
+      name: data.name,
       frequency: data.frequency,
       dueDate: data.dueDate,
       description: data.description,
