@@ -127,3 +127,14 @@ export async function getTasksForUser(user: {
     orderBy: { createdAt: "desc" },
   });
 }
+
+export async function updateTask(taskId: string, data: any) {
+  return prisma.task.update({
+    where: { id: taskId },
+    data: {
+      frequency: data.frequency,
+      dueDate: data.dueDate,
+      description: data.description,
+    },
+  });
+}

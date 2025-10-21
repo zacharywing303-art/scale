@@ -5,7 +5,11 @@ export type User = {
   name: string;
   email: string;
   role: "MAIN_ADMIN" | "SYSTEM_ADMIN" | "AGENCY_USER" | "AGENCY_ADMIN";
-  roleType?: { name: string }; // For backward compatibility
+  roleType?: {
+    name: string;
+    permissions?: { id: string; name: string }[];
+  };
+  // For backward compatibility
   agency?: {
     id: string;
     code: string;
