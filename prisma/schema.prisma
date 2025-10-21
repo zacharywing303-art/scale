@@ -525,6 +525,7 @@ model Task {
   recurring     Boolean    @default(false)
   frequency     Frequency?
   unityTask     Boolean    @default(false) // true = Unity automated task
+  completedAt   DateTime?
 }
 
 model TaskRole {

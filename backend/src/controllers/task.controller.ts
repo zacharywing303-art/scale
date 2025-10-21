@@ -37,10 +37,10 @@ export const getTasksByRole = async (req: Request, res: Response) => {
 export const completeTask = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const updatedTask = await taskService.completeTask(id);
-    return res.json(updatedTask);
-  } catch (error) {
-    console.error("Error toggling task completion:", error);
+    const updated = await taskService.completeTask(id);
+    return res.json(updated);
+  } catch (err) {
+    console.error("Error toggling task completion:", err);
     return res
       .status(500)
       .json({ message: "Failed to toggle task completion" });
