@@ -79,20 +79,24 @@ export async function getTasksForUser(req: Request, res: Response) {
   }
 }
 
-export async function updateTask(req: Request, res: Response) {
+export const updateTask = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { frequency, dueDate, description } = req.body;
-
-    const updatedTask = await taskService.updateTask(id, {
-      frequency,
-      dueDate,
-      description,
-    });
-
-    return res.json(updatedTask);
+    const updated = await taskService.updateTask(id, req.body);
+    return res.json(updated);
   } catch (error) {
     console.error("Error updating task:", error);
     return res.status(500).json({ message: "Failed to update task" });
   }
-}
+};
+
+export const deleteTask = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await taskService.deleteTask(id);
+    return res.json({ message: "Task deleted" });
+  } catch (error) {
+    console.error("Error deleting task:", error);
+    return res.status(500).json({ message: "Failed to delete task" });
+  }
+};

@@ -9,5 +9,6 @@ router.get("/agency/:agencyId/role/:roleId", taskController.getTasksByRole);
 router.get("/user/:userId", taskController.getTasksForUser);
 router.patch("/:id/complete", taskController.completeTask);
 router.patch("/:id", taskController.updateTask);
+router.delete("/:id", taskController.deleteTask);
 
 export default router;

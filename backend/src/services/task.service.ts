@@ -158,8 +158,14 @@ export async function updateTask(taskId: string, data: any) {
     data: {
       name: data.name,
       frequency: data.frequency,
-      dueDate: data.dueDate,
+      dueDate: data.dueDate ? new Date(data.dueDate) : undefined,
       description: data.description,
     },
+  });
+}
+
+export async function deleteTask(taskId: string) {
+  return prisma.task.delete({
+    where: { id: taskId },
   });
 }
