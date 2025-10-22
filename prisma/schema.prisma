@@ -83,11 +83,60 @@ model Permission {
 model Visit {
   id                           Int              @id @default(autoincrement())
   agencyID                     String
+  visitStatus                  VisitStatus      @default(Scheduled) // ✅ added VISIT_STATUS
+  inCall                       Boolean?         @default(false)      // ✅ new
+  callInType                   String?          // ✅ new
+  callInLatitude               Float?           // ✅ new
+  callInLongitude              Float?           // ✅ new
+  callInAddress                String?          // ✅ new
+  outCall                      Boolean?         @default(false)      // ✅ new
+  callOutType                  String?          // ✅ new
+  callOutLatitude              Float?           // ✅ new
+  callOutLongitude             Float?           // ✅ new
+  callOutAddress               String?          // ✅ new
+  adjustedInTime               DateTime?        // ✅ new
+  adjustedOutTime              DateTime?        // ✅ new
+  actualTime                   Float?           // ✅ new (in hours or minutes — adjust to your logic)
+  adjustedTime                 Float?           // ✅ new
+  billTime                     Float?           // ✅ new
+  units                        Int?             // already exists
+  gpsInMilesFromClient         Float?           // ✅ GPS Call In Miles away from client address
+  gpsOutMilesFromClient        Float?           // ✅ GPS Call Out Miles away from client address
+  clientSignature              String?
+  clientSignatureType          String?          // ✅ new
+  clientVerifiedTime           DateTime?        // ✅ new
+  clientVerifiedService        String?          // ✅ new
+
+  // ✅ exception flags
+  unknownClientException       Boolean? @default(false)
+  unknownEmployeeException     Boolean? @default(false)
+  visitWithoutInCallException  Boolean? @default(false)
+  visitWithoutOutCallException Boolean? @default(false)
+  unmatchedClientPhoneException Boolean? @default(false)
+  missingServiceException      Boolean? @default(false)
+  unauthorizedServiceException Boolean? @default(false)
+  missingLocationException     Boolean? @default(false)
+  visitWithoutAnyCallException Boolean? @default(false)
+  actHoursVsSchHoursException  Boolean? @default(false)
+  missingPayerException        Boolean? @default(false)
+  shortVisitException          Boolean? @default(false)
+  noShowException              Boolean? @default(false)
+  visitVerificationException   Boolean? @default(false)
+  clientSignatureException     Boolean? @default(false)
+  serviceVerificationException Boolean? @default(false)
+
+  totalOriginalExceptions      Int?             @default(0)
+  totalCurrentExceptions       Int?             @default(0)
+
+  providerID                   String?          // ✅ new
+  scheduleBeginTime            DateTime?        // ✅ new
+  scheduleEndTime              DateTime?        // ✅ new
+
+  // 🔁 Existing fields kept
   adjustedHours                Float?
   adjustedIn                   DateTime?
   adjustedOut                  DateTime?
   approved                     Boolean?         @default(false)
-  clientSignature              String?
   employeeSignature            String?
   visitSource                  String?
   mileage                      Float?
@@ -129,12 +178,12 @@ model Visit {
   scheduledTimeOut             DateTime?
   service                      String?
   supervisor                   String?
-  tasks                        String?
-  units                        Int?
-  visitFromDate                DateTime?
+
+  // ✅ renamed from tasks to visitTasks
+  visitTasks                   VisitTask[]
+
   sandataAgencyID              String?
   visitTimeZone                String?
-  visitStatus                  VisitStatus      @default(Scheduled)
   missedVisits                 MissedVisit?     @relation("VisitToMissedVisit")
   exceptions                   VisitException[]
   history                      VisitHistory[]
@@ -144,6 +193,18 @@ model Visit {
   @@index([visitStatus])
   @@index([callIn, callOut])
 }
+
+model VisitTask {
+  id        Int      @id @default(autoincrement())
+  visitId   Int
+  name      String
+  completed Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  visit     Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+}
+
+
 
 model VisitException {
   id            Int      @id @default(autoincrement())
