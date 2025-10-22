@@ -129,8 +129,6 @@ model Visit {
   totalCurrentExceptions       Int?             @default(0)
 
   providerID                   String?          // ✅ new
-  scheduleBeginTime            DateTime?        // ✅ new
-  scheduleEndTime              DateTime?        // ✅ new
 
   // 🔁 Existing fields kept
   adjustedHours                Float?
