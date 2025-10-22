@@ -9,7 +9,12 @@ export const loginService = async (
 ) => {
   const user = await prisma.user.findUnique({
     where: { email },
-    include: { agency: true },
+    include: {
+      agency: true,
+      roleType: {
+        include: { permissions: true },
+      },
+    },
   });
 
   if (!user) throw new Error("Invalid credentials");
@@ -50,6 +55,16 @@ export const loginService = async (
             id: user.agency.id,
             code: user.agency.code,
             name: user.agency.name,
+          }
+        : null,
+      roleType: user.roleType
+        ? {
+            id: user.roleType.id,
+            name: user.roleType.name,
+            permissions: user.roleType.permissions.map((p) => ({
+              id: p.id,
+              name: p.name,
+            })),
           }
         : null,
     },

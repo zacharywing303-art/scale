@@ -34,10 +34,11 @@
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
+    "file-saver": "^2.0.5",
     "lodash.isequal": "^4.5.0",
     "lucide-react": "^0.523.0",
     "morgan": "^1.10.1",
-    "next": "15.3.4",
+    "next": "^16.0.0",
     "node-cron": "^4.2.1",
     "react": "^19.0.0",
     "react-apexcharts": "^1.7.0",
@@ -50,12 +51,14 @@
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "sonner": "^2.0.6",
-    "tailwind-merge": "^3.3.1"
+    "tailwind-merge": "^3.3.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@prisma/client": "^6.16.1",
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "^6.0.0",
+    "@types/file-saver": "^2.0.7",
     "@types/lodash.isequal": "^4.5.8",
     "@types/node": "^20.19.9",
     "@types/react": "^19",

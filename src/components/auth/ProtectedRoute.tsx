@@ -6,11 +6,13 @@ import { useEffect, useRef, useState } from "react";
 
 type ProtectedRouteProps = {
   allowedRoles?: string[];
+  permission?: string;
   children: React.ReactNode;
 };
 
 export default function ProtectedRoute({
   allowedRoles = [],
+  permission,
   children,
 }: ProtectedRouteProps) {
   const { user, isAuthenticated } = useAuth();
@@ -21,7 +23,6 @@ export default function ProtectedRoute({
   const [unauthorized, setUnauthorized] = useState(false);
   const hasHandled = useRef(false);
 
-  // ✅ Wait for client mount before checking anything
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -29,22 +30,47 @@ export default function ProtectedRoute({
   useEffect(() => {
     if (!mounted || hasHandled.current) return;
 
+    // Not logged in? Redirect
     if (!isAuthenticated) {
       router.push("/login");
       hasHandled.current = true;
-    } else if (
-      allowedRoles.length > 0 &&
-      !allowedRoles.includes(user?.role ?? user?.roleType?.name ?? "")
-    ) {
+      return;
+    }
+
+    // ✅ Check role
+    const userRole = user?.role ?? user?.roleType?.name ?? "";
+    const roleAllowed =
+      allowedRoles.length === 0 || allowedRoles.includes(userRole);
+
+    // ✅ Check permission (if specified)
+    let hasPermission = true;
+    if (permission) {
+      const userPermissions =
+        user?.roleType?.permissions?.map((p) => p.name) ?? [];
+      hasPermission = userPermissions.includes(permission);
+    }
+
+    // ❌ Block if either role or permission fails
+    if (!roleAllowed || !hasPermission) {
       setUnauthorized(true);
       hasHandled.current = true;
+      return;
     }
-  }, [mounted, isAuthenticated, user, allowedRoles, router, pathname]);
+  }, [
+    mounted,
+    isAuthenticated,
+    user,
+    allowedRoles,
+    permission,
+    router,
+    pathname,
+  ]);
 
+  // Handle unauthorized
   useEffect(() => {
     if (unauthorized) {
       const confirmed = window.confirm(
-        "You do not have permissions to access this page. Please contact the system administrator if you believe this is an error."
+        "You do not have permission to access this page. Please contact your system administrator."
       );
 
       if (confirmed || !confirmed) {
@@ -54,7 +80,6 @@ export default function ProtectedRoute({
     }
   }, [unauthorized, router]);
 
-  // ✅ Don’t render until mounted (prevents SSR mismatch)
   if (!mounted) return null;
   if (!isAuthenticated || unauthorized) return null;
 

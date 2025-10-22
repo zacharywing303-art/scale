@@ -2,12 +2,25 @@ import prisma from "../lib/db";
 import bcrypt from "bcryptjs";
 
 export const getAllUsers = async () => {
-  return await prisma.user.findMany();
+  return await prisma.user.findMany({
+    include: {
+      agency: true,
+      roleType: {
+        include: { permissions: true }, // ✅ include permissions
+      },
+    },
+  });
 };
 
 export const getUserById = async (id: string) => {
   return await prisma.user.findUnique({
     where: { id },
+    include: {
+      agency: true,
+      roleType: {
+        include: { permissions: true },
+      },
+    },
   });
 };
 
