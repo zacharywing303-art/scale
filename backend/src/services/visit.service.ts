@@ -30,6 +30,10 @@ export async function createVisit(data: any) {
     where: { id: clientId },
     include: { addresses: true },
   });
+  const service = serviceId
+    ? await prisma.service.findUnique({ where: { id: serviceId } })
+    : null;
+
   if (!employee || !client) throw new Error("Invalid employee or client");
 
   // ✅ 2. Compute derived fields
