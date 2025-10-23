@@ -1,5 +1,6 @@
 import prisma from "../lib/db";
 import { differenceInMinutes } from "date-fns";
+import { VisitStatus } from "@prisma/client";
 
 export async function createVisit(data: any) {
   const {
@@ -38,12 +39,12 @@ export async function createVisit(data: any) {
     : 0;
   const hours = hasOutCall ? elapsedMinutes / 60 : null;
   const units = hasOutCall ? Math.floor(elapsedMinutes / 15) : null;
-
   // ✅ 3. Determine type-specific fields
-  let visitStatus = "Scheduled";
+  let visitStatus: VisitStatus = "Scheduled";
   let callType = "Manual";
   let visitSource = "Unity Care";
   let callInType = "Manual";
+  let callOutType = hasOutCall ? "Manual" : null;
   let callOutType = hasOutCall ? "Manual" : null;
 
   if (source === "mobile") {
@@ -71,7 +72,7 @@ export async function createVisit(data: any) {
   const newVisit = await prisma.visit.create({
     data: {
       agencyID,
-      visitStatus: visitStatus,
+      visitStatus,
       callIn: callIn ?? scheduledTimeIn ?? null,
       callOut: callOut ?? scheduledTimeOut ?? null,
       inCall: !!(callIn ?? scheduledTimeIn),
