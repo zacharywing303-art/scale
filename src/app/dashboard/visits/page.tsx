@@ -146,7 +146,7 @@ export default function VisitsPage() {
           clientName: v.clientName || "-",
           employeeName: v.employeeName || "-",
           service: v.service || "-",
-          hours: v.hours || "-",
+          hours: v.callHours || "-",
           units: v.units || "-",
           visitStatus: v.visitStatus || "-",
           medicaidId: v.clientMedicaidID || "-",

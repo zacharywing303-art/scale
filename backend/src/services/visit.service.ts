@@ -83,7 +83,7 @@ export async function createVisit(data: any) {
       visitTimeZone: timeZone ?? "EST",
       visitWithoutOutCallException: !hasOutCall,
       billTime: hasOutCall ? hours : null,
-      hours: hours ?? null,
+      callHours: hours ?? null,
       payHours: hours ?? null,
       units,
       service,
