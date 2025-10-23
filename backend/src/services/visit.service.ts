@@ -98,7 +98,7 @@ export async function createVisit(data: any) {
       groupVisitCode,
       supervisor,
       doNotBill: false,
-      program: client.program?.id ?? null,
+      program: client.programID ?? null,
       scheduledTimeIn: scheduledTimeIn ?? null,
       scheduledTimeOut: scheduledTimeOut ?? null,
       latitudeIn,
