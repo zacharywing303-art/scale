@@ -45,7 +45,6 @@ export async function createVisit(data: any) {
   let visitSource = "Unity Care";
   let callInType = "Manual";
   let callOutType = hasOutCall ? "Manual" : null;
-  let callOutType = hasOutCall ? "Manual" : null;
 
   if (source === "mobile") {
     visitStatus = hasOutCall ? "Verified" : "InProcess";
