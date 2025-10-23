@@ -71,7 +71,7 @@ export async function createVisit(data: any) {
   const newVisit = await prisma.visit.create({
     data: {
       agencyID,
-      visitStatus,
+      visitStatus: visitStatus,
       callIn: callIn ?? scheduledTimeIn ?? null,
       callOut: callOut ?? scheduledTimeOut ?? null,
       inCall: !!(callIn ?? scheduledTimeIn),
