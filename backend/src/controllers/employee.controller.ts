@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as employeeService from "../services/employee.service";
+import prisma from "../lib/db";
 
 export const getEmployees = async (_req: Request, res: Response) => {
   const employees = await employeeService.getAllEmployees();
@@ -38,4 +39,18 @@ export const updateEmployee = async (req: Request, res: Response) => {
 export const deleteEmployee = async (req: Request, res: Response) => {
   await employeeService.deleteEmployee(req.params.id);
   res.status(204).send();
+};
+
+export const getEmployeesByAgency = async (req: Request, res: Response) => {
+  try {
+    const { agencyId } = req.params;
+    const employees = await prisma.employee.findMany({
+      where: { agencyID: agencyId },
+      select: { id: true, name: true, email: true },
+    });
+    res.json(employees);
+  } catch (err) {
+    console.error("Error fetching employees:", err);
+    res.status(500).json({ message: "Failed to fetch employees" });
+  }
 };
