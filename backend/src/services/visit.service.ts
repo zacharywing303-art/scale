@@ -9,7 +9,7 @@ export async function createVisit(data: any) {
     clientId,
     callIn,
     callOut,
-    service,
+    serviceId,
     timeZone,
     location,
     groupVisitCode,
@@ -86,7 +86,8 @@ export async function createVisit(data: any) {
       callHours: hours ?? null,
       payHours: hours ?? null,
       units,
-      service,
+      serviceId: serviceId ?? null,
+      serviceName: service ? `${service.code} - ${service.name}` : null,
       inOutCallLocation: clientAddress,
       clientID: (() => {
         const raw = client.clientID ?? null;
@@ -161,16 +162,6 @@ export async function getVisitById(visitId: number) {
     },
   });
 }
-
-// // ✅ Create visit
-// export async function createVisit(data: any) {
-//   return prisma.visit.create({
-//     data: {
-//       ...data,
-//       visitStatus: data.visitStatus || "Scheduled",
-//     },
-//   });
-// }
 
 // ✅ Update visit
 export async function updateVisit(id: number, data: any) {

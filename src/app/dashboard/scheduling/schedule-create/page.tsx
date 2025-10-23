@@ -132,6 +132,8 @@ export default function CreateSchedulePage() {
   // const dummyMissedShifts = ["Visit with Mr. A (6/10)", "Office shift (6/5)"];
   const [missedShifts, setMissedShifts] = useState<any[]>([]);
 
+  const user = getLoggedInUser();
+
   useEffect(() => {
     const fetchMissed = async () => {
       try {
@@ -704,6 +706,7 @@ export default function CreateSchedulePage() {
                             rate: null,
                             copay: null,
                             billAmount: null,
+                            agencyID: user?.agency?.id,
                           };
 
                           const res = await fetch(

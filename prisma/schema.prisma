@@ -81,56 +81,56 @@ model Permission {
 }
 
 model Visit {
-  id                           Int              @id @default(autoincrement())
-  agencyID                     String
-  visitStatus                  VisitStatus      @default(Scheduled) // ✅ added VISIT_STATUS
-  inCall                       Boolean?         @default(false)      // ✅ new
-  callInType                   String?          // ✅ new
-  callInAddress                String?          // ✅ new
-  outCall                      Boolean?         @default(false)      // ✅ new
-  callOutType                  String?          // ✅ new
-  callOutAddress               String?          // ✅ new
-  adjustedInTime               DateTime?        // ✅ new
-  adjustedOutTime              DateTime?        // ✅ new
-  actualTime                   Float?           // ✅ new (in hours or minutes — adjust to your logic)
-  adjustedTime                 Float?           // ✅ new
-  billTime                     Float?           // ✅ new
-  units                        Int?             // already exists
-  gpsInMilesFromClient         Float?           // ✅ GPS Call In Miles away from client address
-  gpsOutMilesFromClient        Float?           // ✅ GPS Call Out Miles away from client address
-  clientSignature              String?
-  clientSignatureType          String?          // ✅ new
-  clientVerifiedTime           DateTime?        // ✅ new
-  clientVerifiedService        String?          // ✅ new
+  id                    Int         @id @default(autoincrement())
+  agencyID              String
+  visitStatus           VisitStatus @default(Scheduled) // ✅ added VISIT_STATUS
+  inCall                Boolean?    @default(false) // ✅ new
+  callInType            String? // ✅ new
+  callInAddress         String? // ✅ new
+  outCall               Boolean?    @default(false) // ✅ new
+  callOutType           String? // ✅ new
+  callOutAddress        String? // ✅ new
+  adjustedInTime        DateTime? // ✅ new
+  adjustedOutTime       DateTime? // ✅ new
+  actualTime            Float? // ✅ new (in hours or minutes — adjust to your logic)
+  adjustedTime          Float? // ✅ new
+  billTime              Float? // ✅ new
+  units                 Int? // already exists
+  gpsInMilesFromClient  Float? // ✅ GPS Call In Miles away from client address
+  gpsOutMilesFromClient Float? // ✅ GPS Call Out Miles away from client address
+  clientSignature       String?
+  clientSignatureType   String? // ✅ new
+  clientVerifiedTime    DateTime? // ✅ new
+  clientVerifiedService String? // ✅ new
 
   // ✅ exception flags
-  unknownClientException       Boolean? @default(false)
-  unknownEmployeeException     Boolean? @default(false)
-  visitWithoutInCallException  Boolean? @default(false)
-  visitWithoutOutCallException Boolean? @default(false)
+  unknownClientException        Boolean? @default(false)
+  unknownEmployeeException      Boolean? @default(false)
+  visitWithoutInCallException   Boolean? @default(false)
+  visitWithoutOutCallException  Boolean? @default(false)
   unmatchedClientPhoneException Boolean? @default(false)
-  missingServiceException      Boolean? @default(false)
-  unauthorizedServiceException Boolean? @default(false)
-  missingLocationException     Boolean? @default(false)
-  visitWithoutAnyCallException Boolean? @default(false)
-  actHoursVsSchHoursException  Boolean? @default(false)
-  missingPayerException        Boolean? @default(false)
-  shortVisitException          Boolean? @default(false)
-  noShowException              Boolean? @default(false)
-  visitVerificationException   Boolean? @default(false)
-  clientSignatureException     Boolean? @default(false)
-  serviceVerificationException Boolean? @default(false)
+  missingServiceException       Boolean? @default(false)
+  unauthorizedServiceException  Boolean? @default(false)
+  missingLocationException      Boolean? @default(false)
+  visitWithoutAnyCallException  Boolean? @default(false)
+  actHoursVsSchHoursException   Boolean? @default(false)
+  missingPayerException         Boolean? @default(false)
+  shortVisitException           Boolean? @default(false)
+  noShowException               Boolean? @default(false)
+  visitVerificationException    Boolean? @default(false)
+  clientSignatureException      Boolean? @default(false)
+  serviceVerificationException  Boolean? @default(false)
 
-  totalOriginalExceptions      Int?             @default(0)
-  totalCurrentExceptions       Int?             @default(0)
+  totalOriginalExceptions Int? @default(0)
+  totalCurrentExceptions  Int? @default(0)
 
-  providerID                   String?          // ✅ new
+  providerID String? // ✅ new
 
   // 🔁 Existing fields kept
   adjustedHours                Float?
   adjustedIn                   DateTime?
   adjustedOut                  DateTime?
-  approved                     Boolean?         @default(false)
+  approved                     Boolean?  @default(false)
   employeeSignature            String?
   visitSource                  String?
   mileage                      Float?
@@ -152,35 +152,38 @@ model Visit {
   clientMedicaidID             String?
   clientName                   String?
   clientPrimaryPhoneNumber     String?
-  clientVerified               Boolean?         @default(false)
-  doNotBill                    Boolean?         @default(false)
+  clientVerified               Boolean?  @default(false)
+  doNotBill                    Boolean?  @default(false)
   employeeContactPhoneNumber   String?
   employeeID                   Int?
   employeeName                 String?
   employeeOtherID              String?
-  exported                     Boolean?         @default(false)
+  exported                     Boolean?  @default(false)
   groupVisitCode               String?
   inOutCallLocation            String?
   memo                         String?
   payHours                     Float?
-  payEqualsSch                 Boolean?         @default(false)
+  payEqualsSch                 Boolean?  @default(false)
   payer                        String?
   program                      String?
   santraxID                    String?
   scheduledHours               Float?
   scheduledTimeIn              DateTime?
   scheduledTimeOut             DateTime?
-  service                      String?
-  supervisor                   String?
+  serviceId                    String?
+  service                      Service?  @relation(fields: [serviceId], references: [id])
+  serviceName                  String? // legacy field for backward compatibility
+
+  supervisor String?
 
   // ✅ renamed from tasks to visitTasks
-  visitTasks                   VisitTask[]
+  visitTasks VisitTask[]
 
-  sandataAgencyID              String?
-  visitTimeZone                String?
-  missedVisits                 MissedVisit?     @relation("VisitToMissedVisit")
-  exceptions                   VisitException[]
-  history                      VisitHistory[]
+  sandataAgencyID String?
+  visitTimeZone   String?
+  missedVisits    MissedVisit?     @relation("VisitToMissedVisit")
+  exceptions      VisitException[]
+  history         VisitHistory[]
 
   @@index([agencyID, scheduledTimeOut])
   @@index([agencyID, scheduledTimeIn])
@@ -195,10 +198,8 @@ model VisitTask {
   completed Boolean  @default(false)
   createdAt DateTime @default(now())
 
-  visit     Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
 }
-
-
 
 model VisitException {
   id            Int      @id @default(autoincrement())
@@ -398,6 +399,7 @@ model Service {
   authorizations Authorization[]
   schedule       Schedule[]
   assignedTo     Client[]        @relation("ClientServices")
+  Visit          Visit[]
 }
 
 model Program {
