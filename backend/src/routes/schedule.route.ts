@@ -4,6 +4,7 @@ import {
   createScheduleController,
   updateScheduleController,
   getScheduleByIdController,
+  getSchedulesByAgencyController,
 } from "../controllers/schedule.controller";
 
 const router = Router();
@@ -13,5 +14,6 @@ router.get("/", getSchedulesController);
 router.post("/", createScheduleController);
 router.put("/:id", updateScheduleController);
 router.get("/:id", getScheduleByIdController);
+router.get("/agency/:agencyId", getSchedulesByAgencyController);
 
 export default router;

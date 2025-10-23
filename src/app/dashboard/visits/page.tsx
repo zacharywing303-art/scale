@@ -148,7 +148,11 @@ export default function VisitsPage() {
           service: v.service || "-",
           hours: v.callHours || "-",
           units: v.units || "-",
-          visitStatus: v.visitStatus || "-",
+          visitStatus: v.visitStatus
+            ? v.visitStatus === "InProcess"
+              ? "In Process"
+              : v.visitStatus
+            : "-",
           medicaidId: v.clientMedicaidID || "-",
           employeeId: v.employeeID || "-",
           clientId: v.clientID || "-",

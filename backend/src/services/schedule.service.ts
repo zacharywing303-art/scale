@@ -1,5 +1,6 @@
 import prisma from "../lib/db";
 import { addMinutes } from "date-fns";
+import { createVisit } from "./visit.service";
 
 type CreateScheduleInput = {
   scheduleType: "office" | "visit" | "facility";
@@ -116,22 +117,16 @@ export async function createScheduleAndVisit(input: CreateScheduleInput) {
       (input.endTime.getTime() - input.startTime.getTime()) / 1000 / 60 / 60;
 
     // 3) Create Visit
-    await tx.visit.create({
-      data: {
-        agencyID: input.agencyID,
-        scheduledTimeIn: input.startTime,
-        scheduledTimeOut: input.endTime,
-        scheduledHours,
-        visitStatus: "Scheduled",
-        clientID: input.clientID ? Number(input.clientID) : undefined,
-        clientMedicaidID: client?.medicaidID ?? input.clientMedicaidId,
-        clientName: client?.name,
-        employeeID: input.employeeID ? Number(input.employeeID) : undefined,
-        employeeName: employee?.name,
-        service: service ? `${service.code} - ${service.name}` : undefined,
-        payEqualsSch: true,
-        memo: input.comments ?? undefined,
-      },
+    await createVisit({
+      agencyID: input.agencyID,
+      clientId: input.clientID,
+      employeeId: input.employeeID,
+      scheduledTimeIn: input.startTime,
+      scheduledTimeOut: input.endTime,
+      service: service ? `${service.code} - ${service.name}` : undefined,
+      timeZone: "EST",
+      location: "Schedule Created",
+      source: "schedule",
     });
 
     return schedule;
@@ -165,3 +160,15 @@ export const updateSchedule = async (id: string, data: any) => {
     },
   });
 };
+
+export async function getSchedulesByAgency(agencyId: string) {
+  return prisma.schedule.findMany({
+    where: { agencyID: agencyId },
+    include: {
+      client: { select: { id: true, name: true, medicaidID: true } },
+      employee: { select: { id: true, name: true } },
+      service: { select: { id: true, name: true } },
+    },
+    orderBy: { startTime: "desc" },
+  });
+}

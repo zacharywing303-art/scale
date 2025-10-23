@@ -4,6 +4,7 @@ import {
   createScheduleAndVisit,
   updateSchedule,
   getScheduleById,
+  getSchedulesByAgency,
 } from "../services/schedule.service";
 
 export const getSchedulesController = async (req: Request, res: Response) => {
@@ -62,3 +63,17 @@ export async function getScheduleByIdController(req: Request, res: Response) {
     res.status(500).json({ error: "Failed to fetch schedule" });
   }
 }
+
+export const getSchedulesByAgencyController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { agencyId } = req.params;
+    const schedules = await getSchedulesByAgency(agencyId);
+    res.json(schedules);
+  } catch (error) {
+    console.error("Error fetching schedules by agency:", error);
+    res.status(500).json({ error: "Failed to fetch schedules" });
+  }
+};

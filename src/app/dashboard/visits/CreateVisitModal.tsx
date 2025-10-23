@@ -249,7 +249,7 @@ export default function CreateVisitModal() {
                   </SelectTrigger>
                   <SelectContent>
                     {services.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
+                      <SelectItem key={s.id} value={s.name}>
                         {s.name} ({s.code})
                       </SelectItem>
                     ))}
