@@ -23,7 +23,6 @@ import { getLoggedInUser } from "@/lib/auth/authHelpers";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { exportTableData } from "@/lib/exportData";
 import ExportButton from "@/components/ExportButton";
-import { permission } from "process";
 
 // Default display columns
 const defaultDisplayColumns = [
@@ -288,11 +287,7 @@ export default function VisitsPage() {
     return <div className="p-6 text-center text-red-500">Error: {error}</div>;
 
   return (
-    <ProtectedRoute
-      allowedRoles={
-        (["AGENCY_ADMIN", "AGENCY_USER"], (permission = "View Visits"))
-      }
-    >
+    <ProtectedRoute allowedRoles={["AGENCY_ADMIN"]} permission="View Visits">
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">
@@ -407,10 +402,10 @@ export default function VisitsPage() {
           </div>
         </div>
 
-        {/* <ExportButton
-        filteredVisits={filteredVisits}
-        displayColumns={displayColumns}
-      /> */}
+        <ExportButton
+          filteredVisits={filteredVisits}
+          displayColumns={displayColumns}
+        />
 
         {/* Display Filters */}
         <details className="mb-4">

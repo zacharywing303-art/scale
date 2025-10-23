@@ -86,13 +86,9 @@ model Visit {
   visitStatus                  VisitStatus      @default(Scheduled) // ✅ added VISIT_STATUS
   inCall                       Boolean?         @default(false)      // ✅ new
   callInType                   String?          // ✅ new
-  callInLatitude               Float?           // ✅ new
-  callInLongitude              Float?           // ✅ new
   callInAddress                String?          // ✅ new
   outCall                      Boolean?         @default(false)      // ✅ new
   callOutType                  String?          // ✅ new
-  callOutLatitude              Float?           // ✅ new
-  callOutLongitude             Float?           // ✅ new
   callOutAddress               String?          // ✅ new
   adjustedInTime               DateTime?        // ✅ new
   adjustedOutTime              DateTime?        // ✅ new

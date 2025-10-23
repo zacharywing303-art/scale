@@ -2,12 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Download } from "lucide-react";
 import { exportTableData } from "@/lib/exportData";
 import { visitColumns } from "@/app/dashboard/visits/visitColumns";
@@ -36,6 +35,11 @@ export default function ExportButton({
       return newRow;
     });
 
+    if (!visibleData.length) {
+      alert("No data available to export.");
+      return;
+    }
+
     // ✅ Add timestamp to file name
     const timestamp = new Date()
       .toISOString()
@@ -48,18 +52,22 @@ export default function ExportButton({
   };
 
   return (
-    <Select onValueChange={(value) => handleExport(value as "xlsx" | "csv")}>
-      <SelectTrigger asChild>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
         <Button variant="outline" className="flex items-center gap-2">
           <Download className="w-4 h-4" />
-          <SelectValue placeholder="Export Data" />
+          Export Data
         </Button>
-      </SelectTrigger>
+      </DropdownMenuTrigger>
 
-      <SelectContent className="w-[220px]">
-        <SelectItem value="xlsx">📊 Export as Excel (.xlsx)</SelectItem>
-        <SelectItem value="csv">📄 Export as CSV (.csv)</SelectItem>
-      </SelectContent>
-    </Select>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuItem onClick={() => handleExport("xlsx")}>
+          📊 Export as Excel (.xlsx)
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleExport("csv")}>
+          📄 Export as CSV (.csv)
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

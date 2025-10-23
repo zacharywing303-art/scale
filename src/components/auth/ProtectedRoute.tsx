@@ -30,27 +30,41 @@ export default function ProtectedRoute({
   useEffect(() => {
     if (!mounted || hasHandled.current) return;
 
-    // Not logged in? Redirect
+    // Not logged in -> redirect to login
     if (!isAuthenticated) {
       router.push("/login");
       hasHandled.current = true;
       return;
     }
 
-    // ✅ Check role
+    // Determine user's primary role string
     const userRole = user?.role ?? user?.roleType?.name ?? "";
+
+    // 1) Role check
     const roleAllowed =
       allowedRoles.length === 0 || allowedRoles.includes(userRole);
 
-    // ✅ Check permission (if specified)
+    // 2) Permission check (if requested)
+    // By default, assume true (if no permission required)
     let hasPermission = true;
+
     if (permission) {
-      const userPermissions =
-        user?.roleType?.permissions?.map((p) => p.name) ?? [];
-      hasPermission = userPermissions.includes(permission);
+      // If user is an AGENCY_ADMIN and AGENCY_ADMIN is an allowedRole,
+      // bypass permission check and allow access.
+      if (
+        userRole === "AGENCY_ADMIN" &&
+        allowedRoles.includes("AGENCY_ADMIN")
+      ) {
+        hasPermission = true;
+      } else {
+        // Otherwise, check permissions array from roleType
+        const userPermissions =
+          user?.roleType?.permissions?.map((p: any) => p.name) ?? [];
+        hasPermission = userPermissions.includes(permission);
+      }
     }
 
-    // ❌ Block if either role or permission fails
+    // Block if role fails OR permission fails
     if (!roleAllowed || !hasPermission) {
       setUnauthorized(true);
       hasHandled.current = true;
@@ -66,7 +80,6 @@ export default function ProtectedRoute({
     pathname,
   ]);
 
-  // Handle unauthorized
   useEffect(() => {
     if (unauthorized) {
       const confirmed = window.confirm(
