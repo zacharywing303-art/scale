@@ -20,6 +20,7 @@ export async function createVisit(data: any) {
     longitudeIn,
     latitudeOut,
     longitudeOut,
+    visitWithoutOutCallException,
   } = data;
 
   // ✅ 1. Load employee + client
@@ -85,7 +86,7 @@ export async function createVisit(data: any) {
       callType,
       visitSource,
       visitTimeZone: timeZone ?? "EST",
-      visitWithoutOutCallException: !hasOutCall,
+      visitWithoutOutCallException: visitWithoutOutCallException ?? !callOut,
       billTime: hasOutCall ? hours : null,
       callHours: hours ?? null,
       payHours: hours ?? null,

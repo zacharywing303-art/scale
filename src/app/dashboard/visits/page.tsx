@@ -145,7 +145,13 @@ export default function VisitsPage() {
             : "-",
           clientName: v.clientName || "-",
           employeeName: v.employeeName || "-",
-          service: v.service || "-",
+          service: v.serviceId
+            ? v.serviceName
+              ? v.serviceName.includes(" - ")
+                ? v.serviceName.split(" - ").slice(1).join(" - ").trim()
+                : v.serviceName
+              : "-"
+            : "-",
           hours: v.callHours || "-",
           units: v.units || "-",
           visitStatus: v.visitStatus
