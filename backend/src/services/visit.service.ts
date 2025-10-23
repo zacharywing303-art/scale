@@ -1,7 +1,5 @@
 import prisma from "../lib/db";
 import { differenceInMinutes } from "date-fns";
-import { Prisma } from "@prisma/client"; // ✅ Import types from Prisma
-const { VisitStatus } = Prisma; // ✅ Enum import shortcut
 
 export async function createVisit(data: any) {
   const {
@@ -16,13 +14,14 @@ export async function createVisit(data: any) {
     groupVisitCode,
     scheduledTimeIn,
     scheduledTimeOut,
-    source = "manual",
+    source = "manual", // "manual" | "schedule" | "mobile"
     latitudeIn,
     longitudeIn,
     latitudeOut,
     longitudeOut,
   } = data;
 
+  // ✅ 1. Load employee + client
   const employee = await prisma.employee.findUnique({
     where: { id: employeeId },
   });
@@ -32,6 +31,7 @@ export async function createVisit(data: any) {
   });
   if (!employee || !client) throw new Error("Invalid employee or client");
 
+  // ✅ 2. Compute derived fields
   const hasOutCall = !!callOut;
   const elapsedMinutes = hasOutCall
     ? differenceInMinutes(new Date(callOut), new Date(callIn))
@@ -39,44 +39,47 @@ export async function createVisit(data: any) {
   const hours = hasOutCall ? elapsedMinutes / 60 : null;
   const units = hasOutCall ? Math.floor(elapsedMinutes / 15) : null;
 
-  // ✅ Use Prisma enum instead of strings
-  let visitStatus: Prisma.VisitStatus = VisitStatus.Scheduled;
+  // ✅ 3. Determine type-specific fields
+  let visitStatus = "Scheduled";
+  let callType = "Manual";
+  let visitSource = "Unity Care";
+  let callInType = "Manual";
+  let callOutType = hasOutCall ? "Manual" : null;
 
   if (source === "mobile") {
-    visitStatus = hasOutCall ? VisitStatus.Verified : VisitStatus.InProcess;
+    visitStatus = hasOutCall ? "Verified" : "InProcess";
+    callType = "Auto";
+    callInType = "Auto";
+    callOutType = hasOutCall ? "Auto" : null;
+    visitSource = "Mobile App";
   } else if (source === "schedule") {
-    visitStatus = VisitStatus.Scheduled;
+    visitStatus = "Scheduled";
   } else {
-    visitStatus = hasOutCall ? VisitStatus.Verified : VisitStatus.InProcess;
+    // Manual creation
+    visitStatus = hasOutCall ? "Verified" : "InProcess";
   }
 
+  // ✅ 4. Determine supervisor
   const supervisor = client.supervisor || employee.supervisor || null;
 
+  // ✅ 5. Address
   const clientAddress = client.addresses[0]
     ? `${client.addresses[0].addressLine1}, ${client.addresses[0].city ?? ""}`
     : "N/A";
 
+  // ✅ 6. Create visit
   const newVisit = await prisma.visit.create({
     data: {
       agencyID,
-      visitStatus, // ✅ Enum-safe now
+      visitStatus,
       callIn: callIn ?? scheduledTimeIn ?? null,
       callOut: callOut ?? scheduledTimeOut ?? null,
       inCall: !!(callIn ?? scheduledTimeIn),
       outCall: hasOutCall || !!scheduledTimeOut,
-      callInType: source === "mobile" ? "Auto" : "Manual",
-      callOutType: hasOutCall
-        ? source === "mobile"
-          ? "Auto"
-          : "Manual"
-        : null,
-      callType: source === "mobile" ? "Auto" : "Manual",
-      visitSource:
-        source === "mobile"
-          ? "Mobile App"
-          : source === "schedule"
-          ? "Schedule"
-          : "Unity Care",
+      callInType,
+      callOutType,
+      callType,
+      visitSource,
       visitTimeZone: timeZone ?? "EST",
       visitWithoutOutCallException: !hasOutCall,
       billTime: hasOutCall ? hours : null,
@@ -105,22 +108,18 @@ export async function createVisit(data: any) {
     },
   });
 
+  // ✅ 7. Record visit history
   await prisma.visitHistory.create({
     data: {
       visitId: newVisit.id,
       title: "Visit Created",
-      reasonCode:
-        source === "mobile"
-          ? "MOBILE_START"
-          : source === "schedule"
-          ? "SCHEDULE_CREATE"
-          : "MANUAL_CREATE",
+      reasonCode: source === "mobile" ? "MOBILE_START" : "MANUAL_CREATE",
       reason:
         source === "mobile"
-          ? "Visit started using mobile app."
+          ? "Visit started using the mobile app."
           : source === "schedule"
-          ? "Visit created from schedule."
-          : "Visit manually created from dashboard.",
+          ? "Visit created from a schedule."
+          : "Visit manually created via dashboard.",
       dateTime: new Date(),
       updatedBy: employee.email,
     },
