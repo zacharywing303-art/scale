@@ -83,15 +83,24 @@ export async function createVisit(data: any) {
       visitTimeZone: timeZone ?? "EST",
       visitWithoutOutCallException: !hasOutCall,
       billTime: hasOutCall ? hours : null,
+      hours: hours ?? null,
       payHours: hours ?? null,
       units,
       service,
       inOutCallLocation: clientAddress,
-      clientID: parseInt(client.clientID) || null,
+      clientID: (() => {
+        const raw = client.clientID ?? null;
+        const num = raw !== null ? Number(raw) : null;
+        return num !== null && !Number.isFinite(num) ? null : num;
+      })(),
       clientMedicaidID: client.medicaidID,
       clientName: client.name,
       clientPrimaryPhoneNumber: client.mainPhone,
-      employeeID: parseInt(employee.employeeID) || null,
+      employeeID: (() => {
+        const raw = employee.employeeID ?? null;
+        const num = raw !== null ? Number(raw) : null;
+        return num !== null && !Number.isFinite(num) ? null : num;
+      })(),
       employeeName: employee.name,
       employeeContactPhoneNumber: employee.mainPhone,
       user: employee.email,

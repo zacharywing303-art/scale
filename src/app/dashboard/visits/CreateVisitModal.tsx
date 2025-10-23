@@ -30,6 +30,7 @@ import { getLoggedInUser } from "@/lib/auth/authHelpers";
 export default function CreateVisitModal() {
   const [clients, setClients] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
+  const [services, setServices] = useState<any[]>([]);
   const [step, setStep] = useState(1);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [timeIn, setTimeIn] = useState("");
@@ -67,17 +68,19 @@ export default function CreateVisitModal() {
       const user = getLoggedInUser();
       if (!user?.agency?.id) return;
 
-      const [clientsRes, employeesRes] = await Promise.all([
+      const [clientsRes, employeesRes, servicesRes] = await Promise.all([
         fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/clients/agency/${user.agency.id}`
         ),
         fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/employees/agency/${user.agency.id}`
         ),
+        fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/services`),
       ]);
 
       setClients(await clientsRes.json());
       setEmployees(await employeesRes.json());
+      setServices(await servicesRes.json());
     })();
   }, []);
 
@@ -240,16 +243,16 @@ export default function CreateVisitModal() {
               </div>
               <div>
                 <Label>Service</Label>
-                <Select onValueChange={setService}>
+                <Select onValueChange={(val) => setService(val)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select service" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Personal Care">Personal Care</SelectItem>
-                    <SelectItem value="Companionship">Companionship</SelectItem>
-                    <SelectItem value="Transportation">
-                      Transportation
-                    </SelectItem>
+                    {services.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name} ({s.code})
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

@@ -30,6 +30,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { TimePicker } from "@/components/TimePicker";
+import { getLoggedInUser } from "@/lib/auth/authHelpers";
 
 function buildDateTime(baseDate: Date, time: string): Date {
   const [h, m] = time.split(":").map(Number);
