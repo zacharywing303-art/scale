@@ -256,7 +256,40 @@ export default function VisitsPage() {
     });
   }, [visits, filters]);
 
-  const paginatedVisits = filteredVisits.slice(
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: "asc" | "desc";
+  }>({
+    key: "",
+    direction: "asc",
+  });
+
+  const sortedVisits = useMemo(() => {
+    if (!sortConfig.key) return filteredVisits;
+    const sorted = [...filteredVisits].sort((a, b) => {
+      const key = sortConfig.key;
+      const valA = a[key];
+      const valB = b[key];
+
+      // Handle numbers/dates vs strings
+      const aDate = Date.parse(valA);
+      const bDate = Date.parse(valB);
+      if (!isNaN(aDate) && !isNaN(bDate)) {
+        return sortConfig.direction === "asc" ? aDate - bDate : bDate - aDate;
+      }
+
+      if (typeof valA === "number" && typeof valB === "number") {
+        return sortConfig.direction === "asc" ? valA - valB : valB - valA;
+      }
+
+      return sortConfig.direction === "asc"
+        ? String(valA).localeCompare(String(valB))
+        : String(valB).localeCompare(String(valA));
+    });
+    return sorted;
+  }, [filteredVisits, sortConfig]);
+
+  const paginatedVisits = sortedVisits.slice(
     (currentPage - 1) * parseInt(perPage),
     currentPage * parseInt(perPage)
   );
@@ -457,8 +490,24 @@ export default function VisitsPage() {
                       <th
                         key={colKey}
                         className="px-4 py-2 font-medium whitespace-nowrap"
+                        onClick={() => {
+                          setSortConfig((prev) =>
+                            prev.key === colKey
+                              ? {
+                                  key: colKey,
+                                  direction:
+                                    prev.direction === "asc" ? "desc" : "asc",
+                                }
+                              : { key: colKey, direction: "asc" }
+                          );
+                        }}
                       >
                         {column?.label}
+                        {sortConfig.key === colKey && (
+                          <span className="ml-1 text-xs">
+                            {sortConfig.direction === "asc" ? "▲" : "▼"}
+                          </span>
+                        )}
                       </th>
                     );
                   })}
@@ -512,7 +561,72 @@ export default function VisitsPage() {
 
                       return (
                         <td key={colKey} className="px-4 py-2">
-                          {visit[colKey] ?? "—"}
+                          {(() => {
+                            // Highlight specific exception fields
+                            if (
+                              colKey === "clientName" &&
+                              visit.unknownClientException
+                            ) {
+                              return (
+                                <span className="text-red-500 font-semibold">
+                                  ⚠ {visit.clientName || "Unknown Client"}
+                                </span>
+                              );
+                            }
+                            if (
+                              colKey === "employeeName" &&
+                              visit.unknownEmployeeException
+                            ) {
+                              return (
+                                <span className="text-red-500 font-semibold">
+                                  ⚠ {visit.employeeName || "Unknown Employee"}
+                                </span>
+                              );
+                            }
+                            if (
+                              colKey === "service" &&
+                              visit.missingServiceException
+                            ) {
+                              return (
+                                <span className="text-orange-500 font-semibold">
+                                  ⚠ {visit.service || "Missing Service"}
+                                </span>
+                              );
+                            }
+                            if (
+                              colKey === "clockIn" &&
+                              visit.visitWithoutInCallException
+                            ) {
+                              return (
+                                <span className="text-yellow-500 font-semibold">
+                                  ⚠ Missing In Call
+                                </span>
+                              );
+                            }
+                            if (
+                              colKey === "clockOut" &&
+                              visit.visitWithoutOutCallException
+                            ) {
+                              return (
+                                <span className="text-yellow-500 font-semibold">
+                                  ⚠ Missing Out Call
+                                </span>
+                              );
+                            }
+                            if (
+                              colKey === "payer" &&
+                              visit.missingPayerException
+                            ) {
+                              return (
+                                <span className="text-pink-500 font-semibold">
+                                  ⚠ No Payer
+                                </span>
+                              );
+                            }
+
+                            // Default
+                            return visit[colKey] ?? "—";
+                          })()}
                         </td>
                       );
                     })}

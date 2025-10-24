@@ -2,42 +2,41 @@ import prisma from "../lib/db";
 
 async function getExceptionsCount(start?: Date, end?: Date) {
   const where: any = {};
-
   if (start && end) {
-    // Backend safeguard: normalize to full days
     const s = new Date(start);
-    s.setHours(0, 0, 0, 0);
     const e = new Date(end);
-    e.setHours(23, 59, 59, 999);
-    where.date = { gte: s, lte: e }; // Use 'date' field instead of 'createdAt'
-  } else if (start) {
-    const s = new Date(start);
     s.setHours(0, 0, 0, 0);
-    where.date = { gte: s };
-  } else if (end) {
-    const e = new Date(end);
     e.setHours(23, 59, 59, 999);
-    where.date = { lte: e };
+    where.callIn = { gte: s, lte: e }; // or scheduledTimeIn, depending on your logic
   }
 
-  const total = await prisma.visitException.count({ where });
+  // Aggregate counts from Visit booleans
+  const flags = [
+    "unknownClientException",
+    "unknownEmployeeException",
+    "visitWithoutInCallException",
+    "visitWithoutOutCallException",
+    "missingServiceException",
+    "missingLocationException",
+    "missingPayerException",
+    "shortVisitException",
+    "noShowException",
+  ];
 
-  const grouped = await prisma.visitException.groupBy({
-    by: ["exceptionType"],
-    _count: { exceptionType: true },
-    where,
-  });
+  const counts: Record<string, number> = {};
+  for (const flag of flags) {
+    counts[flag] = await prisma.visit.count({
+      where: { ...where, [flag]: true },
+    });
+  }
 
-  type GroupedException = {
-    exceptionType: string;
-    _count: { exceptionType: number };
-  };
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
   return {
     total,
-    types: grouped.map((g: GroupedException) => ({
-      type: g.exceptionType,
-      count: g._count.exceptionType,
+    types: Object.entries(counts).map(([type, count]) => ({
+      type,
+      count,
     })),
   };
 }
@@ -50,15 +49,15 @@ async function getStatusesSummary(start?: Date, end?: Date) {
     s.setHours(0, 0, 0, 0);
     const e = new Date(end);
     e.setHours(23, 59, 59, 999);
-    where.visitFromDate = { gte: s, lte: e }; // normalize full day
+    where.callIn = { gte: s, lte: e }; // normalize full day
   } else if (start) {
     const s = new Date(start);
     s.setHours(0, 0, 0, 0);
-    where.visitFromDate = { gte: s };
+    where.callIn = { gte: s };
   } else if (end) {
     const e = new Date(end);
     e.setHours(23, 59, 59, 999);
-    where.visitFromDate = { lte: e };
+    where.callIn = { lte: e };
   }
 
   const totalVisits = await prisma.visit.count({ where });
