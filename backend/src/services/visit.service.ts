@@ -72,7 +72,34 @@ export async function createVisit(data: any) {
     ? `${client.addresses[0].addressLine1}, ${client.addresses[0].city ?? ""}`
     : "N/A";
 
-  // ✅ 6. Create visit
+  // ✅ 6. Exceptions
+  // ✅ Exception logic evaluation
+  const exceptions = {
+    unknownClientException: !clientId,
+    unknownEmployeeException: !employeeId,
+    visitWithoutInCallException: !callIn,
+    visitWithoutOutCallException: !callOut,
+    unmatchedClientPhoneException:
+      client.mainPhone && client.mainPhone !== client.mainPhone, // placeholder logic, adjust if mismatch check later
+    missingServiceException: !serviceId || !service,
+    unauthorizedServiceException: false, // placeholder for now
+    missingLocationException: !location,
+    visitWithoutAnyCallException: !callIn && !callOut,
+    actHoursVsSchHoursException: false, // placeholder, requires scheduled hours data
+    missingPayerException: !data.payer,
+    shortVisitException: hours !== null && hours < 0.25, // less than 1 unit (15 min)
+    noShowException:
+      visitStatus === "Scheduled" &&
+      !callIn &&
+      !callOut &&
+      new Date(scheduledTimeIn ?? Date.now()).getTime() <
+        Date.now() - 24 * 60 * 60 * 1000, // one day past
+    visitVerificationException: !visitStatus,
+    clientSignatureException: false,
+    serviceVerificationException: false,
+  };
+
+  // ✅ 7. Create visit
   const newVisit = await prisma.visit.create({
     data: {
       agencyID,
@@ -86,7 +113,6 @@ export async function createVisit(data: any) {
       callType,
       visitSource,
       visitTimeZone: timeZone ?? "EST",
-      visitWithoutOutCallException: visitWithoutOutCallException ?? !callOut,
       billTime: hasOutCall ? hours : null,
       callHours: hours ?? null,
       payHours: hours ?? null,
@@ -120,6 +146,7 @@ export async function createVisit(data: any) {
       longitudeIn,
       latitudeOut,
       longitudeOut,
+      ...exceptions,
     },
   });
 
