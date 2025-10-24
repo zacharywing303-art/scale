@@ -73,27 +73,27 @@ export async function createVisit(data: any) {
     : "N/A";
 
   // ✅ 6. Exceptions
-  // ✅ Exception logic evaluation
   const exceptions = {
     unknownClientException: !clientId,
     unknownEmployeeException: !employeeId,
     visitWithoutInCallException: !callIn,
     visitWithoutOutCallException: !callOut,
-    unmatchedClientPhoneException:
-      client.mainPhone && client.mainPhone !== client.mainPhone, // placeholder logic, adjust if mismatch check later
+    unmatchedClientPhoneException: !!(
+      client?.mainPhone && client?.mainPhone !== client?.mainPhone
+    ), // ⚠️ placeholder logic, always returns boolean
     missingServiceException: !serviceId || !service,
     unauthorizedServiceException: false, // placeholder for now
     missingLocationException: !location,
     visitWithoutAnyCallException: !callIn && !callOut,
-    actHoursVsSchHoursException: false, // placeholder, requires scheduled hours data
+    actHoursVsSchHoursException: false, // placeholder
     missingPayerException: !data.payer,
-    shortVisitException: hours !== null && hours < 0.25, // less than 1 unit (15 min)
+    shortVisitException: !!(hours !== null && hours < 0.25),
     noShowException:
       visitStatus === "Scheduled" &&
       !callIn &&
       !callOut &&
       new Date(scheduledTimeIn ?? Date.now()).getTime() <
-        Date.now() - 24 * 60 * 60 * 1000, // one day past
+        Date.now() - 24 * 60 * 60 * 1000,
     visitVerificationException: !visitStatus,
     clientSignatureException: false,
     serviceVerificationException: false,
