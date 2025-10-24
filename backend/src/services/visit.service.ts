@@ -146,19 +146,11 @@ export async function createVisit(data: any) {
         serviceId: serviceId ?? null,
         serviceName: service ? `${service.code} - ${service.name}` : null,
         inOutCallLocation: clientAddress,
-        clientID: (() => {
-          const raw = client.clientID ?? null;
-          const num = raw !== null ? Number(raw) : null;
-          return num !== null && !Number.isFinite(num) ? null : num;
-        })(),
+        clientID: data.clientCode ?? client.clientID ?? null,
         clientMedicaidID: client.medicaidID,
         clientName: client.name,
         clientPrimaryPhoneNumber: client.mainPhone,
-        employeeID: (() => {
-          const raw = employee.employeeID ?? null;
-          const num = raw !== null ? Number(raw) : null;
-          return num !== null && !Number.isFinite(num) ? null : num;
-        })(),
+        employeeID: data.employeeCode ?? employee.employeeID ?? null,
         employeeName: employee.name,
         employeeContactPhoneNumber: employee.mainPhone,
         user: employee.email,

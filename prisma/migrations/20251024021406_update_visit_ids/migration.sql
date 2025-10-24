@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "public"."Visit" ALTER COLUMN "clientID" SET DATA TYPE TEXT,
+ALTER COLUMN "employeeID" SET DATA TYPE TEXT;

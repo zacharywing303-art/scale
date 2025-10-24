@@ -148,14 +148,14 @@ model Visit {
   callIn                       DateTime?
   callOut                      DateTime?
   claimsVerificationStatus     String?
-  clientID                     Int?
+  clientID                     String?
   clientMedicaidID             String?
   clientName                   String?
   clientPrimaryPhoneNumber     String?
   clientVerified               Boolean?  @default(false)
   doNotBill                    Boolean?  @default(false)
   employeeContactPhoneNumber   String?
-  employeeID                   Int?
+  employeeID                   String?
   employeeName                 String?
   employeeOtherID              String?
   exported                     Boolean?  @default(false)

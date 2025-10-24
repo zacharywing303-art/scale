@@ -135,8 +135,15 @@ export default function CreateVisitModal() {
       // ✅ Construct payload
       const payload = {
         agencyID: user.agency.id,
+
+        // Prisma UUIDs for lookup
         employeeId: selectedEmployee.id,
         clientId: selectedClient.id,
+
+        // Human-readable business IDs for Visit table fields
+        employeeCode: selectedEmployee.employeeID,
+        clientCode: selectedClient.clientID,
+
         callIn,
         callOut,
         serviceId: service || null,
@@ -144,7 +151,7 @@ export default function CreateVisitModal() {
         location,
         groupVisitCode: groupCode,
         source: "manual",
-        visitWithoutOutCallException: !callOut, // ✅ auto flag if missing
+        visitWithoutOutCallException: !callOut,
       };
 
       const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/visits`, {

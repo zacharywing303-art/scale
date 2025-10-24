@@ -12,6 +12,7 @@ import {
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 
+// 🎨 Color map for human-readable labels
 const exceptionColors: Record<string, string> = {
   "Unknown Client": "#FF6384",
   "Unknown Employee": "#36A2EB",
@@ -20,9 +21,23 @@ const exceptionColors: Record<string, string> = {
   "Missing Call Out": "#9966FF",
   "No Call At All": "#FF9F40",
   "No Show": "#00C49F",
-  "Unknown ID/Phone": "#FF6F91",
-  "GPS Call In": "#FF6F91",
-  "GPS Call Out": "#FF6F91",
+  "Missing Location": "#FFB347",
+  "Missing Payer": "#FF7F7F",
+  "Short Visit": "#FFD700",
+};
+
+// 🔠 Map raw exception keys → human-readable labels
+const exceptionKeyLabels: Record<string, string> = {
+  unknownClientException: "Unknown Client",
+  unknownEmployeeException: "Unknown Employee",
+  visitWithoutInCallException: "Missing Call In",
+  visitWithoutOutCallException: "Missing Call Out",
+  visitWithoutAnyCallException: "No Call At All",
+  missingServiceException: "Missing Service",
+  missingLocationException: "Missing Location",
+  missingPayerException: "Missing Payer",
+  shortVisitException: "Short Visit",
+  noShowException: "No Show",
 };
 
 const statusColors: Record<string, string> = {
@@ -49,7 +64,7 @@ export default function SummaryCard() {
   const [statusesData, setStatusesData] = useState<DataRecord>({});
   const [loading, setLoading] = useState(false);
 
-  // Utility: normalize start/end dates
+  // 🕒 Normalize start/end dates
   const getDateRange = () => {
     const today = new Date();
     let start: Date | undefined;
@@ -78,18 +93,17 @@ export default function SummaryCard() {
         break;
     }
 
-    // Normalize to full day
     if (start) start.setHours(0, 0, 0, 0);
     if (end) end.setHours(23, 59, 59, 999);
 
     return { start, end };
   };
 
+  // 🧮 Fetch summary from backend
   useEffect(() => {
     const fetchSummary = async () => {
       const { start, end } = getDateRange();
 
-      // Optional safeguard: skip fetch if custom date is selected but not picked
       if (dateFilter === "custom" && !customDate) return;
 
       try {
@@ -106,14 +120,17 @@ export default function SummaryCard() {
         );
         const data = await res.json();
 
-        // Fallback in case backend returns undefined
-        setExceptionsData(
+        // 🧭 Transform exception keys to friendly labels
+        const exceptionRecords =
           data?.exceptions?.types?.reduce((acc: DataRecord, t: any) => {
-            acc[t.type] = t.count;
+            const label = exceptionKeyLabels[t.type] || t.type;
+            acc[label] = t.count;
             return acc;
-          }, {} as DataRecord) || {}
-        );
+          }, {} as DataRecord) || {};
 
+        setExceptionsData(exceptionRecords);
+
+        // ✅ Keep statuses unchanged
         setStatusesData(
           data?.statuses?.statuses?.reduce((acc: DataRecord, s: any) => {
             acc[s.status] = s.count;
@@ -132,11 +149,13 @@ export default function SummaryCard() {
     fetchSummary();
   }, [dateFilter, customDate]);
 
+  // 🎨 Pick current dataset
   const data = activeView === "exceptions" ? exceptionsData : statusesData;
   const colors = activeView === "exceptions" ? exceptionColors : statusColors;
 
   const total = Object.values(data).reduce((a, b) => a + b, 0);
 
+  // 🟣 Build chart gradient
   const slices = Object.entries(data).reduce((acc, [type, count]) => {
     const start = acc.length ? acc[acc.length - 1].end : 0;
     const percent = total > 0 ? (count / total) * 100 : 0;
