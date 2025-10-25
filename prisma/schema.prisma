@@ -40,6 +40,7 @@ model Agency {
   RoleType         RoleType[]
   users            User[]
   Task             Task[]
+  Visit            Visit[]
 }
 
 model User {
@@ -83,7 +84,8 @@ model Permission {
 model Visit {
   id                    Int         @id @default(autoincrement())
   agencyID              String
-  scheduleID            String?  @unique
+  agency                Agency?     @relation(fields: [agencyID], references: [id])
+  scheduleID            String?     @unique
   visitStatus           VisitStatus @default(Scheduled) // ✅ added VISIT_STATUS
   inCall                Boolean?    @default(false) // ✅ new
   callInType            String? // ✅ new

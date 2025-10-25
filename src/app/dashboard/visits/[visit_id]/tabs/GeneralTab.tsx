@@ -237,7 +237,7 @@ export default function GeneralTab({ visit }: GeneralTabProps) {
           <Label>Program</Label>
           <Input value={program} onChange={(e) => setProgram(e.target.value)} />
 
-          <Label>Service Id</Label>
+          <Label>Service ID</Label>
           <Input
             value={serviceId ?? ""}
             onChange={(e) => setServiceId(e.target.value)}

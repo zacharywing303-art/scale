@@ -22,13 +22,13 @@ export default function VisitDetailHeader({ visit }: VisitDetailHeaderProps) {
             <strong>Date:</strong> {dateStr}
           </p>
           <p>
-            <strong>Client:</strong> {visit?.clientName ?? "—"} (ID:{" "}
-            {visit?.clientID ?? "—"}, Medicaid: {visit?.clientMedicaidID ?? "—"}
-            )
+            <strong>Client:</strong> {visit?.clientName ?? "N/A"} (ID:{" "}
+            {visit?.clientID ?? "N/A"}, Medicaid:{" "}
+            {visit?.clientMedicaidID ?? "N/A"})
           </p>
           <p>
-            <strong>Employee:</strong> {visit?.employeeName ?? "—"} (ID:{" "}
-            {visit?.employeeID ?? "—"})
+            <strong>Employee:</strong> {visit?.employeeName ?? "N/A"} (ID:{" "}
+            {visit?.employeeID ?? "N/A"})
           </p>
         </div>
       </div>

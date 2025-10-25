@@ -231,6 +231,16 @@ export async function getVisitsByAgency(agencyId: string) {
 /**
  * Get single visit by ID
  */
+// export async function getVisitById(visitId: number) {
+//   return prisma.visit.findUnique({
+//     where: { id: visitId },
+//     include: {
+//       visitTasks: true,
+//       exceptions: true,
+//       history: true,
+//     },
+//   });
+// }
 export async function getVisitById(visitId: number) {
   return prisma.visit.findUnique({
     where: { id: visitId },
@@ -238,6 +248,8 @@ export async function getVisitById(visitId: number) {
       visitTasks: true,
       exceptions: true,
       history: true,
+      agency: { select: { name: true, code: true } }, // ✅
+      service: { select: { id: true, name: true } }, // ✅
     },
   });
 }

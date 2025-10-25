@@ -22,6 +22,8 @@ import mobileAuthRoutes from "./routes/mobile.auth.route";
 import roleRoutes from "./routes/role.route";
 import taskRoutes from "./routes/task.route";
 import visitRoutes from "./routes/visit.route";
+import programRoutes from "./routes/program.route";
+import payerRoutes from "./routes/payer.route";
 
 // Load env variables
 dotenv.config();
@@ -58,6 +60,8 @@ app.use("/api/mobile/auth", mobileAuthRoutes);
 app.use("/api/roles", roleRoutes);
 app.use("/api/tasks", taskRoutes);
 app.use("/api/visits", visitRoutes);
+app.use("/api/programs", programRoutes);
+app.use("/api/payers", payerRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
