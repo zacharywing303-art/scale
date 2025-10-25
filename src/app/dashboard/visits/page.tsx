@@ -205,6 +205,20 @@ export default function VisitsPage() {
             v.totalCurrentExceptions > 0
               ? "Exception Occurred"
               : "No Exception",
+          // Exception flags for highlighting in table
+          unknownClientException: v.unknownClientException,
+          unknownEmployeeException: v.unknownEmployeeException,
+          visitWithoutInCallException: v.visitWithoutInCallException,
+          visitWithoutOutCallException: v.visitWithoutOutCallException,
+          unmatchedClientPhoneException: v.unmatchedClientPhoneException,
+          missingServiceException: v.missingServiceException,
+          unauthorizedServiceException: v.unauthorizedServiceException,
+          missingPayerException: v.missingPayerException,
+          shortVisitException: v.shortVisitException,
+          noShowException: v.noShowException,
+          visitVerificationException: v.visitVerificationException,
+          clientSignatureException: v.clientSignatureException,
+          serviceVerificationException: v.serviceVerificationException,
         }));
 
         setVisits(formatted);

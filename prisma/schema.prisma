@@ -83,6 +83,7 @@ model Permission {
 model Visit {
   id                    Int         @id @default(autoincrement())
   agencyID              String
+  scheduleID            String?  @unique
   visitStatus           VisitStatus @default(Scheduled) // ✅ added VISIT_STATUS
   inCall                Boolean?    @default(false) // ✅ new
   callInType            String? // ✅ new

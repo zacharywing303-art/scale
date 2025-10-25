@@ -27,6 +27,24 @@ type CreateScheduleInput = {
   agencyID: string; // pass the agency code you track, e.g., "UNITY124"
 };
 
+async function generateUniqueScheduleId(agencyID: string): Promise<string> {
+  let unique = false;
+  let scheduleID = "";
+
+  while (!unique) {
+    scheduleID = Math.floor(1000000 + Math.random() * 9000000).toString(); // 7 digits
+
+    const existing = await prisma.visit.findFirst({
+      where: { agencyID, scheduleID },
+      select: { id: true },
+    });
+
+    if (!existing) unique = true;
+  }
+
+  return scheduleID;
+}
+
 export const getAllSchedules = async () => {
   const schedules = await prisma.schedule.findMany({
     include: {
@@ -116,6 +134,9 @@ export async function createScheduleAndVisit(input: CreateScheduleInput) {
     const scheduledHours =
       (input.endTime.getTime() - input.startTime.getTime()) / 1000 / 60 / 60;
 
+    // 3️⃣ Generate unique schedule ID for visit
+    const scheduleID = await generateUniqueScheduleId(input.agencyID);
+
     // 3) Create Visit
     await createVisit({
       agencyID: input.agencyID,
@@ -127,6 +148,7 @@ export async function createScheduleAndVisit(input: CreateScheduleInput) {
       timeZone: "EST",
       location: "Schedule Created",
       source: "schedule",
+      scheduleID,
     });
 
     return schedule;

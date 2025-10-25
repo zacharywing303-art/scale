@@ -40,6 +40,7 @@ const exceptionKeyLabels: Record<string, string> = {
   noShowException: "No Show",
 };
 
+// 🎨 Colors for each status
 const statusColors: Record<string, string> = {
   Incomplete: "#FF6384",
   "In Process": "#36A2EB",
@@ -47,6 +48,17 @@ const statusColors: Record<string, string> = {
   Scheduled: "#9966FF",
   Processed: "#FF9F40",
   Omitted: "#00C49F",
+};
+
+// 🏷️ Normalize backend → display labels
+const statusKeyLabels: Record<string, string> = {
+  Incomplete: "Incomplete",
+  InProcess: "In Process", // backend version
+  "In Process": "In Process", // normalized
+  Verified: "Verified",
+  Scheduled: "Scheduled",
+  Processed: "Processed",
+  Omitted: "Omitted",
 };
 
 type DataRecord = Record<string, number>;
@@ -130,12 +142,22 @@ export default function SummaryCard() {
 
         setExceptionsData(exceptionRecords);
 
+        // 🧭 Transform status keys to friendly labels
+        const statusRecords =
+          data?.statuses?.types?.reduce((acc: DataRecord, t: any) => {
+            const label = statusKeyLabels[t.type] || t.type;
+            acc[label] = t.count;
+            return acc;
+          }, {} as DataRecord) || {};
+
         // ✅ Keep statuses unchanged
         setStatusesData(
-          data?.statuses?.statuses?.reduce((acc: DataRecord, s: any) => {
-            acc[s.status] = s.count;
+          (data?.statuses?.statuses || []).reduce((acc: DataRecord, s: any) => {
+            const rawKey = s.status?.trim();
+            const label = statusKeyLabels[rawKey] || rawKey || "Unknown";
+            acc[label] = s.count;
             return acc;
-          }, {} as DataRecord) || {}
+          }, {} as DataRecord)
         );
       } catch (err) {
         console.error("Failed to fetch dashboard summary", err);

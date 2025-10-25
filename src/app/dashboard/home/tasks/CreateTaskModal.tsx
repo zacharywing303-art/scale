@@ -140,6 +140,17 @@ export default function CreateTaskModal({ onClose, onBack }: Props) {
         return;
       }
       const agencyId = currentUser.agency.id;
+      // 🚫 Validate due date — cannot be today or earlier
+      if (dueDate) {
+        const selectedDate = new Date(dueDate);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        if (selectedDate <= today) {
+          alert("❌ Due date must be after today.");
+          return;
+        }
+      }
 
       // Build tasks payload
       const tasksToCreate: any[] =
@@ -252,6 +263,9 @@ export default function CreateTaskModal({ onClose, onBack }: Props) {
               <Label className="mb-1">Due Date</Label>
               <Input
                 type="date"
+                min={
+                  new Date(Date.now() + 86400000).toISOString().split("T")[0]
+                }
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
               />
