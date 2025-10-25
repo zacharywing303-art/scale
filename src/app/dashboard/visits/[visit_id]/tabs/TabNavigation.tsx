@@ -11,6 +11,7 @@ import GPSTab from "./GPSTab";
 import NotesTab from "./NoteTab";
 import ClaimsTab from "./ClaimsTab";
 import HistoryTab from "./HistoryTab";
+import TasksTab from "./TasksTab";
 
 export default function TabNavigation({ visit }: { visit: any }) {
   return (
@@ -24,6 +25,7 @@ export default function TabNavigation({ visit }: { visit: any }) {
         <TabsTrigger value="exceptions">Exceptions</TabsTrigger>
         <TabsTrigger value="gps">GPS</TabsTrigger>
         <TabsTrigger value="notes">Notes</TabsTrigger>
+        <TabsTrigger value="tasks">Tasks</TabsTrigger>
         <TabsTrigger value="claims">Claims</TabsTrigger>
         <TabsTrigger value="history">History</TabsTrigger>
       </TabsList>
@@ -51,6 +53,9 @@ export default function TabNavigation({ visit }: { visit: any }) {
       </TabsContent>
       <TabsContent value="notes">
         <NotesTab visit={visit} />
+      </TabsContent>
+      <TabsContent value="tasks">
+        <TasksTab visit={visit} />
       </TabsContent>
       <TabsContent value="claims">
         <ClaimsTab visit={visit} />

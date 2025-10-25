@@ -285,3 +285,39 @@ export async function updateVisit(id: number, data: any) {
 export async function deleteVisit(id: number) {
   return prisma.visit.delete({ where: { id } });
 }
+
+export async function addVisitTask(visitId: number, name: string) {
+  // ensure visit exists
+  const v = await prisma.visit.findUnique({ where: { id: visitId } });
+  if (!v) throw new Error("Visit not found");
+
+  const created = await prisma.visitTask.create({
+    data: { visitId, name, completed: false },
+  });
+  return created;
+}
+
+export async function updateVisitTask(
+  visitId: number,
+  taskId: number,
+  completed: boolean
+) {
+  // ensure task belongs to visit
+  const t = await prisma.visitTask.findUnique({ where: { id: taskId } });
+  if (!t || t.visitId !== visitId)
+    throw new Error("Task not found for this visit");
+
+  return prisma.visitTask.update({
+    where: { id: taskId },
+    data: { completed },
+  });
+}
+
+export async function deleteVisitTask(visitId: number, taskId: number) {
+  const t = await prisma.visitTask.findUnique({ where: { id: taskId } });
+  if (!t || t.visitId !== visitId)
+    throw new Error("Task not found for this visit");
+
+  await prisma.visitTask.delete({ where: { id: taskId } });
+  return { ok: true };
+}

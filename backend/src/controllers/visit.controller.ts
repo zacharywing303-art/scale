@@ -55,3 +55,42 @@ export const deleteVisit = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Failed to delete visit" });
   }
 };
+
+export async function addVisitTask(req: Request, res: Response) {
+  try {
+    const visitId = Number(req.params.id);
+    const { name } = req.body;
+    if (!name) return res.status(400).send("Name is required");
+    const created = await visitService.addVisitTask(visitId, name);
+    res.json(created);
+  } catch (e: any) {
+    res.status(400).send(e.message || "Failed to add task");
+  }
+}
+
+export async function updateVisitTask(req: Request, res: Response) {
+  try {
+    const visitId = Number(req.params.id);
+    const taskId = Number(req.params.taskId);
+    const { completed } = req.body;
+    const updated = await visitService.updateVisitTask(
+      visitId,
+      taskId,
+      !!completed
+    );
+    res.json(updated);
+  } catch (e: any) {
+    res.status(400).send(e.message || "Failed to update task");
+  }
+}
+
+export async function deleteVisitTask(req: Request, res: Response) {
+  try {
+    const visitId = Number(req.params.id);
+    const taskId = Number(req.params.taskId);
+    const out = await visitService.deleteVisitTask(visitId, taskId);
+    res.json(out);
+  } catch (e: any) {
+    res.status(400).send(e.message || "Failed to delete task");
+  }
+}
