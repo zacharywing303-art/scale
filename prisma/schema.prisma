@@ -38,8 +38,8 @@ model Agency {
   agencyAdmin      User?      @relation("AgencyAdminRelation", fields: [agencyAdminId], references: [id])
   invoices         Invoice[]
   RoleType         RoleType[]
-  users            User[]
   Task             Task[]
+  users            User[]
   Visit            Visit[]
 }
 
@@ -70,8 +70,8 @@ model RoleType {
   updatedAt   DateTime     @updatedAt
   permissions Permission[]
   agency      Agency       @relation(fields: [agencyId], references: [id])
-  users       User[]
   TaskRole    TaskRole[]
+  users       User[]
 }
 
 model Permission {
@@ -82,111 +82,101 @@ model Permission {
 }
 
 model Visit {
-  id                    Int         @id @default(autoincrement())
-  agencyID              String
-  agency                Agency?     @relation(fields: [agencyID], references: [id])
-  scheduleID            String?     @unique
-  visitStatus           VisitStatus @default(Scheduled) // ✅ added VISIT_STATUS
-  inCall                Boolean?    @default(false) // ✅ new
-  callInType            String? // ✅ new
-  callInAddress         String? // ✅ new
-  outCall               Boolean?    @default(false) // ✅ new
-  callOutType           String? // ✅ new
-  callOutAddress        String? // ✅ new
-  adjustedInTime        DateTime? // ✅ new
-  adjustedOutTime       DateTime? // ✅ new
-  actualTime            Float? // ✅ new (in hours or minutes — adjust to your logic)
-  adjustedTime          Float? // ✅ new
-  billTime              Float? // ✅ new
-  units                 Int? // already exists
-  gpsInMilesFromClient  Float? // ✅ GPS Call In Miles away from client address
-  gpsOutMilesFromClient Float? // ✅ GPS Call Out Miles away from client address
-  clientSignature       String?
-  clientSignatureType   String? // ✅ new
-  clientVerifiedTime    DateTime? // ✅ new
-  clientVerifiedService String? // ✅ new
-
-  // ✅ exception flags
-  unknownClientException        Boolean? @default(false)
-  unknownEmployeeException      Boolean? @default(false)
-  visitWithoutInCallException   Boolean? @default(false)
-  visitWithoutOutCallException  Boolean? @default(false)
-  unmatchedClientPhoneException Boolean? @default(false)
-  missingServiceException       Boolean? @default(false)
-  unauthorizedServiceException  Boolean? @default(false)
-  missingLocationException      Boolean? @default(false)
-  visitWithoutAnyCallException  Boolean? @default(false)
-  actHoursVsSchHoursException   Boolean? @default(false)
-  missingPayerException         Boolean? @default(false)
-  shortVisitException           Boolean? @default(false)
-  noShowException               Boolean? @default(false)
-  visitVerificationException    Boolean? @default(false)
-  clientSignatureException      Boolean? @default(false)
-  serviceVerificationException  Boolean? @default(false)
-
-  totalOriginalExceptions Int? @default(0)
-  totalCurrentExceptions  Int? @default(0)
-
-  providerID String? // ✅ new
-
-  // 🔁 Existing fields kept
-  adjustedHours                Float?
-  adjustedIn                   DateTime?
-  adjustedOut                  DateTime?
-  approved                     Boolean?  @default(false)
-  employeeSignature            String?
-  visitSource                  String?
-  mileage                      Float?
-  authorizationReferenceNumber String?
-  location                     String?
-  latitudeIn                   Float?
-  longitudeIn                  Float?
-  latitudeOut                  Float?
-  longitudeOut                 Float?
-  callType                     String?
-  user                         String?
-  claimID                      String?
-  billHours                    Float?
-  callHours                    Float?
-  callIn                       DateTime?
-  callOut                      DateTime?
-  claimsVerificationStatus     String?
-  clientID                     String?
-  clientMedicaidID             String?
-  clientName                   String?
-  clientPrimaryPhoneNumber     String?
-  clientVerified               Boolean?  @default(false)
-  doNotBill                    Boolean?  @default(false)
-  employeeContactPhoneNumber   String?
-  employeeID                   String?
-  employeeName                 String?
-  employeeOtherID              String?
-  exported                     Boolean?  @default(false)
-  groupVisitCode               String?
-  inOutCallLocation            String?
-  memo                         String?
-  payHours                     Float?
-  payEqualsSch                 Boolean?  @default(false)
-  payer                        String?
-  program                      String?
-  santraxID                    String?
-  scheduledHours               Float?
-  scheduledTimeIn              DateTime?
-  scheduledTimeOut             DateTime?
-  serviceId                    String?
-  service                      Service?  @relation(fields: [serviceId], references: [id])
-  serviceName                  String? // legacy field for backward compatibility
-
-  supervisor String?
-
-  // ✅ renamed from tasks to visitTasks
-  visitTasks VisitTask[]
-
-  sandataAgencyID String?
-  visitTimeZone   String?
-  missedVisits    MissedVisit?     @relation("VisitToMissedVisit")
-  exceptions      VisitException[]
-  history         VisitHistory[]
+  id                            Int              @id @default(autoincrement())
+  agencyID                      String
+  adjustedHours                 Float?
+  adjustedIn                    DateTime?
+  adjustedOut                   DateTime?
+  approved                      Boolean?         @default(false)
+  clientSignature               String?
+  employeeSignature             String?
+  visitSource                   String?
+  mileage                       Float?
+  authorizationReferenceNumber  String?
+  location                      String?
+  latitudeIn                    Float?
+  longitudeIn                   Float?
+  latitudeOut                   Float?
+  longitudeOut                  Float?
+  callType                      String?
+  user                          String?
+  claimID                       String?
+  billHours                     Float?
+  callHours                     Float?
+  callIn                        DateTime?
+  callOut                       DateTime?
+  claimsVerificationStatus      String?
+  clientID                      String?
+  clientMedicaidID              String?
+  clientName                    String?
+  clientPrimaryPhoneNumber      String?
+  clientVerified                Boolean?         @default(false)
+  doNotBill                     Boolean?         @default(false)
+  employeeContactPhoneNumber    String?
+  employeeID                    String?
+  employeeName                  String?
+  employeeOtherID               String?
+  exported                      Boolean?         @default(false)
+  groupVisitCode                String?
+  inOutCallLocation             String?
+  memo                          String?
+  payHours                      Float?
+  payEqualsSch                  Boolean?         @default(false)
+  payer                         String?
+  program                       String?
+  santraxID                     String?
+  scheduledHours                Float?
+  scheduledTimeIn               DateTime?
+  scheduledTimeOut              DateTime?
+  supervisor                    String?
+  units                         Int?
+  sandataAgencyID               String?
+  visitTimeZone                 String?
+  visitStatus                   VisitStatus      @default(Scheduled)
+  actHoursVsSchHoursException   Boolean?         @default(false)
+  actualTime                    Float?
+  adjustedInTime                DateTime?
+  adjustedOutTime               DateTime?
+  adjustedTime                  Float?
+  billTime                      Float?
+  callInAddress                 String?
+  callInType                    String?
+  callOutAddress                String?
+  callOutType                   String?
+  clientSignatureException      Boolean?         @default(false)
+  clientSignatureType           String?
+  clientVerifiedService         String?
+  clientVerifiedTime            DateTime?
+  gpsInMilesFromClient          Float?
+  gpsOutMilesFromClient         Float?
+  inCall                        Boolean?         @default(false)
+  missingLocationException      Boolean?         @default(false)
+  missingPayerException         Boolean?         @default(false)
+  missingServiceException       Boolean?         @default(false)
+  noShowException               Boolean?         @default(false)
+  outCall                       Boolean?         @default(false)
+  providerID                    String?
+  serviceVerificationException  Boolean?         @default(false)
+  shortVisitException           Boolean?         @default(false)
+  totalCurrentExceptions        Int?             @default(0)
+  totalOriginalExceptions       Int?             @default(0)
+  unauthorizedServiceException  Boolean?         @default(false)
+  unknownClientException        Boolean?         @default(false)
+  unknownEmployeeException      Boolean?         @default(false)
+  unmatchedClientPhoneException Boolean?         @default(false)
+  visitVerificationException    Boolean?         @default(false)
+  visitWithoutAnyCallException  Boolean?         @default(false)
+  visitWithoutInCallException   Boolean?         @default(false)
+  visitWithoutOutCallException  Boolean?         @default(false)
+  serviceId                     String?
+  serviceName                   String?
+  scheduleID                    String?          @unique
+  missedVisits                  MissedVisit?     @relation("VisitToMissedVisit")
+  agency                        Agency @relation(fields: [agencyID], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  service                       Service?         @relation(fields: [serviceId], references: [id])
+  exceptions                    VisitException[]
+  history                       VisitHistory[]
+  visitTasks                    VisitTask[]
 
   @@index([agencyID, scheduledTimeOut])
   @@index([agencyID, scheduledTimeIn])
@@ -200,8 +190,7 @@ model VisitTask {
   name      String
   completed Boolean  @default(false)
   createdAt DateTime @default(now())
-
-  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  visit     Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
 }
 
 model VisitException {
@@ -353,11 +342,11 @@ model Address {
   addressLine3 String?
   addressType  String
   zipcode      String
-  city         String
   state        String
   county       String?
   employeeID   String?
   clientID     String?
+  city         String
   client       Client?   @relation(fields: [clientID], references: [id])
   employee     Employee? @relation(fields: [employeeID], references: [id])
 }
@@ -401,13 +390,12 @@ model Service {
   endDate        DateTime
   authorizations Authorization[]
   schedule       Schedule[]
-  assignedTo     Client[]        @relation("ClientServices")
   Visit          Visit[]
+  assignedTo     Client[]        @relation("ClientServices")
 }
 
 model Program {
   id                   String   @id @default(cuid())
-  name                 String?
   supervisor           String?
   enrollmentDate       DateTime
   statusEffectiveDate  DateTime
@@ -417,6 +405,7 @@ model Program {
   eligibilityEndDate   DateTime
   createdDate          DateTime @default(now())
   reasonForChange      String?
+  name                 String?
   clients              Client[]
 }
 
@@ -577,8 +566,6 @@ model Task {
   name          String
   description   String?
   agencyId      String
-  agency        Agency     @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  assignedRoles TaskRole[]
   createdAt     DateTime   @default(now())
   assignedDate  DateTime?  @default(now())
   dueDate       DateTime
@@ -586,16 +573,18 @@ model Task {
   isActive      Boolean    @default(true)
   recurring     Boolean    @default(false)
   frequency     Frequency?
-  unityTask     Boolean    @default(false) // true = Unity automated task
+  unityTask     Boolean    @default(false)
   completedAt   DateTime?
+  agency        Agency     @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  assignedRoles TaskRole[]
 }
 
 model TaskRole {
   id     String   @id @default(uuid())
   taskId String
-  task   Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
   roleId String
   role   RoleType @relation(fields: [roleId], references: [id])
+  task   Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
 }
 
 enum Frequency {

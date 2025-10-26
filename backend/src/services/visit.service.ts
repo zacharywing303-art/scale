@@ -258,21 +258,50 @@ export async function getVisitById(visitId: number) {
  * Update a visit and re-sync exceptions
  */
 export async function updateVisit(id: number, data: any) {
-  const exceptions = computeExceptions(data);
+  // 1️⃣ Get the current visit
+  const existing = await prisma.visit.findUnique({
+    where: { id },
+    include: { service: true },
+  });
+  if (!existing) throw new Error("Visit not found");
 
+  // 2️⃣ If serviceId changed, load new service to update name
+  let serviceName = existing.serviceName;
+  if (data.serviceId && data.serviceId !== existing.serviceId) {
+    const svc = await prisma.service.findUnique({
+      where: { id: data.serviceId },
+    });
+    serviceName = svc ? `${svc.code} - ${svc.name}` : null;
+  }
+
+  // 3️⃣ Merge existing + new data (so missing fields don’t become undefined)
+  const mergedData = { ...existing, ...data, serviceName };
+
+  // 4️⃣ Recompute exceptions using merged data (so nothing gets lost)
+  const exceptions = computeExceptions(mergedData);
+
+  // 5️⃣ Transaction for safe update
   const updated = await prisma.$transaction(async (tx) => {
-    // Update visit fields + exceptions
+    // update the visit
     const visit = await tx.visit.update({
       where: { id },
-      data: { ...data, ...exceptions },
+      data: {
+        ...data,
+        serviceName,
+        ...exceptions,
+      },
     });
 
-    // Reset VisitException records
+    // refresh VisitExceptions
     await tx.visitException.deleteMany({ where: { visitId: id } });
 
     const trueExceptions = Object.entries(exceptions)
       .filter(([_, val]) => val)
-      .map(([key]) => ({ visitId: id, exceptionType: key, date: new Date() }));
+      .map(([key]) => ({
+        visitId: id,
+        exceptionType: key,
+        date: new Date(),
+      }));
 
     if (trueExceptions.length) {
       await tx.visitException.createMany({ data: trueExceptions });
@@ -283,6 +312,14 @@ export async function updateVisit(id: number, data: any) {
           totalOriginalExceptions: trueExceptions.length,
         },
       });
+    } else {
+      await tx.visit.update({
+        where: { id },
+        data: {
+          totalCurrentExceptions: 0,
+          totalOriginalExceptions: 0,
+        },
+      });
     }
 
     return visit;
@@ -290,6 +327,40 @@ export async function updateVisit(id: number, data: any) {
 
   return updated;
 }
+
+// export async function updateVisit(id: number, data: any) {
+//   const exceptions = computeExceptions(data);
+
+//   const updated = await prisma.$transaction(async (tx) => {
+//     // Update visit fields + exceptions
+//     const visit = await tx.visit.update({
+//       where: { id },
+//       data: { ...data, ...exceptions },
+//     });
+
+//     // Reset VisitException records
+//     await tx.visitException.deleteMany({ where: { visitId: id } });
+
+//     const trueExceptions = Object.entries(exceptions)
+//       .filter(([_, val]) => val)
+//       .map(([key]) => ({ visitId: id, exceptionType: key, date: new Date() }));
+
+//     if (trueExceptions.length) {
+//       await tx.visitException.createMany({ data: trueExceptions });
+//       await tx.visit.update({
+//         where: { id },
+//         data: {
+//           totalCurrentExceptions: trueExceptions.length,
+//           totalOriginalExceptions: trueExceptions.length,
+//         },
+//       });
+//     }
+
+//     return visit;
+//   });
+
+//   return updated;
+// }
 
 /**
  * Delete a visit

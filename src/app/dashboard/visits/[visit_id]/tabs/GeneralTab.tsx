@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -102,6 +102,35 @@ export default function GeneralTab({ visit }: GeneralTabProps) {
   const [serviceId, setServiceId] = useState(visit?.serviceId ?? "");
   const [groupCode, setGroupCode] = useState(visit?.groupVisitCode ?? "");
   const [doNotBill, setDoNotBill] = useState(!!visit?.doNotBill);
+  const [services, setServices] = useState<any[]>([]);
+  const [programs, setPrograms] = useState<any[]>([]);
+  const [payers, setPayers] = useState<any[]>([]);
+
+  useEffect(() => {
+    async function fetchAgencyData() {
+      try {
+        const agencyId = visit.agencyID;
+        if (!agencyId) return;
+
+        const [svcRes, progRes, payRes] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/services`),
+          fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/programs/agency/${agencyId}`
+          ),
+          fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/payers/agency/${agencyId}`
+          ),
+        ]);
+
+        setServices(await svcRes.json());
+        setPrograms(await progRes.json());
+        setPayers(await payRes.json());
+      } catch (err) {
+        console.error("❌ Error loading agency data", err);
+      }
+    }
+    fetchAgencyData();
+  }, [visit.agencyID]);
 
   const adjustedIn = useMemo(
     () => combineDateTime(adjustedInDate, adjustedInTime),
@@ -114,6 +143,32 @@ export default function GeneralTab({ visit }: GeneralTabProps) {
 
   const handleSave = async () => {
     try {
+      const adjustedInDateTime = adjustedIn
+        ? new Date(adjustedIn)
+        : visit.callIn
+        ? new Date(visit.callIn)
+        : null;
+      const adjustedOutDateTime = adjustedOut ? new Date(adjustedOut) : null;
+
+      // Validation: Adjusted out cannot be before adjusted in
+      if (adjustedInDateTime && adjustedOutDateTime) {
+        if (adjustedOutDateTime.getTime() < adjustedInDateTime.getTime()) {
+          alert("❌ Adjusted Out time cannot be before Adjusted In time.");
+          return;
+        }
+
+        // Validation: cannot exceed 24 hours from adjusted in
+        const diffHours =
+          (adjustedOutDateTime.getTime() - adjustedInDateTime.getTime()) /
+          (1000 * 60 * 60);
+        if (diffHours >= 24) {
+          alert(
+            "❌ Adjusted Out time cannot be 24 hours or more after Adjusted In or Call In."
+          );
+          return;
+        }
+      }
+
       const payload = {
         adjustedIn: adjustedIn ? new Date(adjustedIn).toISOString() : null,
         adjustedOut: adjustedOut ? new Date(adjustedOut).toISOString() : null,
@@ -134,8 +189,12 @@ export default function GeneralTab({ visit }: GeneralTabProps) {
           body: JSON.stringify(payload),
         }
       );
+
       if (!res.ok) throw new Error("Failed to update visit");
-      alert("✅ Visit updated");
+
+      alert("✅ Visit updated successfully");
+      // reload the page so the latest visit data is fetched and displayed
+      window.location.reload();
     } catch (e: any) {
       console.error(e);
       alert(e.message || "Error updating visit");
@@ -171,10 +230,11 @@ export default function GeneralTab({ visit }: GeneralTabProps) {
           <Label>Time Zone</Label>
           <Input disabled value={visit?.visitTimeZone ?? "—"} />
 
-          <Label>Agency ID</Label>
-          <Input disabled value={visit?.agencyID ?? "—"} />
           <Label>Agency Name</Label>
-          <Input disabled value={visit?.agencyName ?? "—"} />
+          <Input disabled value={visit?.agency?.name ?? "—"} />
+
+          <Label>Agency Code</Label>
+          <Input disabled value={visit?.agency?.code ?? "—"} />
 
           <Label>Client Signature</Label>
           <Input disabled value={visit?.clientSignature ?? "None"} />
@@ -185,8 +245,29 @@ export default function GeneralTab({ visit }: GeneralTabProps) {
           <Label>Schedule ID</Label>
           <Input disabled value={visit?.scheduleID ?? "—"} />
           <div className="flex items-center gap-2">
-            <Checkbox checked disabled id="approved" />
-            <Label>Approved</Label>
+            <Checkbox
+              id="approved"
+              checked={visit?.approved ?? false}
+              onCheckedChange={async (v) => {
+                try {
+                  const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/visits/${visit.id}`,
+                    {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ approved: !!v }),
+                    }
+                  );
+                  if (!res.ok)
+                    throw new Error("Failed to update approval status");
+                  alert(`✅ Visit ${v ? "approved" : "unapproved"}`);
+                } catch (err) {
+                  console.error(err);
+                  alert("Error updating approval");
+                }
+              }}
+            />
+            <Label htmlFor="approved">Approved</Label>
           </div>
         </div>
       </Section>
@@ -231,17 +312,47 @@ export default function GeneralTab({ visit }: GeneralTabProps) {
             onChange={(e) => setPayHours(e.target.value)}
           />
 
-          <Label>Payer</Label>
-          <Input value={payer} onChange={(e) => setPayer(e.target.value)} />
-
           <Label>Program</Label>
-          <Input value={program} onChange={(e) => setProgram(e.target.value)} />
+          <Select value={program} onValueChange={setProgram}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Program" />
+            </SelectTrigger>
+            <SelectContent>
+              {programs.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-          <Label>Service ID</Label>
-          <Input
-            value={serviceId ?? ""}
-            onChange={(e) => setServiceId(e.target.value)}
-          />
+          <Label>Payer</Label>
+          <Select value={payer} onValueChange={setPayer}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Payer" />
+            </SelectTrigger>
+            <SelectContent>
+              {payers.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.payerName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <Label>Service</Label>
+          <Select value={serviceId} onValueChange={setServiceId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select Service" />
+            </SelectTrigger>
+            <SelectContent>
+              {services.map((svc) => (
+                <SelectItem key={svc.id} value={svc.id}>
+                  {svc.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           <Label>Group Visit Code</Label>
           <Input
