@@ -83,14 +83,28 @@ export const columns: ColumnDef<Client>[] = [
   {
     accessorKey: "serviceStartDate",
     header: "Service Start Date",
-    cell: ({ getValue }) =>
-      format(new Date(getValue() as string), "MM/dd/yyyy"),
+    cell: ({ getValue }) => {
+      const val = getValue() as string;
+      if (!val) return "—";
+      try {
+        return format(new Date(val), "MM/dd/yyyy");
+      } catch {
+        return "—";
+      }
+    },
   },
   {
     accessorKey: "serviceEndDate",
     header: "Service End Date",
-    cell: ({ getValue }) =>
-      format(new Date(getValue() as string), "MM/dd/yyyy"),
+    cell: ({ getValue }) => {
+      const val = getValue() as string;
+      if (!val) return "—";
+      try {
+        return format(new Date(val), "MM/dd/yyyy");
+      } catch {
+        return "—";
+      }
+    },
   },
   {
     accessorKey: "services",

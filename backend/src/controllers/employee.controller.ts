@@ -68,10 +68,13 @@ export async function getEmployeesByAgency(req: Request, res: Response) {
       select: {
         id: true,
         name: true,
+        email: true,
+        isSupervisor: true,
         officeStaff: true,
         facilityStaff: true,
         assignedClients: { select: { id: true, name: true } },
       },
+
       orderBy: { name: "asc" },
     });
 
