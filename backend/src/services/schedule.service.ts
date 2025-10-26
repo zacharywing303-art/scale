@@ -76,14 +76,16 @@ export async function getScheduleById(id: string) {
 
 import type { Prisma } from "@prisma/client";
 
-export async function createScheduleAndVisit(input: CreateScheduleInput) {
+export async function createScheduleAndVisit(
+  input: CreateScheduleInput & {
+    groupVisit?: boolean;
+    employeeIDs?: string[]; // for group visits
+  }
+) {
   return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-    // Validation
-    if (input.endTime <= input.startTime) {
+    if (input.endTime <= input.startTime)
       throw new Error("End time must be after start time");
-    }
 
-    // 1) Create Schedule
     const schedule = await tx.schedule.create({
       data: {
         scheduleType: input.scheduleType,
@@ -111,49 +113,124 @@ export async function createScheduleAndVisit(input: CreateScheduleInput) {
       },
     });
 
-    // 2) Get related data for visit
-    const client = await tx.client.findUnique({
-      where: { id: input.clientID },
-      select: { name: true, medicaidID: true },
-    });
-
-    const employee = input.employeeID
-      ? await tx.employee.findUnique({
-          where: { id: input.employeeID },
-          select: { name: true },
-        })
-      : null;
-
+    // related data
     const service = input.serviceId
-      ? await tx.service.findUnique({
-          where: { id: input.serviceId },
-          select: { code: true, name: true },
-        })
+      ? await tx.service.findUnique({ where: { id: input.serviceId } })
       : null;
 
-    const scheduledHours =
-      (input.endTime.getTime() - input.startTime.getTime()) / 1000 / 60 / 60;
+    const groupVisitCode = input.groupVisit
+      ? `GV-${Math.floor(100000 + Math.random() * 900000)}`
+      : null;
 
-    // 3️⃣ Generate unique schedule ID for visit
-    const scheduleID = await generateUniqueScheduleId(input.agencyID);
+    const employees =
+      input.groupVisit && input.employeeIDs?.length
+        ? await tx.employee.findMany({
+            where: { id: { in: input.employeeIDs } },
+          })
+        : input.employeeID
+        ? await tx.employee.findMany({ where: { id: input.employeeID } })
+        : [];
 
-    // 3) Create Visit
-    await createVisit({
-      agencyID: input.agencyID,
-      clientId: input.clientID,
-      employeeId: input.employeeID,
-      scheduledTimeIn: input.startTime,
-      scheduledTimeOut: input.endTime,
-      service: service ? `${service.code} - ${service.name}` : undefined,
-      timeZone: "EST",
-      location: "Schedule Created",
-      source: "schedule",
-      scheduleID,
-    });
+    // create visit(s)
+    for (const emp of employees) {
+      const scheduleID = await generateUniqueScheduleId(input.agencyID);
+      await createVisit({
+        agencyID: input.agencyID,
+        clientId: input.clientID,
+        employeeId: emp.id,
+        scheduledTimeIn: input.startTime,
+        scheduledTimeOut: input.endTime,
+        serviceId: input.serviceId,
+        service: service ? `${service.code} - ${service.name}` : undefined,
+        timeZone: "EST",
+        location: "Schedule Created",
+        source: "schedule",
+        scheduleID,
+        groupVisitCode,
+      });
+    }
 
     return schedule;
   });
 }
+// export async function createScheduleAndVisit(input: CreateScheduleInput) {
+//   return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+//     // Validation
+//     if (input.endTime <= input.startTime) {
+//       throw new Error("End time must be after start time");
+//     }
+
+//     // 1) Create Schedule
+//     const schedule = await tx.schedule.create({
+//       data: {
+//         scheduleType: input.scheduleType,
+//         clientID: input.clientID,
+//         clientMedicaidId: input.clientMedicaidId,
+//         authorizations: input.authorizations ?? undefined,
+//         authorizationNumber: input.authorizationNumber ?? undefined,
+//         serviceId: input.serviceId ?? undefined,
+//         officeReason: input.officeReason ?? undefined,
+//         eventCode: input.eventCode,
+//         authorizationBillUnitType: input.authorizationBillUnitType,
+//         eventStatus: input.eventStatus,
+//         eventDate: input.eventDate,
+//         startTime: input.startTime,
+//         endTime: input.endTime,
+//         employeeID: input.employeeID ?? undefined,
+//         recurring: input.recurring,
+//         dates: input.dates,
+//         comments: input.comments ?? undefined,
+//         billingOverride: input.billingOverride ?? false,
+//         rate: input.rate ?? undefined,
+//         copay: input.copay ?? undefined,
+//         billAmount: input.billAmount ?? undefined,
+//         agencyID: input.agencyID,
+//       },
+//     });
+
+//     // 2) Get related data for visit
+//     const client = await tx.client.findUnique({
+//       where: { id: input.clientID },
+//       select: { name: true, medicaidID: true },
+//     });
+
+//     const employee = input.employeeID
+//       ? await tx.employee.findUnique({
+//           where: { id: input.employeeID },
+//           select: { name: true },
+//         })
+//       : null;
+
+//     const service = input.serviceId
+//       ? await tx.service.findUnique({
+//           where: { id: input.serviceId },
+//           select: { code: true, name: true },
+//         })
+//       : null;
+
+//     const scheduledHours =
+//       (input.endTime.getTime() - input.startTime.getTime()) / 1000 / 60 / 60;
+
+//     // 3️⃣ Generate unique schedule ID for visit
+//     const scheduleID = await generateUniqueScheduleId(input.agencyID);
+
+//     // 3) Create Visit
+//     await createVisit({
+//       agencyID: input.agencyID,
+//       clientId: input.clientID,
+//       employeeId: input.employeeID,
+//       scheduledTimeIn: input.startTime,
+//       scheduledTimeOut: input.endTime,
+//       service: service ? `${service.code} - ${service.name}` : undefined,
+//       timeZone: "EST",
+//       location: "Schedule Created",
+//       source: "schedule",
+//       scheduleID,
+//     });
+
+//     return schedule;
+//   });
+// }
 
 export const updateSchedule = async (id: string, data: any) => {
   if (
