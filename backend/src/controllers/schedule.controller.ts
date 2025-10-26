@@ -5,6 +5,7 @@ import {
   updateSchedule,
   getScheduleById,
   getSchedulesByAgency,
+  createScheduleAndVisitBatch,
 } from "../services/schedule.service";
 
 export const getSchedulesController = async (req: Request, res: Response) => {
@@ -75,5 +76,34 @@ export const getSchedulesByAgencyController = async (
   } catch (error) {
     console.error("Error fetching schedules by agency:", error);
     res.status(500).json({ error: "Failed to fetch schedules" });
+  }
+};
+
+export const createScheduleBatchController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const body = req.body;
+
+    const agencyID = body.baseSchedule?.agencyID ?? "UNITY124";
+    const result = await createScheduleAndVisitBatch({
+      ...body,
+      baseSchedule: {
+        ...body.baseSchedule,
+        agencyID,
+      },
+    });
+
+    res.status(201).json({
+      message: "✅ Schedules created successfully",
+      count: result.length,
+      schedules: result,
+    });
+  } catch (err: any) {
+    console.error("❌ Error creating batch schedules:", err);
+    res
+      .status(500)
+      .json({ error: err.message || "Failed to create batch schedules" });
   }
 };

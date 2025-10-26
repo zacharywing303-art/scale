@@ -495,6 +495,9 @@ model Schedule {
   employeeID                String?
   agencyID                  String        @default("UNITY124")
   recurring                 Boolean       @default(false)
+  recurringFrequency        ScheduleFrequency?
+  createdScheduleID         String?       // shared group ID for multi-day creation
+  recurringScheduleID       String?       // shared ID for recurring sets
   missedVisits              MissedVisit[] @relation("ScheduleToMissedVisit")
   client                    Client        @relation(fields: [clientID], references: [id])
   employee                  Employee?     @relation(fields: [employeeID], references: [id])
@@ -624,4 +627,9 @@ enum VisitStatus {
   Scheduled
   Processed
   Omitted
+}
+
+enum ScheduleFrequency {
+  WEEKLY
+  BIWEEKLY
 }

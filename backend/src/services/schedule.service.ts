@@ -1,5 +1,6 @@
 import prisma from "../lib/db";
 import { addMinutes } from "date-fns";
+import { addDays } from "date-fns";
 import { createVisit } from "./visit.service";
 
 type CreateScheduleInput = {
@@ -27,22 +28,101 @@ type CreateScheduleInput = {
   agencyID: string; // pass the agency code you track, e.g., "UNITY124"
 };
 
+async function generateUniqueId(prefix: string) {
+  return `${prefix}-${Math.floor(100000 + Math.random() * 900000)}`;
+}
+
 async function generateUniqueScheduleId(agencyID: string): Promise<string> {
   let unique = false;
   let scheduleID = "";
-
   while (!unique) {
-    scheduleID = Math.floor(1000000 + Math.random() * 9000000).toString(); // 7 digits
-
+    scheduleID = Math.floor(1000000 + Math.random() * 9000000).toString();
     const existing = await prisma.visit.findFirst({
       where: { agencyID, scheduleID },
       select: { id: true },
     });
-
     if (!existing) unique = true;
   }
-
   return scheduleID;
+}
+
+/**
+ * Create multiple schedules + visits (supports multi-day + recurrence)
+ */
+export async function createScheduleAndVisitBatch(input: {
+  baseSchedule: any; // Reuse CreateScheduleInput
+  selectedDates: string[]; // ISO strings
+  groupVisit?: boolean;
+  employeeIDs?: string[];
+  recurring?: boolean;
+  recurringFrequency?: "WEEKLY" | "BIWEEKLY";
+}) {
+  const createdScheduleID = await generateUniqueId("SCH");
+  const recurringScheduleID = input.recurring
+    ? await generateUniqueId("REC")
+    : null;
+
+  const allSchedules = [];
+
+  for (const dateString of input.selectedDates) {
+    const date = new Date(dateString);
+    const start = new Date(date);
+    const end = new Date(date);
+
+    // Align start/end times with base
+    start.setHours(
+      new Date(input.baseSchedule.startTime).getHours(),
+      new Date(input.baseSchedule.startTime).getMinutes(),
+      0,
+      0
+    );
+    end.setHours(
+      new Date(input.baseSchedule.endTime).getHours(),
+      new Date(input.baseSchedule.endTime).getMinutes(),
+      0,
+      0
+    );
+
+    const schedule = await createScheduleAndVisit({
+      ...input.baseSchedule,
+      eventDate: start,
+      startTime: start,
+      endTime: end,
+      recurring: input.recurring ?? false,
+      recurringFrequency: input.recurringFrequency ?? null,
+      createdScheduleID,
+      recurringScheduleID,
+      groupVisit: input.groupVisit,
+      employeeIDs: input.employeeIDs,
+    });
+
+    allSchedules.push(schedule);
+
+    // If recurring, add next-week or biweekly versions
+    if (input.recurring && input.recurringFrequency) {
+      const addDaysCount = input.recurringFrequency === "BIWEEKLY" ? 14 : 7;
+
+      const nextStart = addDays(start, addDaysCount);
+      const nextEnd = addDays(end, addDaysCount);
+
+      const nextSchedule = await createScheduleAndVisit({
+        ...input.baseSchedule,
+        eventDate: nextStart,
+        startTime: nextStart,
+        endTime: nextEnd,
+        recurring: true,
+        recurringFrequency: input.recurringFrequency,
+        createdScheduleID,
+        recurringScheduleID,
+        groupVisit: input.groupVisit,
+        employeeIDs: input.employeeIDs,
+      });
+
+      allSchedules.push(nextSchedule);
+    }
+  }
+
+  return allSchedules;
 }
 
 export const getAllSchedules = async () => {

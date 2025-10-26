@@ -5,6 +5,7 @@ import {
   updateScheduleController,
   getScheduleByIdController,
   getSchedulesByAgencyController,
+  createScheduleBatchController,
 } from "../controllers/schedule.controller";
 
 const router = Router();
@@ -15,5 +16,6 @@ router.post("/", createScheduleController);
 router.put("/:id", updateScheduleController);
 router.get("/:id", getScheduleByIdController);
 router.get("/agency/:agencyId", getSchedulesByAgencyController);
+router.post("/batch", createScheduleBatchController);
 
 export default router;
