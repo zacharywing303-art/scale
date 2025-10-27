@@ -61,7 +61,8 @@ export async function createVisit(data: any) {
     groupVisitCode,
     scheduledTimeIn,
     scheduledTimeOut,
-    source = "manual", // "manual" | "schedule" | "mobile"
+    scheduledHours, // ✅ new
+    source = "manual",
     latitudeIn,
     longitudeIn,
     latitudeOut,
@@ -166,6 +167,15 @@ export async function createVisit(data: any) {
         longitudeIn,
         latitudeOut,
         longitudeOut,
+        scheduledHours:
+          scheduledHours ??
+          (scheduledTimeIn && scheduledTimeOut
+            ? (scheduledTimeOut.getTime() - scheduledTimeIn.getTime()) /
+              1000 /
+              60 /
+              60
+            : null),
+
         ...exceptions,
       },
     });

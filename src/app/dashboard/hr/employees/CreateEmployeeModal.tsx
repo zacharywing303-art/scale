@@ -50,7 +50,7 @@ export default function CreateEmployeeModal() {
   const handleSubmit = async () => {
     try {
       // Get agency code from logged-in user
-      const agencyID = getLoggedInUser()?.agency?.code;
+      const agencyID = getLoggedInUser()?.agency?.id;
       if (!agencyID) throw new Error("Agency code not found");
 
       // Generate random password if mobile user
