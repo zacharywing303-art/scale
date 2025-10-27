@@ -6,15 +6,16 @@ import { EditButton } from "./EditButton";
 // Example client type (adjust fields if needed)
 export type Client = {
   id: string;
+  clientID: string;
   firstName: string;
   middleInitial?: string;
   lastName: string;
-  status: "pending" | "active" | "inactive";
-  supervisor: "Nina Lewis" | "Tom Reid" | "all";
+  status: string;
+  supervisor: string;
   medicaidId: string;
   payerId: string;
-  serviceStartDate: string;
-  serviceEndDate: string;
+  startDate: string;
+  endDate: string;
   services: string[]; // Example: ['IHCS', 'PAS']
   program: string;
 };
@@ -73,7 +74,7 @@ export const columns: ColumnDef<Client>[] = [
     header: "Medicaid ID",
   },
   {
-    accessorKey: "id",
+    accessorKey: "clientID",
     header: "Client ID",
   },
   {
@@ -81,7 +82,7 @@ export const columns: ColumnDef<Client>[] = [
     header: "Payer ID",
   },
   {
-    accessorKey: "serviceStartDate",
+    accessorKey: "startDate",
     header: "Service Start Date",
     cell: ({ getValue }) => {
       const val = getValue() as string;

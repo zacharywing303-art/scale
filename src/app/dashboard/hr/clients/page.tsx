@@ -25,7 +25,7 @@ interface Client {
   medicaidID: string;
   clientID: string;
   payerId?: string;
-  startDate: string;
+  startDate?: string;
   endDate?: string;
   services?: string[];
   program?: { name?: string };
@@ -247,6 +247,7 @@ export default function ClientsPage() {
           <DataTable
             data={filteredClients.map((c) => ({
               id: c.id,
+              clientID: c.clientID,
               firstName: c.name.split(" ")[0],
               lastName: c.name.split(" ")[1] || "",
               middleInitial: "",
@@ -254,8 +255,8 @@ export default function ClientsPage() {
               supervisor: (c.supervisor as any) || "N/A",
               medicaidId: c.medicaidID,
               payerId: c.payerId || "",
-              serviceStartDate: c.startDate,
-              serviceEndDate: c.endDate || "",
+              startDate: c.startDate || "",
+              endDate: c.endDate || "",
               services: c.services || [],
               program: c.program?.name || "N/A",
             }))}

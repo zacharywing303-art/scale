@@ -125,28 +125,34 @@ export default function CreateClientModal({
 
         <div className="space-y-4">
           <div>
-            <Label>First Name *</Label>
+            <Label className="mb-1">
+              First Name <span className="text-red-500">*</span>
+            </Label>
             <Input
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
             />
           </div>
           <div>
-            <Label>Last Name *</Label>
+            <Label className="mb-1">
+              Last Name <span className="text-red-500">*</span>
+            </Label>
             <Input
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
             />
           </div>
           <div>
-            <Label>Medicaid ID *</Label>
+            <Label className="mb-1">
+              Medicaid ID <span className="text-red-500">*</span>
+            </Label>
             <Input
               value={medicaidId}
               onChange={(e) => setMedicaidId(e.target.value)}
             />
           </div>
           <div>
-            <Label>Program (optional)</Label>
+            <Label className="mb-1">Program (optional)</Label>
             <Select value={program} onValueChange={setProgram}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Program" />
@@ -168,7 +174,7 @@ export default function CreateClientModal({
           </div>
 
           <div>
-            <Label>Supervisor (optional)</Label>
+            <Label className="mb-1">Supervisor (optional)</Label>
             <Select
               value={supervisor || ""}
               onValueChange={(val) => setSupervisor(val || null)}

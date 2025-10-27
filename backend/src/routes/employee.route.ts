@@ -4,10 +4,10 @@ import * as employeeController from "../controllers/employee.controller";
 const router = Router();
 
 router.get("/", employeeController.getEmployees);
+router.get("/agency/:agencyId", employeeController.getEmployeesByAgency);
 router.get("/:id", employeeController.getEmployee);
 router.post("/", employeeController.createEmployee); // protected
 router.patch("/:id", employeeController.updateEmployee);
 router.delete("/:id", employeeController.deleteEmployee);
-router.get("/agency/:agencyId", employeeController.getEmployeesByAgency);
 
 export default router;

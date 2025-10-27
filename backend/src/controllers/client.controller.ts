@@ -33,7 +33,19 @@ export const getClientsByAgency = async (req: Request, res: Response) => {
     const { agencyId } = req.params;
     const clients = await prisma.client.findMany({
       where: { agencyID: agencyId },
-      select: { id: true, name: true, medicaidID: true, supervisor: true },
+      select: {
+        id: true,
+        name: true,
+        medicaidID: true,
+        supervisor: true,
+        clientID: true,
+        status: true,
+        startDate: true,
+        endDate: true,
+        program: { select: { name: true } },
+        languages: true,
+      },
+      orderBy: { name: "asc" },
     });
     res.json(clients);
   } catch (err) {
