@@ -360,6 +360,7 @@ model Client {
   effectiveDate     DateTime        @updatedAt
   clientID          String
   startDate         DateTime        @default(now())
+  endDate           DateTime?
   supervisor        String?
   medicaidID        String
   agencyID          String

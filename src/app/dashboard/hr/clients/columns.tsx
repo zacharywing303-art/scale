@@ -95,7 +95,7 @@ export const columns: ColumnDef<Client>[] = [
     },
   },
   {
-    accessorKey: "serviceEndDate",
+    accessorKey: "endDate",
     header: "Service End Date",
     cell: ({ getValue }) => {
       const val = getValue() as string;
