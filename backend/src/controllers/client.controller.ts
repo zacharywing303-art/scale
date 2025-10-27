@@ -13,9 +13,23 @@ export const getClient = async (req: Request, res: Response) => {
   res.json(client);
 };
 
+// export const createClient = async (req: Request, res: Response) => {
+//   const client = await clientService.createClient(req.body);
+//   res.status(201).json(client);
+// };
 export const createClient = async (req: Request, res: Response) => {
-  const client = await clientService.createClient(req.body);
-  res.status(201).json(client);
+  try {
+    if (!req.body.agencyID) {
+      return res.status(400).json({ message: "Missing agencyID" });
+    }
+    const client = await clientService.createClient(req.body);
+    res.status(201).json(client);
+  } catch (error: any) {
+    console.error("Error creating client:", error);
+    res
+      .status(500)
+      .json({ message: error.message || "Failed to create client" });
+  }
 };
 
 export const updateClient = async (req: Request, res: Response) => {
