@@ -13,7 +13,6 @@ import {
 import { useState, useEffect } from "react";
 import { DataTable } from "@/components/data-table";
 import { columns } from "./columns"; // we'll define columns next
-import { clientsData } from "./mock-data"; // fake data
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
 import CreateClientModal from "./CreateClientModal";
 
@@ -51,6 +50,10 @@ export default function ClientsPage() {
     "German",
     "Italian",
     "Portuguese",
+    "Mandarin",
+    "Hindi",
+    "Arabic",
+    "Russian",
     "Other",
   ]);
 

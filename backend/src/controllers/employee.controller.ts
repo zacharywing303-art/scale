@@ -68,14 +68,21 @@ export async function getEmployeesByAgency(req: Request, res: Response) {
       select: {
         id: true,
         name: true,
-        email: true,
+        status: true,
+        employeeID: true,
+        position: true,
+        supervisor: true,
         isSupervisor: true,
+        hireDate: true,
+        updatedAt: true,
+        email: true,
+        languages: true,
+        mobileUser: true,
         officeStaff: true,
         facilityStaff: true,
         assignedClients: { select: { id: true, name: true } },
       },
-
-      orderBy: { name: "asc" },
+      orderBy: { updatedAt: "desc" },
     });
 
     res.json(employees);

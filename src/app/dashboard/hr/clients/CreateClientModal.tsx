@@ -37,15 +37,15 @@ export default function CreateClientModal({
 
   const user = getLoggedInUser();
 
-  if (!user?.agency?.id) {
-    alert("Missing agency ID — please re-login or check agency assignment.");
-    setLoading(false);
-    return;
-  }
-
   useEffect(() => {
     const fetchPrograms = async () => {
-      if (!user?.agency?.id) return;
+      if (!user?.agency?.id) {
+        alert(
+          "Missing agency ID — please re-login or check agency assignment."
+        );
+        setLoading(false);
+        return;
+      }
       try {
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/programs/agency/${user.agency.id}`

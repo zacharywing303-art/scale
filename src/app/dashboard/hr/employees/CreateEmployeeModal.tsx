@@ -185,11 +185,17 @@ export default function CreateEmployeeModal() {
                 <SelectValue placeholder="Select Language" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="english">English</SelectItem>
-                <SelectItem value="spanish">Spanish</SelectItem>
-                <SelectItem value="german">German</SelectItem>
-                <SelectItem value="french">French</SelectItem>
-                <SelectItem value="mandarin">Mandarin</SelectItem>
+                <SelectItem value="English">English</SelectItem>
+                <SelectItem value="Spanish">Spanish</SelectItem>
+                <SelectItem value="Italian">Italian</SelectItem>
+                <SelectItem value="German">German</SelectItem>
+                <SelectItem value="French">French</SelectItem>
+                <SelectItem value="Portuguese">Portuguese</SelectItem>
+                <SelectItem value="Mandarin">Mandarin</SelectItem>
+                <SelectItem value="Russian">Russian</SelectItem>
+                <SelectItem value="Arabic">Arabic</SelectItem>
+                <SelectItem value="Hindi">Hindi</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
               </SelectContent>
             </Select>
           </div>

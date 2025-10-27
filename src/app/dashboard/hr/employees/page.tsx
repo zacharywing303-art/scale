@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { employeeColumns } from "./columns";
 import { DataTable } from "@/components/data-table";
 import CreateEmployeeModal from "./CreateEmployeeModal";
+import { getLoggedInUser } from "@/lib/auth/authHelpers";
 
 export default function EmployeesPage() {
   const [filters, setFilters] = useState({
@@ -31,11 +32,13 @@ export default function EmployeesPage() {
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const user = getLoggedInUser();
+
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
         const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/employees`,
+          `${process.env.NEXT_PUBLIC_API_URL}/api/employees/agency/${user?.agency?.id}`,
           {
             credentials: "include",
           }
