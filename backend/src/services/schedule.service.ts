@@ -700,3 +700,75 @@ export async function generateNextRecurringSchedules() {
 
   console.log("✅ Recurring schedule regeneration completed.");
 }
+
+export async function getGroupedSchedules(
+  agencyID: string,
+  from?: string,
+  to?: string
+) {
+  const dateFilter =
+    from && to
+      ? {
+          eventDate: {
+            gte: new Date(from),
+            lte: new Date(to),
+          },
+        }
+      : {};
+
+  const schedules = await prisma.schedule.findMany({
+    where: {
+      agencyID, // ✅ restrict to agency
+      ...dateFilter,
+    },
+    include: {
+      client: { select: { id: true, name: true } },
+      employee: { select: { id: true, name: true } },
+      service: { select: { id: true, name: true } },
+    },
+    orderBy: { eventDate: "asc" },
+  });
+
+  // Group by createdScheduleID (shared across multi-day/employee schedules)
+  const grouped = Object.values(
+    schedules.reduce((acc, s) => {
+      const key = s.createdScheduleID ?? s.id;
+      if (!acc[key]) {
+        acc[key] = {
+          createdScheduleID: key,
+          recurringScheduleID: s.recurringScheduleID,
+          scheduleType: s.scheduleType,
+          eventCode: s.eventCode,
+          agencyID: s.agencyID,
+          recurring: s.recurring,
+          recurringFrequency: s.recurringFrequency,
+          startDate: s.eventDate,
+          endDate: s.eventDate,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          client: s.client,
+          service: s.service,
+          employees: [],
+          weekdays: new Set<string>(),
+        };
+      }
+      acc[key].employees.push(s.employee);
+      const dayName = new Date(s.eventDate).toLocaleDateString("en-US", {
+        weekday: "long",
+      });
+      acc[key].weekdays.add(dayName);
+
+      if (new Date(s.eventDate) < new Date(acc[key].startDate))
+        acc[key].startDate = s.eventDate;
+      if (new Date(s.eventDate) > new Date(acc[key].endDate))
+        acc[key].endDate = s.eventDate;
+
+      return acc;
+    }, {} as Record<string, any>)
+  ).map((g) => ({
+    ...g,
+    weekdays: Array.from(g.weekdays),
+  }));
+
+  return grouped;
+}

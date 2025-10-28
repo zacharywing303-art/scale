@@ -6,6 +6,7 @@ import {
   getScheduleById,
   getSchedulesByAgency,
   createScheduleAndVisitBatch,
+  getGroupedSchedules,
 } from "../services/schedule.service";
 
 export const getSchedulesController = async (req: Request, res: Response) => {
@@ -105,5 +106,25 @@ export const createScheduleBatchController = async (
     res
       .status(500)
       .json({ error: err.message || "Failed to create batch schedules" });
+  }
+};
+
+export const getGroupedSchedulesController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { agencyId } = req.params;
+    const { from, to } = req.query as { from?: string; to?: string };
+
+    if (!agencyId) {
+      return res.status(400).json({ error: "Agency ID is required" });
+    }
+
+    const grouped = await getGroupedSchedules(agencyId, from, to);
+    res.status(200).json(grouped);
+  } catch (error) {
+    console.error("❌ Error fetching grouped schedules:", error);
+    res.status(500).json({ error: "Failed to fetch grouped schedules" });
   }
 };
