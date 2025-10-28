@@ -251,6 +251,7 @@ export async function createScheduleAndVisit(
       for (const empId of input.employeeIDs) {
         const schedule = await tx.schedule.create({
           data: {
+            // required core fields
             scheduleType: input.scheduleType,
             eventDate: input.eventDate,
             startTime: input.startTime,
@@ -258,12 +259,27 @@ export async function createScheduleAndVisit(
             authorizationBillUnitType: input.authorizationBillUnitType,
             eventStatus: input.eventStatus,
             agencyID: input.agencyID,
+
+            // 🔴 these two were missing and are required by your schema
+            eventCode: input.eventCode,
+            dates: input.dates ?? [],
+
+            // office/facility specifics
             employeeID: empId,
             officeReason: input.officeReason ?? null,
             comments: input.comments ?? null,
+
+            // ids for grouping/recurrence (optional but nice to persist consistently)
             createdScheduleID:
               input.createdScheduleID ||
               `SCH-${Math.floor(100000 + Math.random() * 900000)}`,
+            recurring: !!input.recurring,
+            recurringFrequency: input.recurringFrequency ?? null,
+
+            // explicitly null-out visit-only fields
+            clientID: null,
+            clientMedicaidId: null,
+            serviceId: null,
           },
         });
 
