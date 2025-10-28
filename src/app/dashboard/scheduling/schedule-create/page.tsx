@@ -763,11 +763,19 @@ export default function CreateSchedulePage() {
 
               <div>
                 <strong>Start Time:</strong>{" "}
-                {format(buildDateTime(new Date(), startTime), "hh:mm a")}
+                {(() => {
+                  if (!startTime) return "N/A";
+                  const dt = buildDateTime(new Date(), startTime);
+                  return !isNaN(dt.getTime()) ? format(dt, "hh:mm a") : "N/A";
+                })()}
               </div>
               <div>
                 <strong>End Time:</strong>{" "}
-                {format(buildDateTime(new Date(), endTime), "hh:mm a")}
+                {(() => {
+                  if (!endTime) return "N/A";
+                  const dt = buildDateTime(new Date(), endTime);
+                  return !isNaN(dt.getTime()) ? format(dt, "hh:mm a") : "N/A";
+                })()}
               </div>
 
               {type === "visit" && (

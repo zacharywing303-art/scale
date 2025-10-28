@@ -152,6 +152,7 @@ export async function createScheduleAndVisitBatch(input: {
     }
 
     // Recurrence (second set only, as per your current logic)
+    // Recurrence handling
     if (input.recurring && input.recurringFrequency) {
       const addDaysCount = input.recurringFrequency === "BIWEEKLY" ? 14 : 7;
       const nextStart = new Date(start);
@@ -159,6 +160,7 @@ export async function createScheduleAndVisitBatch(input: {
       const nextEnd = new Date(end);
       nextEnd.setDate(end.getDate() + addDaysCount);
 
+      // Office/facility multi-employee recurrence
       if (
         input.baseSchedule.scheduleType !== "visit" &&
         input.employeeIDs?.length
@@ -166,7 +168,33 @@ export async function createScheduleAndVisitBatch(input: {
         for (const empId of input.employeeIDs) {
           allSchedules.push(await makeOne(nextStart, nextEnd, empId));
         }
-      } else {
+      }
+      // Visit group recurrence (❗ now loops per employee)
+      else if (
+        input.baseSchedule.scheduleType === "visit" &&
+        input.groupVisit &&
+        input.employeeIDs?.length
+      ) {
+        for (const empId of input.employeeIDs) {
+          allSchedules.push(
+            await createScheduleAndVisit({
+              ...input.baseSchedule,
+              eventDate: nextStart,
+              startTime: nextStart,
+              endTime: nextEnd,
+              recurring: true,
+              recurringFrequency: input.recurringFrequency,
+              createdScheduleID,
+              recurringScheduleID,
+              groupVisit: true,
+              employeeID: empId,
+              employeeIDs: [empId],
+            })
+          );
+        }
+      }
+      // Visit single-employee recurrence
+      else {
         allSchedules.push(
           await createScheduleAndVisit({
             ...input.baseSchedule,
@@ -178,11 +206,45 @@ export async function createScheduleAndVisitBatch(input: {
             createdScheduleID,
             recurringScheduleID,
             groupVisit: input.groupVisit,
-            employeeIDs: input.employeeIDs,
+            employeeID:
+              input.employeeIDs && input.employeeIDs.length === 1
+                ? input.employeeIDs[0]
+                : null,
           })
         );
       }
     }
+    // if (input.recurring && input.recurringFrequency) {
+    //   const addDaysCount = input.recurringFrequency === "BIWEEKLY" ? 14 : 7;
+    //   const nextStart = new Date(start);
+    //   nextStart.setDate(start.getDate() + addDaysCount);
+    //   const nextEnd = new Date(end);
+    //   nextEnd.setDate(end.getDate() + addDaysCount);
+
+    //   if (
+    //     input.baseSchedule.scheduleType !== "visit" &&
+    //     input.employeeIDs?.length
+    //   ) {
+    //     for (const empId of input.employeeIDs) {
+    //       allSchedules.push(await makeOne(nextStart, nextEnd, empId));
+    //     }
+    //   } else {
+    //     allSchedules.push(
+    //       await createScheduleAndVisit({
+    //         ...input.baseSchedule,
+    //         eventDate: nextStart,
+    //         startTime: nextStart,
+    //         endTime: nextEnd,
+    //         recurring: true,
+    //         recurringFrequency: input.recurringFrequency,
+    //         createdScheduleID,
+    //         recurringScheduleID,
+    //         groupVisit: input.groupVisit,
+    //         employeeIDs: input.employeeIDs,
+    //       })
+    //     );
+    //   }
+    // }
   }
 
   return allSchedules;
