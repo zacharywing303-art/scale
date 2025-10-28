@@ -193,21 +193,38 @@ export default function CreateSchedulePage() {
   };
 
   // const canSubmit = () => {
+  //   if (invalidDate) return false;
   //   if (!type || !startTime || !endTime) return false;
-  //   if (oneDay) return !!selectedDate;
-  //   return !!(rangeStart && rangeEnd && weekdays.length > 0);
+  //   if (oneDay) {
+  //     if (!selectedDate) return false;
+  //     if (selectedDate <= new Date()) return false;
+  //     return true;
+  //   }
+  //   if (rangeStart && rangeEnd && weekdays.length > 0) {
+  //     if (rangeStart <= new Date() || rangeEnd <= new Date()) return false;
+  //     return true;
+  //   }
+  //   return false;
   // };
   const canSubmit = () => {
-    if (invalidDate) return false;
-    if (!type || !startTime || !endTime) return false;
+    if (invalidDate || !type || !startTime || !endTime) return false;
+
+    // per-type requirements
+    if (type === "visit") {
+      if (!client || !service) return false;
+      if (groupVisit && visitEmployees.length === 0) return false;
+      if (!groupVisit && (!visitEmployees[0] || visitEmployees.length > 1))
+        return false;
+    } else {
+      // office/facility must have at least one employee
+      if (visitEmployees.length === 0) return false;
+    }
+
     if (oneDay) {
-      if (!selectedDate) return false;
-      if (selectedDate <= new Date()) return false;
-      return true;
+      return !!selectedDate && selectedDate > new Date();
     }
     if (rangeStart && rangeEnd && weekdays.length > 0) {
-      if (rangeStart <= new Date() || rangeEnd <= new Date()) return false;
-      return true;
+      return rangeStart > new Date() && rangeEnd > new Date();
     }
     return false;
   };
@@ -257,13 +274,32 @@ export default function CreateSchedulePage() {
         return;
       }
 
-      const baseSchedule = {
+      // const baseSchedule = {
+      //   scheduleType: type,
+      //   clientID: client || "",
+      //   clientMedicaidId: "TEMP123",
+      //   authorizations: authorization || null,
+      //   serviceId: service || null,
+      //   officeReason: type === "office" ? "Office Schedule" : null,
+      //   eventCode: "EVT001",
+      //   authorizationBillUnitType: "Hourly",
+      //   eventStatus: "Confirmed",
+      //   startTime: buildDateTime(new Date(), startTime).toISOString(),
+      //   endTime: buildDateTime(new Date(), endTime).toISOString(),
+      //   comments,
+      //   agencyID: user?.agency?.id,
+      // };
+      const baseSchedule: any = {
         scheduleType: type,
-        clientID: client || "",
-        clientMedicaidId: "TEMP123",
-        authorizations: authorization || null,
-        serviceId: service || null,
-        officeReason: type === "office" ? "Office Schedule" : null,
+        // visit-only fields
+        clientID: type === "visit" ? client || null : null,
+        clientMedicaidId: type === "visit" ? "TEMP123" : null,
+        serviceId: type === "visit" ? service || null : null,
+        authorizations: type === "visit" ? authorization || null : null,
+
+        // office/facility reason (optional)
+        officeReason: type !== "visit" ? reason || null : null,
+
         eventCode: "EVT001",
         authorizationBillUnitType: "Hourly",
         eventStatus: "Confirmed",
@@ -273,13 +309,20 @@ export default function CreateSchedulePage() {
         agencyID: user?.agency?.id,
       };
 
-      // Use batch API if multi-day or recurring
-      const apiUrl =
-        !oneDay || recurring
-          ? `${process.env.NEXT_PUBLIC_API_URL}/api/schedules/batch`
-          : `${process.env.NEXT_PUBLIC_API_URL}/api/schedules`;
+      const isBatch = !oneDay || recurring;
+      const apiUrl = isBatch
+        ? `${process.env.NEXT_PUBLIC_API_URL}/api/schedules/batch`
+        : `${process.env.NEXT_PUBLIC_API_URL}/api/schedules`;
 
-      // const payload =
+      // employee selection logic per type
+      const selectedEmployeeIDs =
+        type === "visit"
+          ? groupVisit
+            ? visitEmployees
+            : [visitEmployees[0]]
+          : visitEmployees; // office/facility support multi employees always
+
+      // const payload: any =
       //   !oneDay || recurring
       //     ? {
       //         baseSchedule,
@@ -298,28 +341,32 @@ export default function CreateSchedulePage() {
       //         employeeIDs: groupVisit ? visitEmployees : [],
       //         employeeID: !groupVisit ? visitEmployees[0] || null : null,
       //       };
-      const payload: any =
-        !oneDay || recurring
-          ? {
-              baseSchedule,
-              selectedDates,
-              groupVisit,
-              employeeIDs: groupVisit ? visitEmployees : [visitEmployees[0]],
-              recurring,
-              recurringFrequency: recurring ? recurringFrequency : undefined,
-            }
-          : {
-              ...baseSchedule,
-              eventDate: selectedDate?.toISOString(),
-              startTime: buildDateTime(selectedDate!, startTime).toISOString(),
-              endTime: buildDateTime(selectedDate!, endTime).toISOString(),
-              groupVisit,
-              employeeIDs: groupVisit ? visitEmployees : [],
-              employeeID: !groupVisit ? visitEmployees[0] || null : null,
-            };
+      const payload: any = isBatch
+        ? {
+            baseSchedule,
+            selectedDates,
+            groupVisit: type === "visit" ? groupVisit : false,
+            employeeIDs: selectedEmployeeIDs,
+            recurring,
+            recurringFrequency: recurring ? recurringFrequency : undefined,
+          }
+        : {
+            ...baseSchedule,
+            eventDate: selectedDate?.toISOString(),
+            startTime: buildDateTime(selectedDate!, startTime).toISOString(),
+            endTime: buildDateTime(selectedDate!, endTime).toISOString(),
+            groupVisit: type === "visit" ? groupVisit : false,
+            employeeIDs: selectedEmployeeIDs, // one or many
+            employeeID:
+              type === "visit" && !groupVisit
+                ? visitEmployees[0] || null
+                : null,
+          };
 
       // ✅ Include groupVisitCode if it's a group visit
-      if (groupVisit && groupVisitCode) payload.groupVisitCode = groupVisitCode;
+      if (type === "visit" && groupVisit && groupVisitCode) {
+        payload.groupVisitCode = groupVisitCode;
+      }
 
       const res = await fetch(apiUrl, {
         method: "POST",
@@ -611,7 +658,7 @@ export default function CreateSchedulePage() {
       </div>
 
       {/* Visit Only: Service + Employees */}
-      {type === "visit" && (
+      {type === "visit" ? (
         <>
           <Label className="mt-4">Service *</Label>
           <Select onValueChange={setService}>
@@ -627,7 +674,7 @@ export default function CreateSchedulePage() {
             </SelectContent>
           </Select>
 
-          <div className="flex items-center gap-3 mt-3">
+          {/* <div className="flex items-center gap-3 mt-3">
             <Checkbox
               checked={groupVisit}
               onCheckedChange={(v) => {
@@ -639,6 +686,33 @@ export default function CreateSchedulePage() {
             />
             <Label>Group Visit?</Label>
 
+            {groupVisit && groupVisitCode && (
+              <span className="text-sm text-muted-foreground">
+                Code: <strong>{groupVisitCode}</strong>
+              </span>
+            )}
+          </div>
+
+          {clientAssignedEmployees.length > 0 && (
+            <div className="flex items-center gap-3 mt-2">
+              <Checkbox
+                checked={showAssignedOnly}
+                onCheckedChange={(v) => setShowAssignedOnly(!!v)}
+              />
+              <Label>Show only assigned employees for client</Label>
+            </div>
+          )} */}
+          <div className="flex items-center gap-3 mt-3">
+            <Checkbox
+              checked={groupVisit}
+              onCheckedChange={(v) => {
+                const val = !!v;
+                setGroupVisit(val);
+                if (val) generateGroupVisitCode();
+                else setGroupVisitCode(null);
+              }}
+            />
+            <Label>Group Visit?</Label>
             {groupVisit && groupVisitCode && (
               <span className="text-sm text-muted-foreground">
                 Code: <strong>{groupVisitCode}</strong>
@@ -683,6 +757,57 @@ export default function CreateSchedulePage() {
                       : "bg-muted text-muted-foreground"
                   }`}
                   onClick={() => handleEmployeeSelect(emp.id)}
+                >
+                  {emp.name}
+                </button>
+              ))}
+            </div>
+          )}
+        </>
+      ) : (
+        /* Office / Facility */
+        <>
+          <Label className="mt-4">Reason (optional)</Label>
+          <Input
+            placeholder={
+              type === "office"
+                ? "e.g., Staff meeting"
+                : "e.g., Facility coverage"
+            }
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+          />
+
+          <Label className="mt-3">Assign Employees</Label>
+          {filteredEmployees.length === 0 ? (
+            <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
+              <span>No employees currently.</span>
+              <Button
+                variant="link"
+                className="p-0 h-auto text-blue-600 underline"
+                onClick={() => (window.location.href = "/hr/employees/page")}
+              >
+                Create one?
+              </Button>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {filteredEmployees.map((emp) => (
+                <button
+                  key={emp.id}
+                  type="button"
+                  className={`px-3 py-1 rounded border ${
+                    visitEmployees.includes(emp.id)
+                      ? "bg-primary text-white"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                  onClick={() =>
+                    setVisitEmployees((prev) =>
+                      prev.includes(emp.id)
+                        ? prev.filter((x) => x !== emp.id)
+                        : [...prev, emp.id]
+                    )
+                  }
                 >
                   {emp.name}
                 </button>

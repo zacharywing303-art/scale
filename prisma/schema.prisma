@@ -479,7 +479,7 @@ model Schedule {
   authorizations            String?
   billAmount                Float?
   billingOverride           Boolean       @default(false)
-  clientMedicaidId          String
+  clientMedicaidId          String?
   comments                  String?
   copay                     Float?
   createdAt                 DateTime      @default(now())
@@ -492,7 +492,7 @@ model Schedule {
   scheduleType              String
   serviceId                 String?
   updatedAt                 DateTime      @updatedAt
-  clientID                  String
+  clientID                  String?
   employeeID                String?
   agencyID                  String        @default("UNITY124")
   recurring                 Boolean       @default(false)
@@ -500,7 +500,7 @@ model Schedule {
   createdScheduleID         String?       // shared group ID for multi-day creation
   recurringScheduleID       String?       // shared ID for recurring sets
   missedVisits              MissedVisit[] @relation("ScheduleToMissedVisit")
-  client                    Client        @relation(fields: [clientID], references: [id])
+  client                    Client?        @relation(fields: [clientID], references: [id])
   employee                  Employee?     @relation(fields: [employeeID], references: [id])
   service                   Service?      @relation(fields: [serviceId], references: [id])
 }

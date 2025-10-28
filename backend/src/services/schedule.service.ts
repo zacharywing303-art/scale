@@ -5,8 +5,8 @@ import { createVisit } from "./visit.service";
 
 type CreateScheduleInput = {
   scheduleType: "office" | "visit" | "facility";
-  clientID: string;
-  clientMedicaidId: string;
+  clientID?: string;
+  clientMedicaidId?: string;
   serviceId?: string | null;
   authorizations?: string | null;
   authorizationNumber?: string | null;
@@ -51,9 +51,84 @@ async function generateUniqueScheduleId(agencyID: string): Promise<string> {
 /**
  * Create multiple schedules + visits (supports multi-day + recurrence)
  */
+// export async function createScheduleAndVisitBatch(input: {
+//   baseSchedule: any; // Reuse CreateScheduleInput
+//   selectedDates: string[]; // ISO strings
+//   groupVisit?: boolean;
+//   employeeIDs?: string[];
+//   recurring?: boolean;
+//   recurringFrequency?: "WEEKLY" | "BIWEEKLY";
+// }) {
+//   const createdScheduleID = await generateUniqueId("SCH");
+//   const recurringScheduleID = input.recurring
+//     ? await generateUniqueId("REC")
+//     : null;
+
+//   const allSchedules = [];
+
+//   for (const dateString of input.selectedDates) {
+//     const date = new Date(dateString);
+//     const start = new Date(date);
+//     const end = new Date(date);
+
+//     // Align start/end times with base
+//     start.setHours(
+//       new Date(input.baseSchedule.startTime).getHours(),
+//       new Date(input.baseSchedule.startTime).getMinutes(),
+//       0,
+//       0
+//     );
+//     end.setHours(
+//       new Date(input.baseSchedule.endTime).getHours(),
+//       new Date(input.baseSchedule.endTime).getMinutes(),
+//       0,
+//       0
+//     );
+
+//     const schedule = await createScheduleAndVisit({
+//       ...input.baseSchedule,
+//       eventDate: start,
+//       startTime: start,
+//       endTime: end,
+//       recurring: input.recurring ?? false,
+//       recurringFrequency: input.recurringFrequency ?? null,
+//       createdScheduleID,
+//       recurringScheduleID,
+//       groupVisit: input.groupVisit,
+//       employeeIDs: input.employeeIDs,
+//     });
+
+//     allSchedules.push(schedule);
+
+//     // If recurring, add next-week or biweekly versions
+//     if (input.recurring && input.recurringFrequency) {
+//       const addDaysCount = input.recurringFrequency === "BIWEEKLY" ? 14 : 7;
+
+//       const nextStart = addDays(start, addDaysCount);
+//       const nextEnd = addDays(end, addDaysCount);
+
+//       const nextSchedule = await createScheduleAndVisit({
+//         ...input.baseSchedule,
+//         eventDate: nextStart,
+//         startTime: nextStart,
+//         endTime: nextEnd,
+//         recurring: true,
+//         recurringFrequency: input.recurringFrequency,
+//         createdScheduleID,
+//         recurringScheduleID,
+//         groupVisit: input.groupVisit,
+//         employeeIDs: input.employeeIDs,
+//       });
+
+//       allSchedules.push(nextSchedule);
+//     }
+//   }
+
+//   return allSchedules;
+// }
 export async function createScheduleAndVisitBatch(input: {
-  baseSchedule: any; // Reuse CreateScheduleInput
-  selectedDates: string[]; // ISO strings
+  baseSchedule: any;
+  selectedDates: string[];
   groupVisit?: boolean;
   employeeIDs?: string[];
   recurring?: boolean;
@@ -64,20 +139,40 @@ export async function createScheduleAndVisitBatch(input: {
     ? await generateUniqueId("REC")
     : null;
 
-  const allSchedules = [];
+  const allSchedules: any[] = [];
+
+  const makeOne = async (
+    eventStart: Date,
+    eventEnd: Date,
+    employeeID?: string | null
+  ) => {
+    return createScheduleAndVisit({
+      ...input.baseSchedule,
+      eventDate: eventStart,
+      startTime: eventStart,
+      endTime: eventEnd,
+      recurring: !!input.recurring,
+      recurringFrequency: input.recurringFrequency ?? null,
+      createdScheduleID,
+      recurringScheduleID,
+      groupVisit: input.groupVisit,
+      employeeID: employeeID ?? null,
+      employeeIDs: undefined, // not needed here (we loop ourselves)
+    });
+  };
 
   for (const dateString of input.selectedDates) {
     const date = new Date(dateString);
-    const start = new Date(date);
-    const end = new Date(date);
 
-    // Align start/end times with base
+    const start = new Date(date);
     start.setHours(
       new Date(input.baseSchedule.startTime).getHours(),
       new Date(input.baseSchedule.startTime).getMinutes(),
       0,
       0
     );
+
+    const end = new Date(date);
     end.setHours(
       new Date(input.baseSchedule.endTime).getHours(),
       new Date(input.baseSchedule.endTime).getMinutes(),
@@ -85,42 +180,63 @@ export async function createScheduleAndVisitBatch(input: {
       0
     );
 
-    const schedule = await createScheduleAndVisit({
-      ...input.baseSchedule,
-      eventDate: start,
-      startTime: start,
-      endTime: end,
-      recurring: input.recurring ?? false,
-      recurringFrequency: input.recurringFrequency ?? null,
-      createdScheduleID,
-      recurringScheduleID,
-      groupVisit: input.groupVisit,
-      employeeIDs: input.employeeIDs,
-    });
+    // Non-visit: create one Schedule PER employee (no visits)
+    if (
+      input.baseSchedule.scheduleType !== "visit" &&
+      input.employeeIDs?.length
+    ) {
+      for (const empId of input.employeeIDs) {
+        allSchedules.push(await makeOne(start, end, empId));
+      }
+    } else {
+      // Visit: single schedule call; createScheduleAndVisit will spawn visits (group or single)
+      allSchedules.push(
+        await createScheduleAndVisit({
+          ...input.baseSchedule,
+          eventDate: start,
+          startTime: start,
+          endTime: end,
+          recurring: !!input.recurring,
+          recurringFrequency: input.recurringFrequency ?? null,
+          createdScheduleID,
+          recurringScheduleID,
+          groupVisit: input.groupVisit,
+          employeeIDs: input.employeeIDs, // visit can be group
+        })
+      );
+    }
 
-    allSchedules.push(schedule);
-
-    // If recurring, add next-week or biweekly versions
+    // Recurrence (second set only, as per your current logic)
     if (input.recurring && input.recurringFrequency) {
       const addDaysCount = input.recurringFrequency === "BIWEEKLY" ? 14 : 7;
+      const nextStart = new Date(start);
+      nextStart.setDate(start.getDate() + addDaysCount);
+      const nextEnd = new Date(end);
+      nextEnd.setDate(end.getDate() + addDaysCount);
 
-      const nextStart = addDays(start, addDaysCount);
-      const nextEnd = addDays(end, addDaysCount);
-
-      const nextSchedule = await createScheduleAndVisit({
-        ...input.baseSchedule,
-        eventDate: nextStart,
-        startTime: nextStart,
-        endTime: nextEnd,
-        recurring: true,
-        recurringFrequency: input.recurringFrequency,
-        createdScheduleID,
-        recurringScheduleID,
-        groupVisit: input.groupVisit,
-        employeeIDs: input.employeeIDs,
-      });
-
-      allSchedules.push(nextSchedule);
+      if (
+        input.baseSchedule.scheduleType !== "visit" &&
+        input.employeeIDs?.length
+      ) {
+        for (const empId of input.employeeIDs) {
+          allSchedules.push(await makeOne(nextStart, nextEnd, empId));
+        }
+      } else {
+        allSchedules.push(
+          await createScheduleAndVisit({
+            ...input.baseSchedule,
+            eventDate: nextStart,
+            startTime: nextStart,
+            endTime: nextEnd,
+            recurring: true,
+            recurringFrequency: input.recurringFrequency,
+            createdScheduleID,
+            recurringScheduleID,
+            groupVisit: input.groupVisit,
+            employeeIDs: input.employeeIDs,
+          })
+        );
+      }
     }
   }
 
@@ -166,7 +282,7 @@ export async function createScheduleAndVisit(
     recurringScheduleID?: string;
   }
 ) {
-  return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+  return await prisma.$transaction(async (tx) => {
     if (input.endTime <= input.startTime)
       throw new Error("End time must be after start time");
 
@@ -180,14 +296,14 @@ export async function createScheduleAndVisit(
         : input.recurringScheduleID ?? null;
 
     const scheduledHours =
-      (input.endTime.getTime() - input.startTime.getTime()) / 1000 / 60 / 60;
+      (input.endTime.getTime() - input.startTime.getTime()) / 3600000;
 
-    // 1️⃣ Create Schedule record
+    // Create the schedule
     const schedule = await tx.schedule.create({
       data: {
         scheduleType: input.scheduleType,
-        clientID: input.clientID,
-        clientMedicaidId: input.clientMedicaidId,
+        clientID: input.clientID ?? null,
+        clientMedicaidId: input.clientMedicaidId ?? null,
         authorizations: input.authorizations ?? undefined,
         authorizationNumber: input.authorizationNumber ?? undefined,
         serviceId: input.serviceId ?? undefined,
@@ -209,7 +325,12 @@ export async function createScheduleAndVisit(
       },
     });
 
-    // 2️⃣ Related data for visits
+    // Only Visits → create Visit rows
+    if (input.scheduleType !== "visit") {
+      return { schedule, createdScheduleID, recurringScheduleID };
+    }
+
+    // Visit-related
     const service = input.serviceId
       ? await tx.service.findUnique({ where: { id: input.serviceId } })
       : null;
@@ -228,10 +349,8 @@ export async function createScheduleAndVisit(
         `GV-${Math.floor(100000 + Math.random() * 900000)}`
       : null;
 
-    // 3️⃣ Create visit(s)
     for (const emp of employees) {
       const scheduleID = await generateUniqueScheduleId(input.agencyID);
-
       await createVisit({
         agencyID: input.agencyID,
         clientId: input.clientID,
@@ -249,24 +368,35 @@ export async function createScheduleAndVisit(
       });
     }
 
-    return {
-      schedule,
-      createdScheduleID,
-      recurringScheduleID,
-    };
+    return { schedule, createdScheduleID, recurringScheduleID };
   });
 }
 
 // export async function createScheduleAndVisit(
 //   input: CreateScheduleInput & {
 //     groupVisit?: boolean;
-//     employeeIDs?: string[]; // for group visits
+//     employeeIDs?: string[];
+//     createdScheduleID?: string;
+//     recurringScheduleID?: string;
 //   }
 // ) {
 //   return await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
 //     if (input.endTime <= input.startTime)
 //       throw new Error("End time must be after start time");
 
+//     const createdScheduleID =
+//       input.createdScheduleID ||
+//       `SCH-${Math.floor(100000 + Math.random() * 900000)}`;
+
+//     const recurringScheduleID =
+//       input.recurring && !input.recurringScheduleID
+//         ? `REC-${Math.floor(100000 + Math.random() * 900000)}`
+//         : input.recurringScheduleID ?? null;
+
+//     const scheduledHours =
+//       (input.endTime.getTime() - input.startTime.getTime()) / 1000 / 60 / 60;
+
+//     // 1️⃣ Create Schedule record
 //     const schedule = await tx.schedule.create({
 //       data: {
 //         scheduleType: input.scheduleType,
@@ -284,23 +414,18 @@ export async function createScheduleAndVisit(
 //         endTime: input.endTime,
 //         employeeID: input.employeeID ?? undefined,
 //         recurring: input.recurring,
-//         dates: input.dates,
+//         recurringFrequency: input.recurringFrequency ?? null,
+//         createdScheduleID,
+//         recurringScheduleID,
+//         dates: input.dates ?? [],
 //         comments: input.comments ?? undefined,
-//         billingOverride: input.billingOverride ?? false,
-//         rate: input.rate ?? undefined,
-//         copay: input.copay ?? undefined,
-//         billAmount: input.billAmount ?? undefined,
 //         agencyID: input.agencyID,
 //       },
 //     });
 
-//     // related data
+//     // 2️⃣ Related data for visits
 //     const service = input.serviceId
 //       ? await tx.service.findUnique({ where: { id: input.serviceId } })
-//       : null;
-
-//     const groupVisitCode = input.groupVisit
-//       ? `GV-${Math.floor(100000 + Math.random() * 900000)}`
 //       : null;
 
 //     const employees =
@@ -312,15 +437,22 @@ export async function createScheduleAndVisit(
 //         ? await tx.employee.findMany({ where: { id: input.employeeID } })
 //         : [];
 
-//     // create visit(s)
+//     const groupVisitCode = input.groupVisit
+//       ? input.groupVisitCode ||
+//         `GV-${Math.floor(100000 + Math.random() * 900000)}`
+//       : null;
+
+//     // 3️⃣ Create visit(s)
 //     for (const emp of employees) {
 //       const scheduleID = await generateUniqueScheduleId(input.agencyID);
+
 //       await createVisit({
 //         agencyID: input.agencyID,
 //         clientId: input.clientID,
 //         employeeId: emp.id,
 //         scheduledTimeIn: input.startTime,
 //         scheduledTimeOut: input.endTime,
+//         scheduledHours,
 //         serviceId: input.serviceId,
 //         service: service ? `${service.code} - ${service.name}` : undefined,
 //         timeZone: "EST",
@@ -331,7 +463,11 @@ export async function createScheduleAndVisit(
 //       });
 //     }
 
-//     return schedule;
+//     return {
+//       schedule,
+//       createdScheduleID,
+//       recurringScheduleID,
+//     };
 //   });
 // }
 
