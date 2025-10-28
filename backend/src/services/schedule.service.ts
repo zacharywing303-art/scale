@@ -28,6 +28,8 @@ type CreateScheduleInput = {
   agencyID: string; // pass the agency code you track, e.g., "UNITY124"
   groupVisitCode?: string | null;
   recurringFrequency?: "WEEKLY" | "BIWEEKLY" | null;
+  createdScheduleID?: string;
+  recurringScheduleID?: string;
 };
 
 async function generateUniqueId(prefix: string) {
@@ -111,7 +113,7 @@ export async function createScheduleAndVisitBatch(input: {
         allSchedules.push(await makeOne(start, end, empId));
       }
     } // Visit: make separate schedules per employee if groupVisit
-    if (
+    else if (
       input.baseSchedule.scheduleType === "visit" &&
       input.employeeIDs?.length
     ) {
@@ -249,17 +251,22 @@ export async function createScheduleAndVisit(
       for (const empId of input.employeeIDs) {
         const schedule = await tx.schedule.create({
           data: {
-            ...input,
+            scheduleType: input.scheduleType,
+            eventDate: input.eventDate,
+            startTime: input.startTime,
+            endTime: input.endTime,
+            authorizationBillUnitType: input.authorizationBillUnitType,
+            eventStatus: input.eventStatus,
+            agencyID: input.agencyID,
             employeeID: empId,
-            clientID: null,
-            clientMedicaidId: null,
-            serviceId: null,
             officeReason: input.officeReason ?? null,
+            comments: input.comments ?? null,
             createdScheduleID:
               input.createdScheduleID ||
               `SCH-${Math.floor(100000 + Math.random() * 900000)}`,
           },
         });
+
         schedules.push(schedule);
       }
       return { schedules };
