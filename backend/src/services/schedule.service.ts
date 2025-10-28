@@ -29,7 +29,7 @@ type CreateScheduleInput = {
   groupVisitCode?: string | null;
   recurringFrequency?: "WEEKLY" | "BIWEEKLY" | null;
   createdScheduleID?: string;
-  recurringScheduleID?: string;
+  recurringScheduleID?: string | null;
 };
 
 async function generateUniqueId(prefix: string) {
