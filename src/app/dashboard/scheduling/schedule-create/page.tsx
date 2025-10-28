@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/dialog";
 import { TimePicker } from "@/components/TimePicker";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 function buildDateTime(baseDate: Date, time: string): Date {
   const [h, m] = time.split(":").map(Number);
@@ -332,581 +333,593 @@ export default function CreateSchedulePage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <h1 className="text-2xl font-bold">Create Schedule</h1>
+    <ProtectedRoute
+      allowedRoles={["AGENCY_ADMIN"]}
+      permission="Create/Edit Schedule"
+    >
+      <div className="p-6 space-y-6">
+        <h1 className="text-2xl font-bold">Create Schedule</h1>
 
-      {/* Schedule Type */}
-      <div>
-        <Label>Schedule Type *</Label>
-        <Select onValueChange={(v) => setType(v as any)}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="office">Office</SelectItem>
-            <SelectItem value="visit">Visit</SelectItem>
-            <SelectItem value="facility">Facility</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {type === "visit" && (
-        <>
-          <Label>Client *</Label>
-          <Select
-            onValueChange={async (clientId) => {
-              setClient(clientId);
-              setShowAssignedOnly(false); // reset toggle
-
-              try {
-                const res = await fetch(
-                  `${process.env.NEXT_PUBLIC_API_URL}/api/clients/${clientId}`
-                );
-                const data = await res.json();
-
-                if (data?.assignedEmployees?.length) {
-                  setClientAssignedEmployees(
-                    data.assignedEmployees.map((e: any) => e.id)
-                  );
-                } else {
-                  setClientAssignedEmployees([]);
-                }
-              } catch (err) {
-                console.error("Failed to load assigned employees:", err);
-                setClientAssignedEmployees([]);
-              }
-            }}
-          >
+        {/* Schedule Type */}
+        <div>
+          <Label className="mb-1">
+            Schedule Type<span className="text-red-500">*</span>
+          </Label>
+          <Select onValueChange={(v) => setType(v as any)}>
             <SelectTrigger>
-              <SelectValue placeholder="Select client" />
+              <SelectValue placeholder="Select type" />
             </SelectTrigger>
             <SelectContent>
-              {clients.map((c) => (
-                <SelectItem key={c.id} value={c.id}>
-                  {c.name}
-                </SelectItem>
-              ))}
+              <SelectItem value="office">Office</SelectItem>
+              <SelectItem value="visit">Visit</SelectItem>
+              <SelectItem value="facility">Facility</SelectItem>
             </SelectContent>
           </Select>
-        </>
-      )}
+        </div>
 
-      {/* One or Multiple */}
-      <div className="flex items-center gap-3 mt-4">
-        <Label>Apply To:</Label>
-        <Select
-          onValueChange={(v) => {
-            const single = v === "one";
-            setOneDay(single);
-            if (single) setRecurring(false);
-          }}
-        >
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Select option" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="one">One Day</SelectItem>
-            <SelectItem value="multiple">Multiple Days</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        {type === "visit" && (
+          <>
+            <Label>Client *</Label>
+            <Select
+              onValueChange={async (clientId) => {
+                setClient(clientId);
+                setShowAssignedOnly(false); // reset toggle
 
-      {/* Recurring Options */}
-      {!oneDay && (
-        <div className="flex gap-3 mt-2 items-center">
-          <Checkbox
-            checked={recurring}
-            onCheckedChange={(v) => setRecurring(!!v)}
-          />
-          <Label>Recurring?</Label>
-          {recurring && (
-            <Select onValueChange={(v) => setRecurringFrequency(v as any)}>
-              <SelectTrigger className="w-[160px]">
-                <SelectValue placeholder="Frequency" />
+                try {
+                  const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/clients/${clientId}`
+                  );
+                  const data = await res.json();
+
+                  if (data?.assignedEmployees?.length) {
+                    setClientAssignedEmployees(
+                      data.assignedEmployees.map((e: any) => e.id)
+                    );
+                  } else {
+                    setClientAssignedEmployees([]);
+                  }
+                } catch (err) {
+                  console.error("Failed to load assigned employees:", err);
+                  setClientAssignedEmployees([]);
+                }
+              }}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select client" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="WEEKLY">Weekly</SelectItem>
-                <SelectItem value="BIWEEKLY">Every Other Week</SelectItem>
+                {clients.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {c.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
-          )}
-        </div>
-      )}
+          </>
+        )}
 
-      {/* Date Selector */}
-      {oneDay ? (
-        <div>
-          <Label>Date *</Label>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="w-[280px] justify-start">
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="p-0">
-              <Calendar
-                mode="single"
-                selected={selectedDate}
-                onSelect={(date) => {
-                  if (!date) return;
-                  const now = new Date();
-                  now.setHours(0, 0, 0, 0);
-                  if (date <= now) {
-                    toast.warning("You cannot select today or a past date.");
-                    setInvalidDate(true);
-                    setSelectedDate(undefined);
-                  } else {
-                    setSelectedDate(date);
-                    setInvalidDate(false);
-                  }
-                }}
-                fromDate={tomorrow}
-              />
-            </PopoverContent>
-          </Popover>
+        {/* One or Multiple */}
+        <div className="flex items-center gap-3 mt-4">
+          <Label>Apply To:</Label>
+          <Select
+            onValueChange={(v) => {
+              const single = v === "one";
+              setOneDay(single);
+              if (single) setRecurring(false);
+            }}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Select option" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="one">One Day</SelectItem>
+              <SelectItem value="multiple">Multiple Days</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-      ) : (
-        <>
-          <Label>Select Weekdays *</Label>
-          <div className="flex flex-wrap gap-2">
-            {weekdaysList.map((day) => (
-              <button
-                key={day}
-                type="button"
-                className={`px-3 py-1 rounded border ${
-                  weekdays.includes(day)
-                    ? "bg-primary text-white"
-                    : "bg-muted text-muted-foreground"
-                }`}
-                onClick={() => handleCheckboxChange(day, weekdays, setWeekdays)}
-              >
-                {day}
-              </button>
-            ))}
+
+        {/* Recurring Options */}
+        {!oneDay && (
+          <div className="flex gap-3 mt-2 items-center">
+            <Checkbox
+              checked={recurring}
+              onCheckedChange={(v) => setRecurring(!!v)}
+            />
+            <Label>Recurring?</Label>
+            {recurring && (
+              <Select onValueChange={(v) => setRecurringFrequency(v as any)}>
+                <SelectTrigger className="w-[160px]">
+                  <SelectValue placeholder="Frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="WEEKLY">Weekly</SelectItem>
+                  <SelectItem value="BIWEEKLY">Every Other Week</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
           </div>
-          {/* Range Start */}
+        )}
+
+        {/* Date Selector */}
+        {oneDay ? (
           <div>
-            <Label>From *</Label>
+            <Label>
+              Date <span className="text-red-500">*</span>
+            </Label>
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[220px] justify-start">
+                <Button variant="outline" className="w-[280px] justify-start">
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {rangeStart ? format(rangeStart, "PPP") : "Pick start date"}
+                  {selectedDate ? format(selectedDate, "PPP") : "Pick a date"}
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="p-0">
                 <Calendar
                   mode="single"
-                  selected={rangeStart}
+                  selected={selectedDate}
                   onSelect={(date) => {
                     if (!date) return;
                     const now = new Date();
                     now.setHours(0, 0, 0, 0);
                     if (date <= now) {
-                      toast.warning("Start date cannot be today or earlier.");
+                      toast.warning("You cannot select today or a past date.");
                       setInvalidDate(true);
-                      setRangeStart(undefined);
-                      setRangeEnd(undefined);
-                      return;
+                      setSelectedDate(undefined);
+                    } else {
+                      setSelectedDate(date);
+                      setInvalidDate(false);
                     }
-                    setRangeStart(date);
-                    const autoEnd = new Date(date);
-                    autoEnd.setDate(autoEnd.getDate() + 6); // 7-day range
-                    setRangeEnd(autoEnd);
-                    setInvalidDate(false);
                   }}
                   fromDate={tomorrow}
                 />
               </PopoverContent>
             </Popover>
           </div>
-
-          {/* Range End */}
-          <div>
-            <Label>To *</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[220px] justify-start">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {rangeEnd ? format(rangeEnd, "PPP") : "Pick end date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="p-0">
-                <Calendar
-                  mode="single"
-                  selected={rangeEnd}
-                  onSelect={(date) => {
-                    if (!date) return;
-                    const now = new Date();
-                    now.setHours(0, 0, 0, 0);
-                    if (date <= now) {
-                      toast.warning("End date cannot be today or earlier.");
-                      setInvalidDate(true);
-                      setRangeEnd(undefined);
-                      return;
-                    }
-                    if (rangeStart && date < rangeStart) {
-                      toast.warning("End date cannot be before start date.");
-                      setInvalidDate(true);
-                      return;
-                    }
-                    setRangeEnd(date);
-                    setInvalidDate(false);
-                  }}
-                  fromDate={rangeStart ?? tomorrow}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </>
-      )}
-
-      {/* Time */}
-      <div className="flex gap-4 mt-4">
-        <TimePicker
-          label="Start Time *"
-          value={startTime}
-          onChange={setStartTime}
-        />
-        <TimePicker label="End Time *" value={endTime} onChange={setEndTime} />
-      </div>
-
-      {/* Visit Only: Service + Employees */}
-      {type === "visit" ? (
-        <>
-          <Label className="mt-4">Service *</Label>
-          <Select onValueChange={setService}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select service" />
-            </SelectTrigger>
-            <SelectContent>
-              {services.map((s) => (
-                <SelectItem key={s.id} value={s.id}>
-                  {s.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <div className="flex items-center gap-3 mt-3">
-            <Checkbox
-              checked={groupVisit}
-              onCheckedChange={(v) => {
-                const val = !!v;
-                setGroupVisit(val);
-                if (val) generateGroupVisitCode();
-                else setGroupVisitCode(null);
-              }}
-            />
-            <Label>Group Visit?</Label>
-            {groupVisit && groupVisitCode && (
-              <span className="text-sm text-muted-foreground">
-                Code: <strong>{groupVisitCode}</strong>
-              </span>
-            )}
-          </div>
-
-          {clientAssignedEmployees.length > 0 && (
-            <div className="flex items-center gap-3 mt-2">
-              <Checkbox
-                checked={showAssignedOnly}
-                onCheckedChange={(v) => setShowAssignedOnly(!!v)}
-              />
-              <Label>Show only assigned employees for client</Label>
-            </div>
-          )}
-
-          <Label className="mt-3">
-            {groupVisit ? "Select Employees" : "Assign Employee"}
-          </Label>
-
-          {filteredEmployees.length === 0 ? (
-            <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
-              <span>No employees currently.</span>
-              <Button
-                variant="link"
-                className="p-0 h-auto text-blue-600 underline"
-                onClick={() => (window.location.href = "/hr/employees/page")}
-              >
-                Create one?
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {filteredEmployees.map((emp) => (
+        ) : (
+          <>
+            <Label>
+              Select Weekdays <span className="text-red-500">*</span>
+            </Label>
+            <div className="flex flex-wrap gap-2">
+              {weekdaysList.map((day) => (
                 <button
-                  key={emp.id}
+                  key={day}
                   type="button"
                   className={`px-3 py-1 rounded border ${
-                    visitEmployees.includes(emp.id)
-                      ? "bg-primary text-white"
-                      : "bg-muted text-muted-foreground"
-                  }`}
-                  onClick={() => handleEmployeeSelect(emp.id)}
-                >
-                  {emp.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </>
-      ) : (
-        /* Office / Facility */
-        <>
-          <Label className="mt-4">Reason (optional)</Label>
-          <Input
-            placeholder={
-              type === "office"
-                ? "e.g., Staff meeting"
-                : "e.g., Facility coverage"
-            }
-            value={reason}
-            onChange={(e) => setReason(e.target.value)}
-          />
-
-          <Label className="mt-3">Assign Employees</Label>
-          {filteredEmployees.length === 0 ? (
-            <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
-              <span>No employees currently.</span>
-              <Button
-                variant="link"
-                className="p-0 h-auto text-blue-600 underline"
-                onClick={() => (window.location.href = "/hr/employees/page")}
-              >
-                Create one?
-              </Button>
-            </div>
-          ) : (
-            <div className="flex flex-wrap gap-2 mt-2">
-              {filteredEmployees.map((emp) => (
-                <button
-                  key={emp.id}
-                  type="button"
-                  className={`px-3 py-1 rounded border ${
-                    visitEmployees.includes(emp.id)
+                    weekdays.includes(day)
                       ? "bg-primary text-white"
                       : "bg-muted text-muted-foreground"
                   }`}
                   onClick={() =>
-                    setVisitEmployees((prev) =>
-                      prev.includes(emp.id)
-                        ? prev.filter((x) => x !== emp.id)
-                        : [...prev, emp.id]
-                    )
+                    handleCheckboxChange(day, weekdays, setWeekdays)
                   }
                 >
-                  {emp.name}
+                  {day}
                 </button>
               ))}
             </div>
-          )}
-        </>
-      )}
-
-      <Label className="mt-4 block">Comments</Label>
-      <Textarea
-        value={comments}
-        onChange={(e) => setComments(e.target.value)}
-      />
-
-      {/* PREVIEW BUTTON */}
-      <Dialog open={showPreview} onOpenChange={setShowPreview}>
-        <DialogTrigger asChild>
-          <Button disabled={!canSubmit() || loading} className="mt-6 w-full">
-            Generate Schedule Preview
-          </Button>
-        </DialogTrigger>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Schedule Preview</DialogTitle>
-            <DialogDescription>
-              Review all generated schedule entries before confirming.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-3 text-sm">
-            <div className="grid grid-cols-2 gap-y-1">
-              <div>
-                <strong>Type:</strong>{" "}
-                {type.charAt(0).toUpperCase() + type.slice(1)}
-              </div>
-              <div>
-                <strong>Recurring:</strong>{" "}
-                {recurring
-                  ? `${recurringFrequency.charAt(0)}${recurringFrequency
-                      .slice(1)
-                      .toLowerCase()}`
-                  : "No"}
-              </div>
-
-              {oneDay ? (
-                <div className="col-span-2">
-                  <strong>Date:</strong>{" "}
-                  {selectedDate ? format(selectedDate, "PPP") : "N/A"}
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <strong>Range Start:</strong>{" "}
-                    {rangeStart ? format(rangeStart, "PPP") : "—"}
-                  </div>
-                  <div>
-                    <strong>Range End:</strong>{" "}
-                    {rangeEnd ? format(rangeEnd, "PPP") : "—"}
-                  </div>
-                  <div className="col-span-2">
-                    <strong>Weekdays:</strong>{" "}
-                    {weekdays.length ? weekdays.join(", ") : "None"}
-                  </div>
-                </>
-              )}
-
-              <div>
-                <strong>Start Time:</strong>{" "}
-                {(() => {
-                  if (!startTime) return "N/A";
-                  const dt = buildDateTime(new Date(), startTime);
-                  return !isNaN(dt.getTime()) ? format(dt, "hh:mm a") : "N/A";
-                })()}
-              </div>
-              <div>
-                <strong>End Time:</strong>{" "}
-                {(() => {
-                  if (!endTime) return "N/A";
-                  const dt = buildDateTime(new Date(), endTime);
-                  return !isNaN(dt.getTime()) ? format(dt, "hh:mm a") : "N/A";
-                })()}
-              </div>
-
-              {type === "visit" && (
-                <>
-                  <div>
-                    <strong>Client:</strong>{" "}
-                    {clients.find((c) => c.id === client)?.name || "N/A"}
-                  </div>
-                  <div>
-                    <strong>Service:</strong>{" "}
-                    {services.find((s) => s.id === service)?.name || "N/A"}
-                  </div>
-                </>
-              )}
-              <div className="col-span-2">
-                <strong>Employees:</strong>{" "}
-                {visitEmployees
-                  .map((id) => employees.find((e) => e.id === id)?.name)
-                  .join(", ") || "None"}
-              </div>
+            {/* Range Start */}
+            <div>
+              <Label>
+                From <span className="text-red-500">*</span>
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="w-[220px] justify-start">
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {rangeStart ? format(rangeStart, "PPP") : "Pick start date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="p-0">
+                  <Calendar
+                    mode="single"
+                    selected={rangeStart}
+                    onSelect={(date) => {
+                      if (!date) return;
+                      const now = new Date();
+                      now.setHours(0, 0, 0, 0);
+                      if (date <= now) {
+                        toast.warning("Start date cannot be today or earlier.");
+                        setInvalidDate(true);
+                        setRangeStart(undefined);
+                        setRangeEnd(undefined);
+                        return;
+                      }
+                      setRangeStart(date);
+                      const autoEnd = new Date(date);
+                      autoEnd.setDate(autoEnd.getDate() + 6); // 7-day range
+                      setRangeEnd(autoEnd);
+                      setInvalidDate(false);
+                    }}
+                    fromDate={tomorrow}
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
 
-            <div className="border-t pt-3 mt-2">
-              <strong>Generated Schedule Summary:</strong>
-              <p className="text-muted-foreground text-xs mb-2">
-                (These are the schedules that will be created)
-              </p>
+            {/* Range End */}
+            <div>
+              <Label>
+                To <span className="text-red-500">*</span>
+              </Label>
+              <Button
+                variant="outline"
+                className="w-[220px] justify-start"
+                disabled
+                title={
+                  rangeStart
+                    ? "End date is auto-calculated from the start date"
+                    : "Pick a start date first"
+                }
+              >
+                <CalendarIcon className="mr-2 h-4 w-4" />
+                {rangeEnd
+                  ? format(rangeEnd, "PPP")
+                  : rangeStart
+                  ? format(
+                      new Date(rangeStart.getTime() + 6 * 24 * 60 * 60 * 1000),
+                      "PPP"
+                    )
+                  : "Pick start date first"}
+              </Button>
+            </div>
+          </>
+        )}
 
-              <div className="max-h-48 overflow-y-auto border rounded-md">
-                <table className="w-full text-xs border-collapse">
-                  <thead className="bg-muted text-muted-foreground border-b">
-                    <tr>
-                      <th className="px-2 py-1 text-left">#</th>
-                      <th className="px-2 py-1 text-left">Date</th>
-                      <th className="px-2 py-1 text-left">Day</th>
-                      <th className="px-2 py-1 text-left">Start Time</th>
-                      <th className="px-2 py-1 text-left">End Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(() => {
-                      // Compute all dates that will be created
-                      const allDates: Date[] = [];
+        {/* Time */}
+        <div className="flex gap-4 mt-4">
+          <TimePicker
+            label="Start Time "
+            value={startTime}
+            onChange={setStartTime}
+          />
+          <TimePicker
+            label="End Time *"
+            value={endTime}
+            onChange={setEndTime}
+          />
+        </div>
 
-                      if (oneDay && selectedDate) {
-                        allDates.push(selectedDate);
-                      } else if (rangeStart && rangeEnd) {
-                        const days = eachDayOfInterval({
-                          start: rangeStart,
-                          end: rangeEnd,
-                        });
-                        for (const d of days) {
-                          const dayName = d.toLocaleDateString("en-US", {
-                            weekday: "long",
+        {/* Visit Only: Service + Employees */}
+        {type === "visit" ? (
+          <>
+            <Label className="mt-4">
+              Service <span className="text-red-500">*</span>
+            </Label>
+            <Select onValueChange={setService}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select service" />
+              </SelectTrigger>
+              <SelectContent>
+                {services.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div className="flex items-center gap-3 mt-3">
+              <Checkbox
+                checked={groupVisit}
+                onCheckedChange={(v) => {
+                  const val = !!v;
+                  setGroupVisit(val);
+                  if (val) generateGroupVisitCode();
+                  else setGroupVisitCode(null);
+                }}
+              />
+              <Label>Group Visit?</Label>
+              {groupVisit && groupVisitCode && (
+                <span className="text-sm text-muted-foreground">
+                  Code: <strong>{groupVisitCode}</strong>
+                </span>
+              )}
+            </div>
+
+            {clientAssignedEmployees.length > 0 && (
+              <div className="flex items-center gap-3 mt-2">
+                <Checkbox
+                  checked={showAssignedOnly}
+                  onCheckedChange={(v) => setShowAssignedOnly(!!v)}
+                />
+                <Label>Show only assigned employees for client</Label>
+              </div>
+            )}
+
+            <Label className="mt-3">
+              {groupVisit ? "Select Employees" : "Assign Employee"}
+            </Label>
+
+            {filteredEmployees.length === 0 ? (
+              <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
+                <span>No employees currently.</span>
+                <Button
+                  variant="link"
+                  className="p-0 h-auto text-blue-600 underline"
+                  onClick={() => (window.location.href = "/hr/employees/page")}
+                >
+                  Create one?
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {filteredEmployees.map((emp) => (
+                  <button
+                    key={emp.id}
+                    type="button"
+                    className={`px-3 py-1 rounded border ${
+                      visitEmployees.includes(emp.id)
+                        ? "bg-primary text-white"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                    onClick={() => handleEmployeeSelect(emp.id)}
+                  >
+                    {emp.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        ) : (
+          /* Office / Facility */
+          <>
+            <Label className="mt-4">Reason (optional)</Label>
+            <Input
+              placeholder={
+                type === "office"
+                  ? "e.g., Staff meeting"
+                  : "e.g., Facility coverage"
+              }
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+            />
+
+            <Label className="mt-3">Assign Employees</Label>
+            {filteredEmployees.length === 0 ? (
+              <div className="mt-2 text-sm text-muted-foreground flex items-center gap-2">
+                <span>No employees currently.</span>
+                <Button
+                  variant="link"
+                  className="p-0 h-auto text-blue-600 underline"
+                  onClick={() => (window.location.href = "/hr/employees/page")}
+                >
+                  Create one?
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {filteredEmployees.map((emp) => (
+                  <button
+                    key={emp.id}
+                    type="button"
+                    className={`px-3 py-1 rounded border ${
+                      visitEmployees.includes(emp.id)
+                        ? "bg-primary text-white"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                    onClick={() =>
+                      setVisitEmployees((prev) =>
+                        prev.includes(emp.id)
+                          ? prev.filter((x) => x !== emp.id)
+                          : [...prev, emp.id]
+                      )
+                    }
+                  >
+                    {emp.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </>
+        )}
+
+        <Label className="mt-4 block">Comments</Label>
+        <Textarea
+          value={comments}
+          onChange={(e) => setComments(e.target.value)}
+        />
+
+        {/* PREVIEW BUTTON */}
+        <Dialog open={showPreview} onOpenChange={setShowPreview}>
+          <DialogTrigger asChild>
+            <Button disabled={!canSubmit() || loading} className="mt-6 w-full">
+              Generate Schedule Preview
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Schedule Preview</DialogTitle>
+              <DialogDescription>
+                Review all generated schedule entries before confirming.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-3 text-sm">
+              <div className="grid grid-cols-2 gap-y-1">
+                <div>
+                  <strong>Type:</strong>{" "}
+                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                </div>
+                <div>
+                  <strong>Recurring:</strong>{" "}
+                  {recurring
+                    ? `${recurringFrequency.charAt(0)}${recurringFrequency
+                        .slice(1)
+                        .toLowerCase()}`
+                    : "No"}
+                </div>
+
+                {oneDay ? (
+                  <div className="col-span-2">
+                    <strong>Date:</strong>{" "}
+                    {selectedDate ? format(selectedDate, "PPP") : "N/A"}
+                  </div>
+                ) : (
+                  <>
+                    <div>
+                      <strong>Range Start:</strong>{" "}
+                      {rangeStart ? format(rangeStart, "PPP") : "—"}
+                    </div>
+                    <div>
+                      <strong>Range End:</strong>{" "}
+                      {rangeEnd ? format(rangeEnd, "PPP") : "—"}
+                    </div>
+                    <div className="col-span-2">
+                      <strong>Weekdays:</strong>{" "}
+                      {weekdays.length ? weekdays.join(", ") : "None"}
+                    </div>
+                  </>
+                )}
+
+                <div>
+                  <strong>Start Time:</strong>{" "}
+                  {(() => {
+                    if (!startTime) return "N/A";
+                    const dt = buildDateTime(new Date(), startTime);
+                    return !isNaN(dt.getTime()) ? format(dt, "hh:mm a") : "N/A";
+                  })()}
+                </div>
+                <div>
+                  <strong>End Time:</strong>{" "}
+                  {(() => {
+                    if (!endTime) return "N/A";
+                    const dt = buildDateTime(new Date(), endTime);
+                    return !isNaN(dt.getTime()) ? format(dt, "hh:mm a") : "N/A";
+                  })()}
+                </div>
+
+                {type === "visit" && (
+                  <>
+                    <div>
+                      <strong>Client:</strong>{" "}
+                      {clients.find((c) => c.id === client)?.name || "N/A"}
+                    </div>
+                    <div>
+                      <strong>Service:</strong>{" "}
+                      {services.find((s) => s.id === service)?.name || "N/A"}
+                    </div>
+                  </>
+                )}
+                <div className="col-span-2">
+                  <strong>Employees:</strong>{" "}
+                  {visitEmployees
+                    .map((id) => employees.find((e) => e.id === id)?.name)
+                    .join(", ") || "None"}
+                </div>
+              </div>
+
+              <div className="border-t pt-3 mt-2">
+                <strong>Generated Schedule Summary:</strong>
+                <p className="text-muted-foreground text-xs mb-2">
+                  (These are the schedules that will be created)
+                </p>
+
+                <div className="max-h-48 overflow-y-auto border rounded-md">
+                  <table className="w-full text-xs border-collapse">
+                    <thead className="bg-muted text-muted-foreground border-b">
+                      <tr>
+                        <th className="px-2 py-1 text-left">#</th>
+                        <th className="px-2 py-1 text-left">Date</th>
+                        <th className="px-2 py-1 text-left">Day</th>
+                        <th className="px-2 py-1 text-left">Start Time</th>
+                        <th className="px-2 py-1 text-left">End Time</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(() => {
+                        // Compute all dates that will be created
+                        const allDates: Date[] = [];
+
+                        if (oneDay && selectedDate) {
+                          allDates.push(selectedDate);
+                        } else if (rangeStart && rangeEnd) {
+                          const days = eachDayOfInterval({
+                            start: rangeStart,
+                            end: rangeEnd,
                           });
-                          if (weekdays.includes(dayName)) allDates.push(d);
-                        }
-
-                        // Add recurring instances (weekly/biweekly)
-                        if (recurring && recurringFrequency) {
-                          const repeatDays = eachDayOfInterval({
-                            start: new Date(
-                              rangeStart.getTime() +
-                                (recurringFrequency === "WEEKLY" ? 7 : 14) *
-                                  24 *
-                                  60 *
-                                  60 *
-                                  1000
-                            ),
-                            end: new Date(
-                              rangeEnd.getTime() +
-                                (recurringFrequency === "WEEKLY" ? 7 : 14) *
-                                  24 *
-                                  60 *
-                                  60 *
-                                  1000
-                            ),
-                          });
-                          for (const d of repeatDays) {
+                          for (const d of days) {
                             const dayName = d.toLocaleDateString("en-US", {
                               weekday: "long",
                             });
                             if (weekdays.includes(dayName)) allDates.push(d);
                           }
+
+                          // Add recurring instances (weekly/biweekly)
+                          if (recurring && recurringFrequency) {
+                            const repeatDays = eachDayOfInterval({
+                              start: new Date(
+                                rangeStart.getTime() +
+                                  (recurringFrequency === "WEEKLY" ? 7 : 14) *
+                                    24 *
+                                    60 *
+                                    60 *
+                                    1000
+                              ),
+                              end: new Date(
+                                rangeEnd.getTime() +
+                                  (recurringFrequency === "WEEKLY" ? 7 : 14) *
+                                    24 *
+                                    60 *
+                                    60 *
+                                    1000
+                              ),
+                            });
+                            for (const d of repeatDays) {
+                              const dayName = d.toLocaleDateString("en-US", {
+                                weekday: "long",
+                              });
+                              if (weekdays.includes(dayName)) allDates.push(d);
+                            }
+                          }
                         }
-                      }
 
-                      if (!allDates.length)
-                        return (
-                          <tr>
-                            <td
-                              colSpan={5}
-                              className="text-center text-muted-foreground py-3"
-                            >
-                              No valid dates selected
+                        if (!allDates.length)
+                          return (
+                            <tr>
+                              <td
+                                colSpan={5}
+                                className="text-center text-muted-foreground py-3"
+                              >
+                                No valid dates selected
+                              </td>
+                            </tr>
+                          );
+
+                        return allDates.map((d, idx) => (
+                          <tr
+                            key={idx}
+                            className="border-b hover:bg-accent/40 transition-colors"
+                          >
+                            <td className="px-2 py-1">{idx + 1}</td>
+                            <td className="px-2 py-1">{format(d, "PPP")}</td>
+                            <td className="px-2 py-1">
+                              {d.toLocaleDateString("en-US", {
+                                weekday: "long",
+                              })}
                             </td>
+                            <td className="px-2 py-1">{startTime}</td>
+                            <td className="px-2 py-1">{endTime}</td>
                           </tr>
-                        );
+                        ));
+                      })()}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
 
-                      return allDates.map((d, idx) => (
-                        <tr
-                          key={idx}
-                          className="border-b hover:bg-accent/40 transition-colors"
-                        >
-                          <td className="px-2 py-1">{idx + 1}</td>
-                          <td className="px-2 py-1">{format(d, "PPP")}</td>
-                          <td className="px-2 py-1">
-                            {d.toLocaleDateString("en-US", { weekday: "long" })}
-                          </td>
-                          <td className="px-2 py-1">{startTime}</td>
-                          <td className="px-2 py-1">{endTime}</td>
-                        </tr>
-                      ));
-                    })()}
-                  </tbody>
-                </table>
+              <div className="pt-4">
+                <Button
+                  onClick={handleConfirm}
+                  disabled={loading}
+                  className="w-full mt-2"
+                >
+                  {loading ? "Creating..." : "Confirm & Create Schedule"}
+                </Button>
               </div>
             </div>
-
-            <div className="pt-4">
-              <Button
-                onClick={handleConfirm}
-                disabled={loading}
-                className="w-full mt-2"
-              >
-                {loading ? "Creating..." : "Confirm & Create Schedule"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </ProtectedRoute>
   );
 }

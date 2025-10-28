@@ -81,13 +81,15 @@ export async function createScheduleAndVisitBatch(input: {
       recurringScheduleID,
       groupVisit: input.groupVisit,
       employeeID: employeeID ?? null,
-      employeeIDs: undefined, // not needed here (we loop ourselves)
+      employeeIDs: undefined,
     });
   };
 
+  // 1️⃣ Generate base schedules for the first range
+  const baseDates: { start: Date; end: Date }[] = [];
+
   for (const dateString of input.selectedDates) {
     const date = new Date(dateString);
-
     const start = new Date(date);
     start.setHours(
       new Date(input.baseSchedule.startTime).getHours(),
@@ -104,7 +106,9 @@ export async function createScheduleAndVisitBatch(input: {
       0
     );
 
-    // Non-visit: create one Schedule PER employee (no visits)
+    baseDates.push({ start, end });
+
+    // create schedules for the base week
     if (
       input.baseSchedule.scheduleType !== "visit" &&
       input.employeeIDs?.length
@@ -112,8 +116,7 @@ export async function createScheduleAndVisitBatch(input: {
       for (const empId of input.employeeIDs) {
         allSchedules.push(await makeOne(start, end, empId));
       }
-    } // Visit: make separate schedules per employee if groupVisit
-    else if (
+    } else if (
       input.baseSchedule.scheduleType === "visit" &&
       input.employeeIDs?.length
     ) {
@@ -150,17 +153,18 @@ export async function createScheduleAndVisitBatch(input: {
         })
       );
     }
+  }
 
-    // Recurrence (second set only, as per your current logic)
-    // Recurrence handling
-    if (input.recurring && input.recurringFrequency) {
-      const addDaysCount = input.recurringFrequency === "BIWEEKLY" ? 14 : 7;
+  // 2️⃣ Apply recurrence after processing all base week dates
+  if (input.recurring && input.recurringFrequency) {
+    const offsetDays = input.recurringFrequency === "BIWEEKLY" ? 14 : 7;
+
+    for (const { start, end } of baseDates) {
       const nextStart = new Date(start);
-      nextStart.setDate(start.getDate() + addDaysCount);
+      nextStart.setDate(start.getDate() + offsetDays);
       const nextEnd = new Date(end);
-      nextEnd.setDate(end.getDate() + addDaysCount);
+      nextEnd.setDate(end.getDate() + offsetDays);
 
-      // Office/facility multi-employee recurrence
       if (
         input.baseSchedule.scheduleType !== "visit" &&
         input.employeeIDs?.length
@@ -168,9 +172,7 @@ export async function createScheduleAndVisitBatch(input: {
         for (const empId of input.employeeIDs) {
           allSchedules.push(await makeOne(nextStart, nextEnd, empId));
         }
-      }
-      // Visit group recurrence (❗ now loops per employee)
-      else if (
+      } else if (
         input.baseSchedule.scheduleType === "visit" &&
         input.groupVisit &&
         input.employeeIDs?.length
@@ -192,9 +194,7 @@ export async function createScheduleAndVisitBatch(input: {
             })
           );
         }
-      }
-      // Visit single-employee recurrence
-      else {
+      } else {
         allSchedules.push(
           await createScheduleAndVisit({
             ...input.baseSchedule,
@@ -214,41 +214,179 @@ export async function createScheduleAndVisitBatch(input: {
         );
       }
     }
-    // if (input.recurring && input.recurringFrequency) {
-    //   const addDaysCount = input.recurringFrequency === "BIWEEKLY" ? 14 : 7;
-    //   const nextStart = new Date(start);
-    //   nextStart.setDate(start.getDate() + addDaysCount);
-    //   const nextEnd = new Date(end);
-    //   nextEnd.setDate(end.getDate() + addDaysCount);
-
-    //   if (
-    //     input.baseSchedule.scheduleType !== "visit" &&
-    //     input.employeeIDs?.length
-    //   ) {
-    //     for (const empId of input.employeeIDs) {
-    //       allSchedules.push(await makeOne(nextStart, nextEnd, empId));
-    //     }
-    //   } else {
-    //     allSchedules.push(
-    //       await createScheduleAndVisit({
-    //         ...input.baseSchedule,
-    //         eventDate: nextStart,
-    //         startTime: nextStart,
-    //         endTime: nextEnd,
-    //         recurring: true,
-    //         recurringFrequency: input.recurringFrequency,
-    //         createdScheduleID,
-    //         recurringScheduleID,
-    //         groupVisit: input.groupVisit,
-    //         employeeIDs: input.employeeIDs,
-    //       })
-    //     );
-    //   }
-    // }
   }
 
   return allSchedules;
 }
+
+// export async function createScheduleAndVisitBatch(input: {
+//   baseSchedule: any;
+//   selectedDates: string[];
+//   groupVisit?: boolean;
+//   employeeIDs?: string[];
+//   recurring?: boolean;
+//   recurringFrequency?: "WEEKLY" | "BIWEEKLY";
+// }) {
+//   const createdScheduleID = await generateUniqueId("SCH");
+//   const recurringScheduleID = input.recurring
+//     ? await generateUniqueId("REC")
+//     : null;
+
+//   const allSchedules: any[] = [];
+
+//   const makeOne = async (
+//     eventStart: Date,
+//     eventEnd: Date,
+//     employeeID?: string | null
+//   ) => {
+//     return createScheduleAndVisit({
+//       ...input.baseSchedule,
+//       eventDate: eventStart,
+//       startTime: eventStart,
+//       endTime: eventEnd,
+//       recurring: !!input.recurring,
+//       recurringFrequency: input.recurringFrequency ?? null,
+//       createdScheduleID,
+//       recurringScheduleID,
+//       groupVisit: input.groupVisit,
+//       employeeID: employeeID ?? null,
+//       employeeIDs: undefined, // not needed here (we loop ourselves)
+//     });
+//   };
+
+//   for (const dateString of input.selectedDates) {
+//     const date = new Date(dateString);
+
+//     const start = new Date(date);
+//     start.setHours(
+//       new Date(input.baseSchedule.startTime).getHours(),
+//       new Date(input.baseSchedule.startTime).getMinutes(),
+//       0,
+//       0
+//     );
+
+//     const end = new Date(date);
+//     end.setHours(
+//       new Date(input.baseSchedule.endTime).getHours(),
+//       new Date(input.baseSchedule.endTime).getMinutes(),
+//       0,
+//       0
+//     );
+
+//     // Non-visit: create one Schedule PER employee (no visits)
+//     if (
+//       input.baseSchedule.scheduleType !== "visit" &&
+//       input.employeeIDs?.length
+//     ) {
+//       for (const empId of input.employeeIDs) {
+//         allSchedules.push(await makeOne(start, end, empId));
+//       }
+//     } // Visit: make separate schedules per employee if groupVisit
+//     else if (
+//       input.baseSchedule.scheduleType === "visit" &&
+//       input.employeeIDs?.length
+//     ) {
+//       for (const empId of input.employeeIDs) {
+//         allSchedules.push(
+//           await createScheduleAndVisit({
+//             ...input.baseSchedule,
+//             eventDate: start,
+//             startTime: start,
+//             endTime: end,
+//             recurring: !!input.recurring,
+//             recurringFrequency: input.recurringFrequency ?? null,
+//             createdScheduleID,
+//             recurringScheduleID,
+//             groupVisit: input.groupVisit,
+//             employeeID: empId,
+//             employeeIDs: [empId],
+//           })
+//         );
+//       }
+//     } else {
+//       allSchedules.push(
+//         await createScheduleAndVisit({
+//           ...input.baseSchedule,
+//           eventDate: start,
+//           startTime: start,
+//           endTime: end,
+//           recurring: !!input.recurring,
+//           recurringFrequency: input.recurringFrequency ?? null,
+//           createdScheduleID,
+//           recurringScheduleID,
+//           groupVisit: input.groupVisit,
+//           employeeIDs: input.employeeIDs,
+//         })
+//       );
+//     }
+
+//     // Recurrence (second set only, as per your current logic)
+//     // Recurrence handling
+//     if (input.recurring && input.recurringFrequency) {
+//       const addDaysCount = input.recurringFrequency === "BIWEEKLY" ? 14 : 7;
+//       const nextStart = new Date(start);
+//       nextStart.setDate(start.getDate() + addDaysCount);
+//       const nextEnd = new Date(end);
+//       nextEnd.setDate(end.getDate() + addDaysCount);
+
+//       // Office/facility multi-employee recurrence
+//       if (
+//         input.baseSchedule.scheduleType !== "visit" &&
+//         input.employeeIDs?.length
+//       ) {
+//         for (const empId of input.employeeIDs) {
+//           allSchedules.push(await makeOne(nextStart, nextEnd, empId));
+//         }
+//       }
+//       // Visit group recurrence (❗ now loops per employee)
+//       else if (
+//         input.baseSchedule.scheduleType === "visit" &&
+//         input.groupVisit &&
+//         input.employeeIDs?.length
+//       ) {
+//         for (const empId of input.employeeIDs) {
+//           allSchedules.push(
+//             await createScheduleAndVisit({
+//               ...input.baseSchedule,
+//               eventDate: nextStart,
+//               startTime: nextStart,
+//               endTime: nextEnd,
+//               recurring: true,
+//               recurringFrequency: input.recurringFrequency,
+//               createdScheduleID,
+//               recurringScheduleID,
+//               groupVisit: true,
+//               employeeID: empId,
+//               employeeIDs: [empId],
+//             })
+//           );
+//         }
+//       }
+//       // Visit single-employee recurrence
+//       else {
+//         allSchedules.push(
+//           await createScheduleAndVisit({
+//             ...input.baseSchedule,
+//             eventDate: nextStart,
+//             startTime: nextStart,
+//             endTime: nextEnd,
+//             recurring: true,
+//             recurringFrequency: input.recurringFrequency,
+//             createdScheduleID,
+//             recurringScheduleID,
+//             groupVisit: input.groupVisit,
+//             employeeID:
+//               input.employeeIDs && input.employeeIDs.length === 1
+//                 ? input.employeeIDs[0]
+//                 : null,
+//           })
+//         );
+//       }
+//     }
+//   }
+
+//   return allSchedules;
+// }
 
 export const getAllSchedules = async () => {
   const schedules = await prisma.schedule.findMany({
