@@ -85,7 +85,7 @@ export async function createScheduleAndVisitBatch(input: {
     });
   };
 
-  // 1️⃣ Generate base schedules for the first range
+  // Generate base schedules for the first range
   const baseDates: { start: Date; end: Date }[] = [];
 
   for (const dateString of input.selectedDates) {
@@ -108,7 +108,7 @@ export async function createScheduleAndVisitBatch(input: {
 
     baseDates.push({ start, end });
 
-    // create schedules for the base week
+    // Create schedules for the base week
     if (
       input.baseSchedule.scheduleType !== "visit" &&
       input.employeeIDs?.length
@@ -155,7 +155,7 @@ export async function createScheduleAndVisitBatch(input: {
     }
   }
 
-  // 2️⃣ Apply recurrence after processing all base week dates
+  // Apply recurrence after processing all base week dates
   if (input.recurring && input.recurringFrequency) {
     const offsetDays = input.recurringFrequency === "BIWEEKLY" ? 14 : 7;
 
@@ -417,8 +417,6 @@ export async function getScheduleById(id: string) {
   });
 }
 
-import type { Prisma } from "@prisma/client";
-
 export async function createScheduleAndVisit(
   input: CreateScheduleInput & {
     groupVisit?: boolean;
@@ -443,8 +441,6 @@ export async function createScheduleAndVisit(
     const scheduledHours =
       (input.endTime.getTime() - input.startTime.getTime()) / 3600000;
 
-    // Create the schedule
-
     // Handle office/facility multi-employee case
     if (input.scheduleType !== "visit" && input.employeeIDs?.length) {
       const schedules = [];
@@ -459,8 +455,6 @@ export async function createScheduleAndVisit(
             authorizationBillUnitType: input.authorizationBillUnitType,
             eventStatus: input.eventStatus,
             agencyID: input.agencyID,
-
-            // 🔴 these two were missing and are required by your schema
             eventCode: input.eventCode,
             dates: input.dates ?? [],
 
@@ -687,8 +681,6 @@ export async function generateNextRecurringSchedules() {
 
         recurring: true,
         recurringFrequency: s.recurringFrequency ?? undefined,
-
-        // keep the same recurrence chain id; coerce null → undefined (fixes TS2322)
         recurringScheduleID: s.recurringScheduleID ?? undefined,
 
         // new createdScheduleID for the new set
@@ -702,8 +694,6 @@ export async function generateNextRecurringSchedules() {
         billAmount: s.billAmount ?? undefined,
 
         agencyID: s.agencyID,
-        // We don’t need to pass groupVisitCode/employeeIDs explicitly here:
-        // each stored schedule row already represents the per-employee instance.
       });
     }
   }

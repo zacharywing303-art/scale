@@ -1,6 +1,5 @@
 import prisma from "../lib/db";
 
-// ✅ Create new role with optional permissions
 export async function createRole(data: {
   name: string;
   agencyId: string;
@@ -16,7 +15,6 @@ export async function createRole(data: {
   });
 }
 
-// ✅ Fetch all roles (optionally by agency)
 export async function getRoles(agencyId?: string) {
   return prisma.roleType.findMany({
     where: agencyId ? { agencyId } : {},
@@ -25,7 +23,6 @@ export async function getRoles(agencyId?: string) {
   });
 }
 
-// ✅ Fetch single role by ID
 export async function getRoleById(id: string) {
   return prisma.roleType.findUnique({
     where: { id },
@@ -33,7 +30,6 @@ export async function getRoleById(id: string) {
   });
 }
 
-// ✅ Update role name/description/permissions
 export async function updateRole(
   id: string,
   data: {
@@ -56,14 +52,12 @@ export async function updateRole(
   });
 }
 
-// ✅ Delete role
 export async function deleteRole(id: string) {
   return prisma.roleType.delete({
     where: { id },
   });
 }
 
-// Create new permission
 export async function createPermission(data: {
   name: string;
   roleId?: string;
@@ -71,7 +65,6 @@ export async function createPermission(data: {
   return prisma.permission.create({ data });
 }
 
-// Get all permissions (optionally filtered by roleId)
 export async function getPermissions(roleId?: string) {
   return prisma.permission.findMany({
     where: roleId ? { roleId } : {},
@@ -79,12 +72,10 @@ export async function getPermissions(roleId?: string) {
   });
 }
 
-// Get a single permission by ID
 export async function getPermissionById(id: string) {
   return prisma.permission.findUnique({ where: { id } });
 }
 
-// Update permission name or role link
 export async function updatePermission(
   id: string,
   data: { name?: string; roleId?: string | null }
@@ -92,7 +83,6 @@ export async function updatePermission(
   return prisma.permission.update({ where: { id }, data });
 }
 
-// Delete a permission
 export async function deletePermission(id: string) {
   return prisma.permission.delete({ where: { id } });
 }
@@ -123,7 +113,7 @@ export async function getAvailableRolesForUser(userId: string) {
   const agencyRoles = await prisma.roleType.findMany({
     where: { agencyId: user.agencyId! },
     include: {
-      permissions: true, // optional if you want role permissions too
+      permissions: true, // optional if we want role permissions too
     },
   });
 

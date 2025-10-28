@@ -10,7 +10,6 @@ import {
 
 const router = Router();
 
-// GET /api/schedules
 router.get("/", getSchedulesController);
 router.post("/", createScheduleController);
 router.put("/:id", updateScheduleController);

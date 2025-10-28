@@ -30,7 +30,7 @@ export function registerChatNamespace(io: Server) {
       lastThreadStart[participantKey] = now;
 
       try {
-        // 🔍 First, find existing thread
+        // Find existing thread
         let thread = await prisma.chatThread.findFirst({
           where: {
             agencyCode: me.agencyCode,
@@ -63,7 +63,6 @@ export function registerChatNamespace(io: Server) {
 
         if (!thread) {
           isNew = true;
-          // ✅ Use transaction to avoid race duplicates
           thread = await prisma.$transaction(async (tx) => {
             const t = await tx.chatThread.create({
               data: {
@@ -108,7 +107,6 @@ export function registerChatNamespace(io: Server) {
         if (thread) {
           socket.join(thread.id);
 
-          // ✅ Always acknowledge with the thread itself
           ack?.({ success: true, thread, isNew });
 
           console.log(
@@ -142,21 +140,21 @@ export function registerChatNamespace(io: Server) {
         lastMessageSent[msgKey] = now;
 
         try {
-          // ✅ Create the message
+          // Create the message
           const message = await prisma.chatMessage.create({
             data: { threadId, senderId, senderType, content },
           });
 
-          // ✅ Update thread’s "updatedAt" timestamp
+          // Update thread’s "updatedAt" timestamp
           await prisma.chatThread.update({
             where: { id: threadId },
             data: { updatedAt: new Date() },
           });
 
-          // ✅ Broadcast to everyone in the thread room
+          // Broadcast to everyone in the thread room
           chat.to(threadId).emit("newMessage", { threadId, message });
 
-          // ✅ Also emit a lightweight event for thread list updates (optional)
+          // Emit a lightweight event for thread list updates (optional)
           chat.emit("threadUpdated", { threadId, lastMessage: message });
 
           ack?.({ success: true });

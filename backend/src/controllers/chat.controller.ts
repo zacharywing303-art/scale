@@ -5,7 +5,6 @@ import {
   getParticipants,
   getUnreadCountForUser,
 } from "../services/chat.service";
-import prisma from "../lib/db";
 
 export async function fetchThreads(req: Request, res: Response) {
   try {

@@ -19,7 +19,7 @@ export async function removeMissedVisit(req: Request, res: Response) {
 
 export async function rescheduleMissedVisit(req: Request, res: Response) {
   const { id } = req.params;
-  // You could also accept a payload to create a new schedule+visit here,
+  // We may upscale toaccept a payload to create a new schedule+visit here,
   // then pass its Schedule.id to mark a link before deleting.
   await resolveMissedVisit(id);
   res.status(200).json({ ok: true });

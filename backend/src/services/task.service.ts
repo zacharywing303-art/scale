@@ -59,7 +59,7 @@ export const completeTask = async (taskId: string) => {
   const task = await prisma.task.findUnique({ where: { id: taskId } });
   if (!task) throw new Error("Task not found");
 
-  // ✅ If already complete → revert to incomplete
+  // If already complete → revert to incomplete
   if (task.isDone) {
     return prisma.task.update({
       where: { id: taskId },
@@ -71,7 +71,7 @@ export const completeTask = async (taskId: string) => {
     });
   }
 
-  // ✅ If marking complete now
+  // If marking complete now
   if (task.recurring && task.frequency) {
     let newDueDate = new Date();
     switch (task.frequency) {
@@ -104,7 +104,7 @@ export const completeTask = async (taskId: string) => {
     });
   }
 
-  // ✅ Non-recurring → mark as complete
+  // Non-recurring → mark as complete
   return prisma.task.update({
     where: { id: taskId },
     data: {

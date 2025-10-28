@@ -13,10 +13,6 @@ export const getClient = async (req: Request, res: Response) => {
   res.json(client);
 };
 
-// export const createClient = async (req: Request, res: Response) => {
-//   const client = await clientService.createClient(req.body);
-//   res.status(201).json(client);
-// };
 export const createClient = async (req: Request, res: Response) => {
   try {
     if (!req.body.agencyID) {

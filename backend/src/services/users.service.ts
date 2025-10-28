@@ -6,7 +6,7 @@ export const getAllUsers = async () => {
     include: {
       agency: true,
       roleType: {
-        include: { permissions: true }, // ✅ include permissions
+        include: { permissions: true }, // include permissions
       },
     },
   });

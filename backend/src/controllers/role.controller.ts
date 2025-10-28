@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import * as roleService from "../services/role.service";
 
-// ✅ Create new role
 export async function createRole(req: Request, res: Response) {
   try {
     const role = await roleService.createRole(req.body);
@@ -11,7 +10,6 @@ export async function createRole(req: Request, res: Response) {
   }
 }
 
-// ✅ Get roles (optionally filtered by agency)
 export async function getRoles(req: Request, res: Response) {
   try {
     const { agencyId } = req.query;
@@ -24,7 +22,6 @@ export async function getRoles(req: Request, res: Response) {
   }
 }
 
-// ✅ Get single role
 export async function getRoleById(req: Request, res: Response) {
   try {
     const role = await roleService.getRoleById(req.params.id);
@@ -35,7 +32,6 @@ export async function getRoleById(req: Request, res: Response) {
   }
 }
 
-// ✅ Update role
 export async function updateRole(req: Request, res: Response) {
   try {
     const role = await roleService.updateRole(req.params.id, req.body);
@@ -45,7 +41,6 @@ export async function updateRole(req: Request, res: Response) {
   }
 }
 
-// ✅ Delete role
 export async function deleteRole(req: Request, res: Response) {
   try {
     await roleService.deleteRole(req.params.id);

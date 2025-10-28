@@ -15,7 +15,6 @@ export const getEmployee = async (req: Request, res: Response) => {
 
 export const createEmployee = async (req: Request, res: Response) => {
   try {
-    // use agencyID passed from frontend instead of session
     if (!req.body.agencyID) {
       return res.status(400).json({ message: "Agency ID is required" });
     }
@@ -41,19 +40,6 @@ export const deleteEmployee = async (req: Request, res: Response) => {
   res.status(204).send();
 };
 
-// export const getEmployeesByAgency = async (req: Request, res: Response) => {
-//   try {
-//     const { agencyId } = req.params;
-//     const employees = await prisma.employee.findMany({
-//       where: { agencyID: agencyId },
-//       select: { id: true, name: true, email: true },
-//     });
-//     res.json(employees);
-//   } catch (err) {
-//     console.error("Error fetching employees:", err);
-//     res.status(500).json({ message: "Failed to fetch employees" });
-//   }
-// };
 export async function getEmployeesByAgency(req: Request, res: Response) {
   try {
     const { agencyId } = req.params;

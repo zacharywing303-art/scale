@@ -15,8 +15,8 @@ export async function deleteMissedVisit(id: string) {
 }
 
 /**
- * Option A (per your spec): when rescheduling, we DELETE the MissedVisit row.
- * If you'd rather keep an audit, mark rescheduled=true and link replacement schedule id instead.
+ * When rescheduling, we DELETE the MissedVisit row, subject to change.
+ * We may use logic to keep an audit, mark rescheduled=true and link replacement schedule id instead.
  */
 export async function resolveMissedVisit(missedVisitId: string) {
   return prisma.missedVisit.delete({ where: { id: missedVisitId } });

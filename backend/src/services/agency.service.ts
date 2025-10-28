@@ -18,7 +18,7 @@ export const createAgencyWithAdmin = async (data: {
 }) => {
   const agencyCode = generateAgencyCode();
 
-  // 1. Create the agency first without agencyAdminId
+  // Create the agency first without agencyAdminId
   const agency = await prisma.agency.create({
     data: {
       name: data.name,
@@ -32,7 +32,7 @@ export const createAgencyWithAdmin = async (data: {
     },
   });
 
-  // 2. Create the admin user linked to agency
+  // Create the admin user linked to agency
   const user = await prisma.user.create({
     data: {
       name: data.contactPerson,
@@ -44,7 +44,7 @@ export const createAgencyWithAdmin = async (data: {
     },
   });
 
-  // 3. Update agency to set agencyAdminId
+  // Update agency to set agencyAdminId
   const updatedCreatedAgency = await prisma.agency.update({
     where: { id: agency.id },
     data: {

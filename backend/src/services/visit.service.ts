@@ -61,7 +61,7 @@ export async function createVisit(data: any) {
     groupVisitCode,
     scheduledTimeIn,
     scheduledTimeOut,
-    scheduledHours, // ✅ new
+    scheduledHours,
     source = "manual",
     latitudeIn,
     longitudeIn,
@@ -70,7 +70,7 @@ export async function createVisit(data: any) {
     scheduleID,
   } = data;
 
-  // 1️⃣ Load employee and client
+  // Load employee and client
   const [employee, client, service] = await Promise.all([
     prisma.employee.findUnique({ where: { id: employeeId } }),
     prisma.client.findUnique({
@@ -84,7 +84,7 @@ export async function createVisit(data: any) {
 
   if (!employee || !client) throw new Error("Invalid employee or client");
 
-  // 2️⃣ Compute derived visit timing info
+  // Compute derived visit timing info
   const hasOutCall = !!callOut;
   const elapsedMinutes = hasOutCall
     ? differenceInMinutes(new Date(callOut), new Date(callIn))
@@ -92,7 +92,7 @@ export async function createVisit(data: any) {
   const hours = hasOutCall ? elapsedMinutes / 60 : null;
   const units = hasOutCall ? Math.floor(elapsedMinutes / 15) : null;
 
-  // 3️⃣ Determine visit type and source
+  // Determine visit type and source
   let visitStatus: VisitStatus = "Scheduled";
   let callType = "Manual";
   let visitSource = "Unity Care";
@@ -111,13 +111,13 @@ export async function createVisit(data: any) {
     visitStatus = hasOutCall ? "Verified" : "InProcess";
   }
 
-  // 4️⃣ Supervisor and address
+  // Supervisor and address
   const supervisor = client.supervisor || employee.supervisor || null;
   const clientAddress = client.addresses[0]
     ? `${client.addresses[0].addressLine1}, ${client.addresses[0].city ?? ""}`
     : "N/A";
 
-  // 5️⃣ Compute exceptions
+  // Compute exceptions
   const exceptions = computeExceptions({
     ...data,
     service,
@@ -125,7 +125,7 @@ export async function createVisit(data: any) {
     hours,
   });
 
-  // 6️⃣ Transaction — ensures visit + exceptions + history stay in sync
+  // Transaction — ensures visit + exceptions + history stay in sync
   const newVisit = await prisma.$transaction(async (tx) => {
     // Create visit
     const visit = await tx.visit.create({
@@ -238,19 +238,6 @@ export async function getVisitsByAgency(agencyId: string) {
   });
 }
 
-/**
- * Get single visit by ID
- */
-// export async function getVisitById(visitId: number) {
-//   return prisma.visit.findUnique({
-//     where: { id: visitId },
-//     include: {
-//       visitTasks: true,
-//       exceptions: true,
-//       history: true,
-//     },
-//   });
-// }
 export async function getVisitById(visitId: number) {
   return prisma.visit.findUnique({
     where: { id: visitId },
@@ -258,8 +245,8 @@ export async function getVisitById(visitId: number) {
       visitTasks: true,
       exceptions: true,
       history: true,
-      agency: { select: { name: true, code: true } }, // ✅
-      service: { select: { id: true, name: true } }, // ✅
+      agency: { select: { name: true, code: true } },
+      service: { select: { id: true, name: true } },
     },
   });
 }
@@ -268,14 +255,14 @@ export async function getVisitById(visitId: number) {
  * Update a visit and re-sync exceptions
  */
 export async function updateVisit(id: number, data: any) {
-  // 1️⃣ Get the current visit
+  // Get the current visit
   const existing = await prisma.visit.findUnique({
     where: { id },
     include: { service: true },
   });
   if (!existing) throw new Error("Visit not found");
 
-  // 2️⃣ If serviceId changed, load new service to update name
+  // If serviceId changed, load new service to update name
   let serviceName = existing.serviceName;
   if (data.serviceId && data.serviceId !== existing.serviceId) {
     const svc = await prisma.service.findUnique({
@@ -284,13 +271,13 @@ export async function updateVisit(id: number, data: any) {
     serviceName = svc ? `${svc.code} - ${svc.name}` : null;
   }
 
-  // 3️⃣ Merge existing + new data (so missing fields don’t become undefined)
+  // Merge existing + new data (so missing fields don’t become undefined)
   const mergedData = { ...existing, ...data, serviceName };
 
-  // 4️⃣ Recompute exceptions using merged data (so nothing gets lost)
+  // Recompute exceptions using merged data (so nothing gets lost)
   const exceptions = computeExceptions(mergedData);
 
-  // 5️⃣ Transaction for safe update
+  // Transaction for safe update
   const updated = await prisma.$transaction(async (tx) => {
     // update the visit
     const visit = await tx.visit.update({

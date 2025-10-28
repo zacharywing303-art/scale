@@ -48,7 +48,6 @@ export const getEmployeeById = async (id: string) => {
       email: true,
       languages: true,
       mobileUser: true,
-      // add more fields if you need them
     },
   });
 };

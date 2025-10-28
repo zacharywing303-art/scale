@@ -19,6 +19,4 @@ router.delete("/:id", deleteAgencyController);
 router.patch("/:id/settings", updateAgencySettingsController);
 router.patch("/:id/save_changes", saveAgencyChangesSettingsController);
 
-console.log("✔ agency routes loaded");
-
 export default router;
