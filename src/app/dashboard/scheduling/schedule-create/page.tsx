@@ -192,20 +192,6 @@ export default function CreateSchedulePage() {
     }
   };
 
-  // const canSubmit = () => {
-  //   if (invalidDate) return false;
-  //   if (!type || !startTime || !endTime) return false;
-  //   if (oneDay) {
-  //     if (!selectedDate) return false;
-  //     if (selectedDate <= new Date()) return false;
-  //     return true;
-  //   }
-  //   if (rangeStart && rangeEnd && weekdays.length > 0) {
-  //     if (rangeStart <= new Date() || rangeEnd <= new Date()) return false;
-  //     return true;
-  //   }
-  //   return false;
-  // };
   const canSubmit = () => {
     if (invalidDate || !type || !startTime || !endTime) return false;
 
@@ -244,12 +230,6 @@ export default function CreateSchedulePage() {
     return [];
   };
 
-  // Filter employees by office/facility flags
-  // const filteredEmployees = employees.filter((e) => {
-  //   if (officeStaffOnly) return e.officeStaff;
-  //   if (facilityStaffOnly) return e.facilityStaff;
-  //   return true;
-  // });
   const filteredEmployees = employees.filter((e) => {
     if (officeStaffOnly) return e.officeStaff;
     if (facilityStaffOnly) return e.facilityStaff;
@@ -274,21 +254,6 @@ export default function CreateSchedulePage() {
         return;
       }
 
-      // const baseSchedule = {
-      //   scheduleType: type,
-      //   clientID: client || "",
-      //   clientMedicaidId: "TEMP123",
-      //   authorizations: authorization || null,
-      //   serviceId: service || null,
-      //   officeReason: type === "office" ? "Office Schedule" : null,
-      //   eventCode: "EVT001",
-      //   authorizationBillUnitType: "Hourly",
-      //   eventStatus: "Confirmed",
-      //   startTime: buildDateTime(new Date(), startTime).toISOString(),
-      //   endTime: buildDateTime(new Date(), endTime).toISOString(),
-      //   comments,
-      //   agencyID: user?.agency?.id,
-      // };
       const baseSchedule: any = {
         scheduleType: type,
         // visit-only fields
@@ -322,25 +287,6 @@ export default function CreateSchedulePage() {
             : [visitEmployees[0]]
           : visitEmployees; // office/facility support multi employees always
 
-      // const payload: any =
-      //   !oneDay || recurring
-      //     ? {
-      //         baseSchedule,
-      //         selectedDates,
-      //         groupVisit,
-      //         employeeIDs: groupVisit ? visitEmployees : [visitEmployees[0]],
-      //         recurring,
-      //         recurringFrequency: recurring ? recurringFrequency : undefined,
-      //       }
-      //     : {
-      //         ...baseSchedule,
-      //         eventDate: selectedDate?.toISOString(),
-      //         startTime: buildDateTime(selectedDate!, startTime).toISOString(),
-      //         endTime: buildDateTime(selectedDate!, endTime).toISOString(),
-      //         groupVisit,
-      //         employeeIDs: groupVisit ? visitEmployees : [],
-      //         employeeID: !groupVisit ? visitEmployees[0] || null : null,
-      //       };
       const payload: any = isBatch
         ? {
             baseSchedule,
@@ -539,37 +485,6 @@ export default function CreateSchedulePage() {
               </button>
             ))}
           </div>
-
-          {/* <div className="flex gap-4 mt-3">
-            {[
-              { label: "From", date: rangeStart, setter: setRangeStart },
-              { label: "To", date: rangeEnd, setter: setRangeEnd },
-            ].map(({ label, date, setter }) => (
-              <div key={label}>
-                <Label>{label}</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="w-[220px] justify-start"
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {date ? format(date, "PPP") : "Pick date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="p-0">
-                    <Calendar
-  mode="single"
-  selected={date}
-  onSelect={setter}
-  fromDate={tomorrow} // was today
-/>
-
-                  </PopoverContent>
-                </Popover>
-              </div>
-            ))}
-          </div> */}
           {/* Range Start */}
           <div>
             <Label>From *</Label>
@@ -673,35 +588,6 @@ export default function CreateSchedulePage() {
               ))}
             </SelectContent>
           </Select>
-
-          {/* <div className="flex items-center gap-3 mt-3">
-            <Checkbox
-              checked={groupVisit}
-              onCheckedChange={(v) => {
-                const val = !!v;
-                setGroupVisit(val);
-                if (val) generateGroupVisitCode(); // auto-generate code
-                else setGroupVisitCode(null);
-              }}
-            />
-            <Label>Group Visit?</Label>
-
-            {groupVisit && groupVisitCode && (
-              <span className="text-sm text-muted-foreground">
-                Code: <strong>{groupVisitCode}</strong>
-              </span>
-            )}
-          </div>
-
-          {clientAssignedEmployees.length > 0 && (
-            <div className="flex items-center gap-3 mt-2">
-              <Checkbox
-                checked={showAssignedOnly}
-                onCheckedChange={(v) => setShowAssignedOnly(!!v)}
-              />
-              <Label>Show only assigned employees for client</Label>
-            </div>
-          )} */}
           <div className="flex items-center gap-3 mt-3">
             <Checkbox
               checked={groupVisit}
@@ -841,11 +727,16 @@ export default function CreateSchedulePage() {
           <div className="space-y-3 text-sm">
             <div className="grid grid-cols-2 gap-y-1">
               <div>
-                <strong>Type:</strong> {type}
+                <strong>Type:</strong>{" "}
+                {type.charAt(0).toUpperCase() + type.slice(1)}
               </div>
               <div>
                 <strong>Recurring:</strong>{" "}
-                {recurring ? `${recurringFrequency}` : "No"}
+                {recurring
+                  ? `${recurringFrequency.charAt(0)}${recurringFrequency
+                      .slice(1)
+                      .toLowerCase()}`
+                  : "No"}
               </div>
 
               {oneDay ? (
@@ -871,10 +762,12 @@ export default function CreateSchedulePage() {
               )}
 
               <div>
-                <strong>Start Time:</strong> {startTime}
+                <strong>Start Time:</strong>{" "}
+                {format(buildDateTime(new Date(), startTime), "hh:mm a")}
               </div>
               <div>
-                <strong>End Time:</strong> {endTime}
+                <strong>End Time:</strong>{" "}
+                {format(buildDateTime(new Date(), endTime), "hh:mm a")}
               </div>
 
               {type === "visit" && (
@@ -887,14 +780,14 @@ export default function CreateSchedulePage() {
                     <strong>Service:</strong>{" "}
                     {services.find((s) => s.id === service)?.name || "N/A"}
                   </div>
-                  <div className="col-span-2">
-                    <strong>Employees:</strong>{" "}
-                    {visitEmployees
-                      .map((id) => employees.find((e) => e.id === id)?.name)
-                      .join(", ") || "None"}
-                  </div>
                 </>
               )}
+              <div className="col-span-2">
+                <strong>Employees:</strong>{" "}
+                {visitEmployees
+                  .map((id) => employees.find((e) => e.id === id)?.name)
+                  .join(", ") || "None"}
+              </div>
             </div>
 
             <div className="border-t pt-3 mt-2">
