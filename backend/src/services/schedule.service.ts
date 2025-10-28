@@ -29,7 +29,7 @@ type CreateScheduleInput = {
   groupVisitCode?: string | null;
   recurringFrequency?: "WEEKLY" | "BIWEEKLY" | null;
   createdScheduleID?: string;
-  recurringScheduleID?: string | null;
+  recurringScheduleID?: string;
 };
 
 async function generateUniqueId(prefix: string) {
@@ -608,61 +608,105 @@ export async function getSchedulesByAgency(agencyId: string) {
 export async function generateNextRecurringSchedules() {
   const now = new Date();
 
-  // Fetch all recurring schedules whose last event has passed
-  const recurringSets = await prisma.schedule.findMany({
+  // Find distinct recurring sets (groups) that are active
+  const groups = await prisma.schedule.groupBy({
+    by: ["recurringScheduleID", "recurringFrequency"],
     where: {
       recurring: true,
-      eventDate: { lt: now },
+      recurringScheduleID: { not: null },
     },
-    distinct: ["recurringScheduleID"],
-    orderBy: { eventDate: "desc" },
+    _max: { eventDate: true }, // last date in that group
   });
 
-  for (const schedule of recurringSets) {
-    if (!schedule.recurringScheduleID || !schedule.recurringFrequency) continue;
+  for (const g of groups) {
+    const recurringScheduleID = g.recurringScheduleID;
+    const freq = g.recurringFrequency;
 
-    const freq = schedule.recurringFrequency;
-    const offsetDays = freq === "BIWEEKLY" ? 28 : 14; // double cycle gap
-    const newStart = new Date(schedule.eventDate);
-    newStart.setDate(newStart.getDate() + offsetDays);
+    if (!recurringScheduleID || !freq) continue;
+    // Only roll forward after the latest event has passed
+    const lastEventDate = g._max.eventDate;
+    if (!lastEventDate || lastEventDate >= now) continue;
 
-    // Skip if future recurrence already exists
-    const existing = await prisma.schedule.findFirst({
-      where: {
-        recurringScheduleID: schedule.recurringScheduleID,
-        eventDate: newStart,
-      },
-    });
-    if (existing) continue;
+    // Cycle gap: always 14d for WEEKLY, 28d for BIWEEKLY (your “2/4 weeks ahead” rule)
+    const cycleOffsetDays = freq === "BIWEEKLY" ? 28 : 14;
 
-    // Find all schedules in this recurrence group (same week pattern)
-    const sameGroup = await prisma.schedule.findMany({
-      where: { recurringScheduleID: schedule.recurringScheduleID },
+    // Pull the last cycle (we'll replicate its pattern forward)
+    const lastCycle = await prisma.schedule.findMany({
+      where: { recurringScheduleID },
+      orderBy: { eventDate: "asc" },
     });
 
-    for (const s of sameGroup) {
-      const start = new Date(s.startTime);
-      const end = new Date(s.endTime);
-      const startDiff = start.getDate() - s.eventDate.getDate();
+    if (!lastCycle.length) continue;
+
+    // Compute the candidate next cycle date for each schedule in the group
+    for (const s of lastCycle) {
       const newEventDate = new Date(s.eventDate);
-      newEventDate.setDate(s.eventDate.getDate() + offsetDays);
-      const newStartTime = new Date(s.startTime);
-      newStartTime.setDate(newStartTime.getDate() + offsetDays);
-      const newEndTime = new Date(s.endTime);
-      newEndTime.setDate(newEndTime.getDate() + offsetDays);
+      newEventDate.setDate(newEventDate.getDate() + cycleOffsetDays);
 
+      const newStartTime = new Date(s.startTime);
+      newStartTime.setDate(newStartTime.getDate() + cycleOffsetDays);
+
+      const newEndTime = new Date(s.endTime);
+      newEndTime.setDate(newEndTime.getDate() + cycleOffsetDays);
+
+      // Dedup: skip if we already generated this one (same group, same employee/date)
+      const already = await prisma.schedule.findFirst({
+        where: {
+          recurringScheduleID,
+          eventDate: newEventDate,
+          employeeID: s.employeeID ?? null,
+          scheduleType: s.scheduleType,
+        },
+      });
+      if (already) continue;
+
+      // Build the safe input for createScheduleAndVisit (no nulls where undefined is expected)
       await createScheduleAndVisit({
-        ...s,
+        scheduleType: s.scheduleType as "office" | "visit" | "facility",
+
+        clientID: s.clientID ?? undefined,
+        clientMedicaidId: s.clientMedicaidId ?? undefined,
+
+        serviceId: s.serviceId ?? undefined,
+        authorizations: s.authorizations ?? undefined,
+        authorizationNumber: s.authorizationNumber ?? undefined,
+
+        officeReason: s.officeReason ?? undefined,
+        eventCode: s.eventCode,
+        authorizationBillUnitType: s.authorizationBillUnitType as
+          | "Hourly"
+          | "Unit"
+          | "Visit",
+        eventStatus: s.eventStatus as "Hold" | "Confirmed" | "Pending",
+
         eventDate: newEventDate,
         startTime: newStartTime,
         endTime: newEndTime,
+
+        employeeID: s.employeeID ?? undefined,
+
         recurring: true,
-        recurringFrequency: s.recurringFrequency,
-        recurringScheduleID: s.recurringScheduleID,
+        recurringFrequency: s.recurringFrequency ?? undefined,
+
+        // keep the same recurrence chain id; coerce null → undefined (fixes TS2322)
+        recurringScheduleID: s.recurringScheduleID ?? undefined,
+
+        // new createdScheduleID for the new set
         createdScheduleID: await generateUniqueId("SCH"),
+
+        dates: s.dates ?? [],
+        comments: s.comments ?? undefined,
+        billingOverride: s.billingOverride ?? undefined,
+        rate: s.rate ?? undefined,
+        copay: s.copay ?? undefined,
+        billAmount: s.billAmount ?? undefined,
+
+        agencyID: s.agencyID,
+        // We don’t need to pass groupVisitCode/employeeIDs explicitly here:
+        // each stored schedule row already represents the per-employee instance.
       });
     }
   }
 
-  console.log(`✅ Recurring schedule regeneration completed.`);
+  console.log("✅ Recurring schedule regeneration completed.");
 }
