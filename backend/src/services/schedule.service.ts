@@ -600,3 +600,69 @@ export async function getSchedulesByAgency(agencyId: string) {
     orderBy: { startTime: "desc" },
   });
 }
+
+/**
+ * Auto-generate next recurring schedules after the last ones have passed.
+ * Run this via cron daily.
+ */
+export async function generateNextRecurringSchedules() {
+  const now = new Date();
+
+  // Fetch all recurring schedules whose last event has passed
+  const recurringSets = await prisma.schedule.findMany({
+    where: {
+      recurring: true,
+      eventDate: { lt: now },
+    },
+    distinct: ["recurringScheduleID"],
+    orderBy: { eventDate: "desc" },
+  });
+
+  for (const schedule of recurringSets) {
+    if (!schedule.recurringScheduleID || !schedule.recurringFrequency) continue;
+
+    const freq = schedule.recurringFrequency;
+    const offsetDays = freq === "BIWEEKLY" ? 28 : 14; // double cycle gap
+    const newStart = new Date(schedule.eventDate);
+    newStart.setDate(newStart.getDate() + offsetDays);
+
+    // Skip if future recurrence already exists
+    const existing = await prisma.schedule.findFirst({
+      where: {
+        recurringScheduleID: schedule.recurringScheduleID,
+        eventDate: newStart,
+      },
+    });
+    if (existing) continue;
+
+    // Find all schedules in this recurrence group (same week pattern)
+    const sameGroup = await prisma.schedule.findMany({
+      where: { recurringScheduleID: schedule.recurringScheduleID },
+    });
+
+    for (const s of sameGroup) {
+      const start = new Date(s.startTime);
+      const end = new Date(s.endTime);
+      const startDiff = start.getDate() - s.eventDate.getDate();
+      const newEventDate = new Date(s.eventDate);
+      newEventDate.setDate(s.eventDate.getDate() + offsetDays);
+      const newStartTime = new Date(s.startTime);
+      newStartTime.setDate(newStartTime.getDate() + offsetDays);
+      const newEndTime = new Date(s.endTime);
+      newEndTime.setDate(newEndTime.getDate() + offsetDays);
+
+      await createScheduleAndVisit({
+        ...s,
+        eventDate: newEventDate,
+        startTime: newStartTime,
+        endTime: newEndTime,
+        recurring: true,
+        recurringFrequency: s.recurringFrequency,
+        recurringScheduleID: s.recurringScheduleID,
+        createdScheduleID: await generateUniqueId("SCH"),
+      });
+    }
+  }
+
+  console.log(`✅ Recurring schedule regeneration completed.`);
+}

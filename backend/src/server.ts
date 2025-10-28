@@ -24,11 +24,19 @@ import taskRoutes from "./routes/task.route";
 import visitRoutes from "./routes/visit.route";
 import programRoutes from "./routes/program.route";
 import payerRoutes from "./routes/payer.route";
+import cron from "node-cron";
+import { generateNextRecurringSchedules } from "./services/schedule.service";
 
 // Load env variables
 dotenv.config();
 
 const app = express();
+
+// Schedule the recurring schedule generation
+cron.schedule("0 0 * * *", async () => {
+  console.log(`🕛 Running scheduled task: generateNextRecurringSchedules`);
+  await generateNextRecurringSchedules();
+});
 
 const allowedOrigins = [
   "http://localhost:3000", // local Next.js dev

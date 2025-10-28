@@ -827,6 +827,85 @@ export default function CreateSchedulePage() {
                     </thead>
                     <tbody>
                       {(() => {
+                        const allDates: Date[] = [];
+
+                        // --- 1️⃣ Build base range dates ---
+                        if (oneDay && selectedDate) {
+                          allDates.push(selectedDate);
+                        } else if (rangeStart && rangeEnd) {
+                          const days = eachDayOfInterval({
+                            start: rangeStart,
+                            end: rangeEnd,
+                          });
+                          for (const d of days) {
+                            const dayName = d.toLocaleDateString("en-US", {
+                              weekday: "long",
+                            });
+                            if (weekdays.includes(dayName)) allDates.push(d);
+                          }
+
+                          // --- 2️⃣ Add recurrence for entire base range ---
+                          if (recurring && recurringFrequency) {
+                            const offsetDays =
+                              recurringFrequency === "BIWEEKLY" ? 14 : 7;
+                            const recurStart = new Date(rangeStart);
+                            const recurEnd = new Date(rangeEnd);
+                            recurStart.setDate(
+                              recurStart.getDate() + offsetDays
+                            );
+                            recurEnd.setDate(recurEnd.getDate() + offsetDays);
+
+                            const repeatDays = eachDayOfInterval({
+                              start: recurStart,
+                              end: recurEnd,
+                            });
+                            for (const d of repeatDays) {
+                              const dayName = d.toLocaleDateString("en-US", {
+                                weekday: "long",
+                              });
+                              if (weekdays.includes(dayName)) allDates.push(d);
+                            }
+                          }
+                        }
+
+                        // --- 3️⃣ Sort chronologically ---
+                        allDates.sort((a, b) => a.getTime() - b.getTime());
+
+                        // --- 4️⃣ Render ---
+                        if (!allDates.length) {
+                          return (
+                            <tr>
+                              <td
+                                colSpan={5}
+                                className="text-center text-muted-foreground py-3"
+                              >
+                                No valid dates selected
+                              </td>
+                            </tr>
+                          );
+                        }
+
+                        return allDates.map((d, idx) => (
+                          <tr
+                            key={idx}
+                            className="border-b hover:bg-accent/40 transition-colors"
+                          >
+                            <td className="px-2 py-1">{idx + 1}</td>
+                            <td className="px-2 py-1">{format(d, "PPP")}</td>
+                            <td className="px-2 py-1">
+                              {d.toLocaleDateString("en-US", {
+                                weekday: "long",
+                              })}
+                            </td>
+                            <td className="px-2 py-1">{startTime}</td>
+                            <td className="px-2 py-1">{endTime}</td>
+                          </tr>
+                        ));
+                      })()}
+                    </tbody>
+
+                    {/* <tbody>
+                      {(() => {
                         // Compute all dates that will be created
                         const allDates: Date[] = [];
 
@@ -902,7 +981,7 @@ export default function CreateSchedulePage() {
                           </tr>
                         ));
                       })()}
-                    </tbody>
+                    </tbody> */}
                   </table>
                 </div>
               </div>
