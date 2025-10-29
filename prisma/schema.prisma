@@ -613,6 +613,8 @@ model TimelyAudit {
 
   agency    Agency @relation(fields: [agencyId], references: [id])
   unityTask Task?  @relation(fields: [unityTaskId], references: [id])
+
+  @@unique([agencyId, frequency, startDate, endDate])
 }
 
 enum Frequency {

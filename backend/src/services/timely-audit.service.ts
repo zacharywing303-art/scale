@@ -69,6 +69,79 @@ function calculateRange(
 /**
  * Generate a new audit and compute metrics from Visit table.
  */
+// export async function generateAudit({
+//   agencyId,
+//   frequency,
+//   customStart,
+//   customEnd,
+//   unityTaskId,
+//   createdById,
+// }: GenerateAuditInput) {
+//   const { startDate, endDate } = calculateRange(
+//     frequency,
+//     customStart,
+//     customEnd
+//   );
+
+//   // ✅ Step 1: Check if audit already exists for same frequency and date range
+//   const existing = await prisma.timelyAudit.findFirst({
+//     where: {
+//       agencyId,
+//       frequency,
+//       startDate,
+//       endDate,
+//     },
+//     orderBy: { createdAt: "desc" },
+//   });
+
+//   if (existing) {
+//     // Return existing audit instead of creating a new one
+//     return {
+//       audit: existing,
+//       message: "Existing audit found",
+//       alreadyExists: true,
+//     };
+//   }
+
+//   // ✅ Step 2: Proceed to create a new audit
+//   const visits = await prisma.visit.findMany({
+//     where: {
+//       agencyID: agencyId,
+//       scheduledTimeIn: { gte: startDate, lte: endDate },
+//     },
+//   });
+
+//   const totalVisits = visits.length;
+//   const evvAutoCount = visits.filter((v) => v.callType === "Auto").length;
+//   const evvCompliance = totalVisits ? (evvAutoCount / totalVisits) * 100 : 0;
+
+//   const gpsExceptions = visits.filter(
+//     (v) =>
+//       (v.gpsInMilesFromClient && v.gpsInMilesFromClient > 1) ||
+//       (v.gpsOutMilesFromClient && v.gpsOutMilesFromClient > 1)
+//   ).length;
+
+//   const exceptionCount = visits.filter(
+//     (v) => v.totalCurrentExceptions && v.totalCurrentExceptions > 0
+//   ).length;
+
+//   const audit = await prisma.timelyAudit.create({
+//     data: {
+//       agencyId,
+//       startDate,
+//       endDate,
+//       frequency,
+//       unityTaskId,
+//       createdById,
+//       totalVisits,
+//       evvCompliance,
+//       gpsExceptions,
+//       exceptionCount,
+//     },
+//   });
+
+//   return { audit, totalVisits, evvCompliance, gpsExceptions, exceptionCount };
+// }
 export async function generateAudit({
   agencyId,
   frequency,
@@ -83,7 +156,7 @@ export async function generateAudit({
     customEnd
   );
 
-  // ✅ Step 1: Check if audit already exists for same frequency and date range
+  // Step 1: look for existing record (idempotence)
   const existing = await prisma.timelyAudit.findFirst({
     where: {
       agencyId,
@@ -91,56 +164,60 @@ export async function generateAudit({
       startDate,
       endDate,
     },
-    orderBy: { createdAt: "desc" },
   });
-
   if (existing) {
-    // Return existing audit instead of creating a new one
-    return {
-      audit: existing,
-      message: "Existing audit found",
-      alreadyExists: true,
-    };
+    return { audit: existing, alreadyExists: true };
   }
 
-  // ✅ Step 2: Proceed to create a new audit
-  const visits = await prisma.visit.findMany({
-    where: {
-      agencyID: agencyId,
-      scheduledTimeIn: { gte: startDate, lte: endDate },
-    },
-  });
+  // Step 2: attempt to create
+  try {
+    const visits = await prisma.visit.findMany({
+      where: {
+        agencyID: agencyId,
+        scheduledTimeIn: { gte: startDate, lte: endDate },
+      },
+    });
 
-  const totalVisits = visits.length;
-  const evvAutoCount = visits.filter((v) => v.callType === "Auto").length;
-  const evvCompliance = totalVisits ? (evvAutoCount / totalVisits) * 100 : 0;
+    const totalVisits = visits.length;
+    const evvAutoCount = visits.filter((v) => v.callType === "Auto").length;
+    const evvCompliance = totalVisits ? (evvAutoCount / totalVisits) * 100 : 0;
 
-  const gpsExceptions = visits.filter(
-    (v) =>
-      (v.gpsInMilesFromClient && v.gpsInMilesFromClient > 1) ||
-      (v.gpsOutMilesFromClient && v.gpsOutMilesFromClient > 1)
-  ).length;
+    const gpsExceptions = visits.filter(
+      (v) =>
+        (v.gpsInMilesFromClient && v.gpsInMilesFromClient > 1) ||
+        (v.gpsOutMilesFromClient && v.gpsOutMilesFromClient > 1)
+    ).length;
 
-  const exceptionCount = visits.filter(
-    (v) => v.totalCurrentExceptions && v.totalCurrentExceptions > 0
-  ).length;
+    const exceptionCount = visits.filter(
+      (v) => v.totalCurrentExceptions && v.totalCurrentExceptions > 0
+    ).length;
 
-  const audit = await prisma.timelyAudit.create({
-    data: {
-      agencyId,
-      startDate,
-      endDate,
-      frequency,
-      unityTaskId,
-      createdById,
-      totalVisits,
-      evvCompliance,
-      gpsExceptions,
-      exceptionCount,
-    },
-  });
+    const audit = await prisma.timelyAudit.create({
+      data: {
+        agencyId,
+        startDate,
+        endDate,
+        frequency,
+        unityTaskId,
+        createdById,
+        totalVisits,
+        evvCompliance,
+        gpsExceptions,
+        exceptionCount,
+      },
+    });
 
-  return { audit, totalVisits, evvCompliance, gpsExceptions, exceptionCount };
+    return { audit, alreadyExists: false };
+  } catch (err: any) {
+    // Step 3: if conflict, return existing
+    if (err.code === "P2002") {
+      const existing = await prisma.timelyAudit.findFirst({
+        where: { agencyId, frequency, startDate, endDate },
+      });
+      return { audit: existing, alreadyExists: true };
+    }
+    throw err;
+  }
 }
 
 /**

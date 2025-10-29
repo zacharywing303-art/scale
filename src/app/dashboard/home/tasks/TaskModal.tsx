@@ -15,6 +15,8 @@ import {
 import { format } from "date-fns";
 import CreateTaskModal from "./CreateTaskModal";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type Task = {
   id: string;
@@ -48,6 +50,7 @@ export default function TaskModal({
   const [editTask, setEditTask] = useState<Task | null>(null);
 
   const user = getLoggedInUser();
+  const router = useRouter();
 
   const canEdit =
     user?.role === "AGENCY_ADMIN" ||
@@ -151,6 +154,19 @@ export default function TaskModal({
     } catch (err) {
       console.error(err);
       alert("Error deleting task");
+    }
+  };
+
+  const handleGoToUnityTask = async (task: Task) => {
+    if (task.name === "Conduct/Review Timely Audits") {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/timely-audits/for-task/${task.id}`
+      );
+      const data = await res.json();
+      if (!data.ready) return toast.warning(data.message);
+      router.push(
+        `/dashboard/hr/document-review/timely-audit/${data.audit.id}`
+      );
     }
   };
 
