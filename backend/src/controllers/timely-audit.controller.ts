@@ -87,46 +87,6 @@ export async function exportAuditReport(req: Request, res: Response) {
   }
 }
 
-// export async function getAuditForTask(req: Request, res: Response) {
-//   try {
-//     const { taskId } = req.params;
-//     const task = await prisma.task.findUnique({ where: { id: taskId } });
-//     if (!task) return res.status(404).json({ error: "Task not found" });
-
-//     const due = new Date(task.dueDate);
-
-//     // The "audit week" is the *previous full week* before the due date
-//     const start = startOfWeek(due, { weekStartsOn: 0 });
-//     const end = endOfWeek(due, { weekStartsOn: 0 });
-
-//     // Ensure the week has ended
-//     const now = new Date();
-//     if (now < end) {
-//       return res.status(200).json({
-//         ready: false,
-//         message: `Audit not ready — available after ${end.toDateString()}`,
-//       });
-//     }
-
-//     // Safely get the user ID from query
-//     const userId =
-//       typeof req.query.userId === "string" ? req.query.userId : undefined;
-
-//     const audit = await timelyAuditService.generateAudit({
-//       agencyId: task.agencyId,
-//       frequency: "CUSTOM", // use CUSTOM to force using your start/end range
-//       customStart: start.toISOString(),
-//       customEnd: end.toISOString(),
-//       unityTaskId: task.id,
-//       createdById: userId || "system",
-//     });
-
-//     res.json({ ready: true, audit });
-//   } catch (error) {
-//     console.error("Error generating audit for task:", error);
-//     res.status(500).json({ error: "Failed to generate audit for task" });
-//   }
-// }
 export async function getAuditForTask(req: Request, res: Response) {
   try {
     const { taskId } = req.params;
@@ -151,7 +111,7 @@ export async function getAuditForTask(req: Request, res: Response) {
     const userId =
       typeof req.query.userId === "string" ? req.query.userId : undefined;
 
-    const audit = await timelyAuditService.generateAudit({
+    const result = await timelyAuditService.generateAudit({
       agencyId: task.agencyId,
       frequency: "CUSTOM",
       customStart: start.toISOString(),
@@ -160,7 +120,11 @@ export async function getAuditForTask(req: Request, res: Response) {
       createdById: userId || "system",
     });
 
-    return res.json({ ready: true, audit });
+    return res.json({
+      ready: true,
+      audit: result.audit, // flatten
+      alreadyExists: result.alreadyExists,
+    });
   } catch (err) {
     console.error("Error generating audit for task:", err);
     res.status(500).json({ error: "Failed to generate audit for task" });
