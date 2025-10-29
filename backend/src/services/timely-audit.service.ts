@@ -150,11 +150,10 @@ export async function generateAudit({
   unityTaskId,
   createdById,
 }: GenerateAuditInput) {
-  const { startDate, endDate } = calculateRange(
-    frequency,
-    customStart,
-    customEnd
-  );
+  const { startDate, endDate } =
+    frequency === "CUSTOM" && customStart && customEnd
+      ? { startDate: new Date(customStart), endDate: new Date(customEnd) }
+      : calculateRange(frequency, customStart, customEnd);
 
   // Step 1: look for existing record (idempotence)
   const existing = await prisma.timelyAudit.findFirst({

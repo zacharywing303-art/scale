@@ -13,6 +13,10 @@ export const createTask = async (data: any) => {
     unityTask,
   } = data;
 
+  if (dueDate && new Date(dueDate) < new Date()) {
+    throw new Error("Due date cannot be before today.");
+  }
+
   const task = await prisma.task.create({
     data: {
       name,

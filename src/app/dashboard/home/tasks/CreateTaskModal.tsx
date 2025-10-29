@@ -261,11 +261,17 @@ export default function CreateTaskModal({ onClose, onBack }: Props) {
 
             <div>
               <Label className="mb-1">Due Date</Label>
-              <Input
+              {/* <Input
                 type="date"
                 min={
                   new Date(Date.now() + 86400000).toISOString().split("T")[0]
                 }
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+              /> */}
+              <Input
+                type="date"
+                min={new Date().toISOString().split("T")[0]}
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
               />

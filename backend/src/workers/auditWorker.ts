@@ -26,11 +26,11 @@ cron.schedule("0 0 * * 0", async () => {
 
       const result = await generateAudit({
         agencyId: task.agencyId,
-        frequency: "WEEKLY",
+        frequency: "CUSTOM",
         customStart: start.toISOString(),
         customEnd: end.toISOString(),
         unityTaskId: task.id,
-        createdById: task.agencyId, // or "system"
+        createdById: task.agencyId,
       });
 
       if (result.alreadyExists) {

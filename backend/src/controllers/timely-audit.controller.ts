@@ -87,35 +87,75 @@ export async function exportAuditReport(req: Request, res: Response) {
   }
 }
 
+// export async function getAuditForTask(req: Request, res: Response) {
+//   try {
+//     const { taskId } = req.params;
+//     const task = await prisma.task.findUnique({ where: { id: taskId } });
+//     if (!task) return res.status(404).json({ error: "Task not found" });
+
+//     // Calculate the audit week for the dueDate
+//     const due = new Date(task.dueDate);
+//     const start = startOfWeek(subDays(due, 7), { weekStartsOn: 0 });
+//     const end = endOfWeek(subDays(due, 7), { weekStartsOn: 0 });
+
+//     // If today < end, it’s not ready
+//     if (new Date() < end) {
+//       return res.status(200).json({
+//         ready: false,
+//         message: `Audit not ready — available after ${end.toDateString()}`,
+//         start,
+//         end,
+//       });
+//     }
+
+//     // ✅ Safely extract and cast userId query param
+//     const userId =
+//       typeof req.query.userId === "string" ? req.query.userId : undefined;
+
+//     // Try to find or generate it
+//     const audit = await timelyAuditService.generateAudit({
+//       agencyId: task.agencyId,
+//       frequency: "WEEKLY",
+//       customStart: start.toISOString(),
+//       customEnd: end.toISOString(),
+//       unityTaskId: task.id,
+//       createdById: userId || "system",
+//     });
+
+//     res.json({ ready: true, audit });
+//   } catch (error) {
+//     console.error("Error generating audit for task:", error);
+//     res.status(500).json({ error: "Failed to generate audit for task" });
+//   }
+// }
 export async function getAuditForTask(req: Request, res: Response) {
   try {
     const { taskId } = req.params;
     const task = await prisma.task.findUnique({ where: { id: taskId } });
     if (!task) return res.status(404).json({ error: "Task not found" });
 
-    // Calculate the audit week for the dueDate
     const due = new Date(task.dueDate);
-    const start = startOfWeek(subDays(due, 7), { weekStartsOn: 0 });
-    const end = endOfWeek(subDays(due, 7), { weekStartsOn: 0 });
 
-    // If today < end, it’s not ready
-    if (new Date() < end) {
+    // The "audit week" is the *previous full week* before the due date
+    const start = startOfWeek(due, { weekStartsOn: 0 });
+    const end = endOfWeek(due, { weekStartsOn: 0 });
+
+    // Ensure the week has ended
+    const now = new Date();
+    if (now < end) {
       return res.status(200).json({
         ready: false,
         message: `Audit not ready — available after ${end.toDateString()}`,
-        start,
-        end,
       });
     }
 
-    // ✅ Safely extract and cast userId query param
+    // Safely get the user ID from query
     const userId =
       typeof req.query.userId === "string" ? req.query.userId : undefined;
 
-    // Try to find or generate it
     const audit = await timelyAuditService.generateAudit({
       agencyId: task.agencyId,
-      frequency: "WEEKLY",
+      frequency: "CUSTOM", // use CUSTOM to force using your start/end range
       customStart: start.toISOString(),
       customEnd: end.toISOString(),
       unityTaskId: task.id,

@@ -167,6 +167,8 @@ export default function TaskModal({
       router.push(
         `/dashboard/hr/document-review/timely-audit/${data.audit.id}`
       );
+    } else {
+      alert("Go to Tasks page (coming soon)");
     }
   };
 
@@ -372,7 +374,7 @@ export default function TaskModal({
               {/* Go To Tasks for automated Unity tasks */}
               {detailTask.unityTask && (
                 <Button
-                  onClick={() => alert("Go to Tasks page (coming soon)")}
+                  onClick={() => handleGoToUnityTask(detailTask)}
                   className="bg-blue-600 hover:bg-blue-700 text-white"
                 >
                   Go to Tasks
