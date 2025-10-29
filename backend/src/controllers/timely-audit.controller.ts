@@ -108,6 +108,10 @@ export async function getAuditForTask(req: Request, res: Response) {
       });
     }
 
+    // ✅ Safely extract and cast userId query param
+    const userId =
+      typeof req.query.userId === "string" ? req.query.userId : undefined;
+
     // Try to find or generate it
     const audit = await timelyAuditService.generateAudit({
       agencyId: task.agencyId,
@@ -115,7 +119,7 @@ export async function getAuditForTask(req: Request, res: Response) {
       customStart: start.toISOString(),
       customEnd: end.toISOString(),
       unityTaskId: task.id,
-      createdById: req.query.userId || task.agencyId || "system",
+      createdById: userId || "system",
     });
 
     res.json({ ready: true, audit });
