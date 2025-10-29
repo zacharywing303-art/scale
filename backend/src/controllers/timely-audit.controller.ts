@@ -67,18 +67,18 @@ export async function markAuditComplete(req: Request, res: Response) {
 export async function exportAuditReport(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const { format } = req.query;
-    if (!["xlsx", "pdf"].includes(format)) {
+    const formatParam = req.query.format;
+
+    // 🧠 Safely cast query param to string
+    const format = Array.isArray(formatParam) ? formatParam[0] : formatParam;
+
+    if (format !== "xlsx" && format !== "pdf") {
       return res
         .status(400)
         .json({ error: "Invalid format. Use ?format=xlsx or ?format=pdf" });
     }
 
-    await timelyAuditService.exportAuditReport(
-      id,
-      format as "xlsx" | "pdf",
-      res
-    );
+    await timelyAuditService.exportAuditReport(id, format, res);
   } catch (error) {
     console.error("❌ exportAuditReport error:", error);
     res.status(500).json({ error: "Failed to export audit report" });
