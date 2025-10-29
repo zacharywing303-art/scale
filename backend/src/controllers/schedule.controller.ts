@@ -7,6 +7,9 @@ import {
   getSchedulesByAgency,
   createScheduleAndVisitBatch,
   getGroupedSchedules,
+  getSchedulesByGroup,
+  updateScheduleGroup,
+  deleteScheduleSafe,
 } from "../services/schedule.service";
 
 export const getSchedulesController = async (req: Request, res: Response) => {
@@ -126,5 +129,50 @@ export const getGroupedSchedulesController = async (
   } catch (error) {
     console.error("❌ Error fetching grouped schedules:", error);
     res.status(500).json({ error: "Failed to fetch grouped schedules" });
+  }
+};
+
+export const getScheduleGroupController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { createdScheduleID } = req.params;
+    const schedules = await getSchedulesByGroup(createdScheduleID);
+    res.json(schedules);
+  } catch (error: any) {
+    res
+      .status(500)
+      .json({ error: error.message || "Failed to fetch schedule group" });
+  }
+};
+
+export const updateScheduleGroupController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { createdScheduleID } = req.params;
+    const result = await updateScheduleGroup(createdScheduleID, req.body);
+    res.json(result);
+  } catch (error: any) {
+    res
+      .status(400)
+      .json({ error: error.message || "Failed to update schedule group" });
+  }
+};
+
+export const deleteScheduleSafeController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { id } = req.params;
+    const result = await deleteScheduleSafe(id);
+    res.json(result);
+  } catch (error: any) {
+    res
+      .status(400)
+      .json({ error: error.message || "Failed to delete schedule" });
   }
 };

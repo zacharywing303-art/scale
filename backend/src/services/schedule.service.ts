@@ -219,175 +219,6 @@ export async function createScheduleAndVisitBatch(input: {
   return allSchedules;
 }
 
-// export async function createScheduleAndVisitBatch(input: {
-//   baseSchedule: any;
-//   selectedDates: string[];
-//   groupVisit?: boolean;
-//   employeeIDs?: string[];
-//   recurring?: boolean;
-//   recurringFrequency?: "WEEKLY" | "BIWEEKLY";
-// }) {
-//   const createdScheduleID = await generateUniqueId("SCH");
-//   const recurringScheduleID = input.recurring
-//     ? await generateUniqueId("REC")
-//     : null;
-
-//   const allSchedules: any[] = [];
-
-//   const makeOne = async (
-//     eventStart: Date,
-//     eventEnd: Date,
-//     employeeID?: string | null
-//   ) => {
-//     return createScheduleAndVisit({
-//       ...input.baseSchedule,
-//       eventDate: eventStart,
-//       startTime: eventStart,
-//       endTime: eventEnd,
-//       recurring: !!input.recurring,
-//       recurringFrequency: input.recurringFrequency ?? null,
-//       createdScheduleID,
-//       recurringScheduleID,
-//       groupVisit: input.groupVisit,
-//       employeeID: employeeID ?? null,
-//       employeeIDs: undefined, // not needed here (we loop ourselves)
-//     });
-//   };
-
-//   for (const dateString of input.selectedDates) {
-//     const date = new Date(dateString);
-
-//     const start = new Date(date);
-//     start.setHours(
-//       new Date(input.baseSchedule.startTime).getHours(),
-//       new Date(input.baseSchedule.startTime).getMinutes(),
-//       0,
-//       0
-//     );
-
-//     const end = new Date(date);
-//     end.setHours(
-//       new Date(input.baseSchedule.endTime).getHours(),
-//       new Date(input.baseSchedule.endTime).getMinutes(),
-//       0,
-//       0
-//     );
-
-//     // Non-visit: create one Schedule PER employee (no visits)
-//     if (
-//       input.baseSchedule.scheduleType !== "visit" &&
-//       input.employeeIDs?.length
-//     ) {
-//       for (const empId of input.employeeIDs) {
-//         allSchedules.push(await makeOne(start, end, empId));
-//       }
-//     } // Visit: make separate schedules per employee if groupVisit
-//     else if (
-//       input.baseSchedule.scheduleType === "visit" &&
-//       input.employeeIDs?.length
-//     ) {
-//       for (const empId of input.employeeIDs) {
-//         allSchedules.push(
-//           await createScheduleAndVisit({
-//             ...input.baseSchedule,
-//             eventDate: start,
-//             startTime: start,
-//             endTime: end,
-//             recurring: !!input.recurring,
-//             recurringFrequency: input.recurringFrequency ?? null,
-//             createdScheduleID,
-//             recurringScheduleID,
-//             groupVisit: input.groupVisit,
-//             employeeID: empId,
-//             employeeIDs: [empId],
-//           })
-//         );
-//       }
-//     } else {
-//       allSchedules.push(
-//         await createScheduleAndVisit({
-//           ...input.baseSchedule,
-//           eventDate: start,
-//           startTime: start,
-//           endTime: end,
-//           recurring: !!input.recurring,
-//           recurringFrequency: input.recurringFrequency ?? null,
-//           createdScheduleID,
-//           recurringScheduleID,
-//           groupVisit: input.groupVisit,
-//           employeeIDs: input.employeeIDs,
-//         })
-//       );
-//     }
-
-//     // Recurrence (second set only, as per your current logic)
-//     // Recurrence handling
-//     if (input.recurring && input.recurringFrequency) {
-//       const addDaysCount = input.recurringFrequency === "BIWEEKLY" ? 14 : 7;
-//       const nextStart = new Date(start);
-//       nextStart.setDate(start.getDate() + addDaysCount);
-//       const nextEnd = new Date(end);
-//       nextEnd.setDate(end.getDate() + addDaysCount);
-
-//       // Office/facility multi-employee recurrence
-//       if (
-//         input.baseSchedule.scheduleType !== "visit" &&
-//         input.employeeIDs?.length
-//       ) {
-//         for (const empId of input.employeeIDs) {
-//           allSchedules.push(await makeOne(nextStart, nextEnd, empId));
-//         }
-//       }
-//       // Visit group recurrence (❗ now loops per employee)
-//       else if (
-//         input.baseSchedule.scheduleType === "visit" &&
-//         input.groupVisit &&
-//         input.employeeIDs?.length
-//       ) {
-//         for (const empId of input.employeeIDs) {
-//           allSchedules.push(
-//             await createScheduleAndVisit({
-//               ...input.baseSchedule,
-//               eventDate: nextStart,
-//               startTime: nextStart,
-//               endTime: nextEnd,
-//               recurring: true,
-//               recurringFrequency: input.recurringFrequency,
-//               createdScheduleID,
-//               recurringScheduleID,
-//               groupVisit: true,
-//               employeeID: empId,
-//               employeeIDs: [empId],
-//             })
-//           );
-//         }
-//       }
-//       // Visit single-employee recurrence
-//       else {
-//         allSchedules.push(
-//           await createScheduleAndVisit({
-//             ...input.baseSchedule,
-//             eventDate: nextStart,
-//             startTime: nextStart,
-//             endTime: nextEnd,
-//             recurring: true,
-//             recurringFrequency: input.recurringFrequency,
-//             createdScheduleID,
-//             recurringScheduleID,
-//             groupVisit: input.groupVisit,
-//             employeeID:
-//               input.employeeIDs && input.employeeIDs.length === 1
-//                 ? input.employeeIDs[0]
-//                 : null,
-//           })
-//         );
-//       }
-//     }
-//   }
-
-//   return allSchedules;
-// }
-
 export const getAllSchedules = async () => {
   const schedules = await prisma.schedule.findMany({
     include: {
@@ -718,7 +549,7 @@ export async function getGroupedSchedules(
 
   const schedules = await prisma.schedule.findMany({
     where: {
-      agencyID, // ✅ restrict to agency
+      agencyID,
       ...dateFilter,
     },
     include: {
@@ -771,4 +602,97 @@ export async function getGroupedSchedules(
   }));
 
   return grouped;
+}
+
+/**
+ * Fetch all schedules in a createdScheduleID group
+ */
+export async function getSchedulesByGroup(createdScheduleID: string) {
+  return prisma.schedule.findMany({
+    where: { createdScheduleID },
+    include: {
+      client: { select: { id: true, name: true, medicaidID: true } },
+      employee: { select: { id: true, name: true } },
+      service: { select: { id: true, name: true } },
+    },
+    orderBy: { eventDate: "asc" },
+  });
+}
+
+/**
+ * Update all schedules in a group (multi-employee / multi-date)
+ */
+export async function updateScheduleGroup(
+  createdScheduleID: string,
+  data: any
+) {
+  const now = new Date();
+  const group = await prisma.schedule.findMany({
+    where: { createdScheduleID },
+  });
+
+  if (!group.length) throw new Error("No schedules found for this group.");
+
+  for (const s of group) {
+    // Only allow full edits for future schedules; past ones only toggle recurring
+    if (s.eventDate < now) {
+      await prisma.schedule.update({
+        where: { id: s.id },
+        data: { recurring: data.recurring ?? s.recurring },
+      });
+      continue;
+    }
+
+    if (data.startTime && data.endTime) {
+      const start = new Date(data.startTime);
+      const end = new Date(data.endTime);
+      if (end <= start) throw new Error("End time must be after start time");
+    }
+
+    await prisma.schedule.update({
+      where: { id: s.id },
+      data: {
+        startTime: data.startTime ? new Date(data.startTime) : s.startTime,
+        endTime: data.endTime ? new Date(data.endTime) : s.endTime,
+        recurring: data.recurring ?? s.recurring,
+        recurringFrequency: data.recurring
+          ? data.recurringFrequency ?? null
+          : null,
+        officeReason: data.officeReason ?? s.officeReason,
+        serviceId: data.serviceId ?? s.serviceId,
+        employeeID: data.employeeID ?? s.employeeID,
+        comments: data.comments ?? s.comments,
+      },
+    });
+  }
+
+  return { message: "Schedules updated successfully", count: group.length };
+}
+
+/**
+ * Safely delete a schedule
+ */
+export async function deleteScheduleSafe(id: string) {
+  const schedule = await prisma.schedule.findUnique({
+    where: { id },
+    include: { client: true, service: true },
+  });
+  if (!schedule) throw new Error("Schedule not found.");
+
+  const now = new Date();
+  if (schedule.eventDate < now) {
+    throw new Error("Cannot delete schedules whose date has already passed.");
+  }
+
+  // For visits: keep the visit record intact
+  if (schedule.scheduleType === "visit") {
+    await prisma.schedule.delete({ where: { id } });
+    return {
+      deleted: true,
+      warning: "Visit records will remain (not deleted).",
+    };
+  }
+
+  await prisma.schedule.delete({ where: { id } });
+  return { deleted: true };
 }
