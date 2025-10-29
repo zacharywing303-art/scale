@@ -13,6 +13,7 @@ import ClientQuarterlyReviewsCard from "@/components/document-review/ClientQuart
 import EmployeeQuarterlyReviewsCard from "@/components/document-review/EmployeeQuarterlyReviewsCard";
 import BillingSummaryCard from "@/components/document-review/BillingSummaryCard";
 import ReviewModal from "@/components/document-review/ReviewModal";
+import GenerateAuditModal from "@/components/document-review/GenerateAuditModal";
 
 export default function DocumentReviewPage() {
   const router = useRouter();
@@ -56,12 +57,24 @@ export default function DocumentReviewPage() {
         </main>
 
         {/* Mock Modal */}
-        <Dialog open={!!openModal} onOpenChange={() => setOpenModal(null)}>
+        {/* <Dialog open={!!openModal} onOpenChange={() => setOpenModal(null)}>
           <DialogContent>
             <ReviewModal
               section={openModal}
               onClose={() => setOpenModal(null)}
             />
+          </DialogContent>
+        </Dialog> */}
+        <Dialog open={!!openModal} onOpenChange={() => setOpenModal(null)}>
+          <DialogContent className="max-w-md">
+            {openModal === "audit" ? (
+              <GenerateAuditModal onClose={() => setOpenModal(null)} />
+            ) : (
+              <ReviewModal
+                section={openModal}
+                onClose={() => setOpenModal(null)}
+              />
+            )}
           </DialogContent>
         </Dialog>
       </div>
