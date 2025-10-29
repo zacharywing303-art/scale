@@ -84,7 +84,16 @@ export default function GenerateAuditModal({
       }
 
       const data = await res.json();
-      toast.success("Audit generated successfully!");
+
+      // ✅ Detect already existing audit
+      if (data.alreadyExists) {
+        toast.info(
+          "Audit for this period already exists — opening it instead."
+        );
+      } else {
+        toast.success("Audit generated successfully!");
+      }
+
       onClose();
       router.push(
         `/dashboard/hr/document-review/timely-audit/${data.audit.id}`

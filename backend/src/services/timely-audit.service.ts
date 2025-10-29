@@ -69,59 +69,6 @@ function calculateRange(
 /**
  * Generate a new audit and compute metrics from Visit table.
  */
-// export async function generateAudit({
-//   agencyId,
-//   frequency,
-//   customStart,
-//   customEnd,
-//   unityTaskId,
-//   createdById,
-// }: GenerateAuditInput) {
-//   const { startDate, endDate } = calculateRange(
-//     frequency,
-//     customStart,
-//     customEnd
-//   );
-
-//   // Fetch relevant visits
-//   const visits = await prisma.visit.findMany({
-//     where: {
-//       agencyID: agencyId,
-//       scheduledTimeIn: { gte: startDate, lte: endDate },
-//     },
-//   });
-
-//   const totalVisits = visits.length;
-//   const evvAutoCount = visits.filter((v) => v.callType === "Auto").length;
-//   const evvCompliance = totalVisits ? (evvAutoCount / totalVisits) * 100 : 0;
-
-//   const gpsExceptions = visits.filter(
-//     (v) =>
-//       (v.gpsInMilesFromClient && v.gpsInMilesFromClient > 1) ||
-//       (v.gpsOutMilesFromClient && v.gpsOutMilesFromClient > 1)
-//   ).length;
-
-//   const exceptionCount = visits.filter(
-//     (v) => v.totalCurrentExceptions && v.totalCurrentExceptions > 0
-//   ).length;
-
-//   const audit = await prisma.timelyAudit.create({
-//     data: {
-//       agencyId,
-//       startDate,
-//       endDate,
-//       frequency,
-//       unityTaskId,
-//       createdById,
-//       totalVisits,
-//       evvCompliance,
-//       gpsExceptions,
-//       exceptionCount,
-//     },
-//   });
-
-//   return { audit, totalVisits, evvCompliance, gpsExceptions, exceptionCount };
-// }
 export async function generateAudit({
   agencyId,
   frequency,
@@ -141,8 +88,8 @@ export async function generateAudit({
     where: {
       agencyId,
       frequency,
-      startDate: { gte: startDate, lte: endDate },
-      endDate: { gte: startDate, lte: endDate },
+      startDate,
+      endDate,
     },
     orderBy: { createdAt: "desc" },
   });

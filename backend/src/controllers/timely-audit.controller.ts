@@ -1,5 +1,7 @@
 import * as timelyAuditService from "../services/timely-audit.service";
 import { Request, Response } from "express";
+import { startOfWeek, endOfWeek, subDays } from "date-fns";
+import prisma from "../lib/db";
 
 export async function createAudit(req: Request, res: Response) {
   try {
@@ -82,5 +84,43 @@ export async function exportAuditReport(req: Request, res: Response) {
   } catch (error) {
     console.error("❌ exportAuditReport error:", error);
     res.status(500).json({ error: "Failed to export audit report" });
+  }
+}
+
+export async function getAuditForTask(req: Request, res: Response) {
+  try {
+    const { taskId } = req.params;
+    const task = await prisma.task.findUnique({ where: { id: taskId } });
+    if (!task) return res.status(404).json({ error: "Task not found" });
+
+    // Calculate the audit week for the dueDate
+    const due = new Date(task.dueDate);
+    const start = startOfWeek(subDays(due, 7), { weekStartsOn: 0 });
+    const end = endOfWeek(subDays(due, 7), { weekStartsOn: 0 });
+
+    // If today < end, it’s not ready
+    if (new Date() < end) {
+      return res.status(200).json({
+        ready: false,
+        message: `Audit not ready — available after ${end.toDateString()}`,
+        start,
+        end,
+      });
+    }
+
+    // Try to find or generate it
+    const audit = await timelyAuditService.generateAudit({
+      agencyId: task.agencyId,
+      frequency: "WEEKLY",
+      customStart: start.toISOString(),
+      customEnd: end.toISOString(),
+      unityTaskId: task.id,
+      createdById: req.query.userId || task.agencyId || "system",
+    });
+
+    res.json({ ready: true, audit });
+  } catch (error) {
+    console.error("Error generating audit for task:", error);
+    res.status(500).json({ error: "Failed to generate audit for task" });
   }
 }

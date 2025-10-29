@@ -5,6 +5,7 @@ const router = Router();
 
 router.post("/", timelyAuditController.createAudit);
 router.get("/agency/:agencyId", timelyAuditController.getAgencyAudits);
+router.get("/for-task/:taskId", timelyAuditController.getAuditForTask);
 router.get("/:id", timelyAuditController.getAuditDetail);
 router.patch("/:id/complete", timelyAuditController.markAuditComplete);
 router.get("/:id/export", timelyAuditController.exportAuditReport);
