@@ -24,6 +24,7 @@ import taskRoutes from "./routes/task.route";
 import visitRoutes from "./routes/visit.route";
 import programRoutes from "./routes/program.route";
 import payerRoutes from "./routes/payer.route";
+import timelyAuditRoutes from "./routes/timely-audit.route";
 import cron from "node-cron";
 import { generateNextRecurringSchedules } from "./services/schedule.service";
 
@@ -70,6 +71,7 @@ app.use("/api/tasks", taskRoutes);
 app.use("/api/visits", visitRoutes);
 app.use("/api/programs", programRoutes);
 app.use("/api/payers", payerRoutes);
+app.use("/api/timely-audits", timelyAuditRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {

@@ -205,7 +205,10 @@ export default function EditSchedulePage() {
   if (loading) return <p className="p-6 text-gray-500">Loading schedules...</p>;
 
   return (
-    <ProtectedRoute allowedRoles={["AGENCY_ADMIN", "AGENCY_USER"]}>
+    <ProtectedRoute
+      allowedRoles={["AGENCY_ADMIN"]}
+      permission="Create/Edit Schedule"
+    >
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Edit Schedule</h1>
 

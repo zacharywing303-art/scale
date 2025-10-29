@@ -5,7 +5,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
-import WeeklyAuditCard from "@/components/document-review/WeeklyAuditCard";
+import TimelyAuditCard from "@/components/document-review/TimelyAuditCard";
 import EmployeeMileageCard from "@/components/document-review/EmployeeMileageCard";
 import HoursWorkedCard from "@/components/document-review/HoursWorkedCard";
 import VisitExceptionsCard from "@/components/document-review/VisitExceptionsCard";
@@ -29,9 +29,9 @@ export default function DocumentReviewPage() {
             Review key compliance and operational records for your agency.
           </p>
 
-          {/* Top section: Weekly audits + mileage + hours worked */}
+          {/* Top section: Timely audits + mileage + hours worked */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <WeeklyAuditCard onClick={() => setOpenModal("audit")} />
+            <TimelyAuditCard onClick={() => setOpenModal("audit")} />
             <EmployeeMileageCard onClick={() => setOpenModal("mileage")} />
             <HoursWorkedCard onClick={() => setOpenModal("hours")} />
           </div>

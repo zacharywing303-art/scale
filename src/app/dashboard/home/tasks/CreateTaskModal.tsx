@@ -22,7 +22,7 @@ type Props = {
 };
 
 const automatedTasks = [
-  "Conduct/Review Weekly Audit",
+  "Conduct/Review Timely Audits",
   "Fix Visit Exceptions",
   "Review GPS Exceptions",
   "Run Payroll",

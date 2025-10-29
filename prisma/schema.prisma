@@ -9,38 +9,39 @@ datasource db {
 }
 
 model Agency {
-  id               String     @id @default(cuid())
+  id               String        @id @default(cuid())
   name             String
-  code             String     @unique
+  code             String        @unique
   state            String
-  allowEvv         Boolean    @default(false)
-  status           String     @default("Active")
+  allowEvv         Boolean       @default(false)
+  status           String        @default("Active")
   subscriptionPlan String?
   paymentMethod    String?
-  createdAt        DateTime   @default(now())
-  updatedAt        DateTime   @updatedAt
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
   email            String?
-  numEmployees     Int        @default(0)
+  numEmployees     Int           @default(0)
   phone            String?
   santraxID        String?
-  addressLine1     String     @default("N/A")
+  addressLine1     String        @default("N/A")
   addressLine2     String?
   addressLine3     String?
-  addressState     String     @default("N/A")
-  city             String     @default("N/A")
-  zipCode          String     @default("N/A")
+  addressState     String        @default("N/A")
+  city             String        @default("N/A")
+  zipCode          String        @default("N/A")
   billingEmail     String?
   billingPhone     String?
-  numClients       Int        @default(0)
-  numVisits        Int        @default(0)
-  paymentStatus    String     @default("Not Required")
-  agencyAdminId    String?    @unique
-  agencyAdmin      User?      @relation("AgencyAdminRelation", fields: [agencyAdminId], references: [id])
+  numClients       Int           @default(0)
+  numVisits        Int           @default(0)
+  paymentStatus    String        @default("Not Required")
+  agencyAdminId    String?       @unique
+  agencyAdmin      User?         @relation("AgencyAdminRelation", fields: [agencyAdminId], references: [id])
   invoices         Invoice[]
   RoleType         RoleType[]
   Task             Task[]
   users            User[]
   Visit            Visit[]
+  TimelyAudit      TimelyAudit[]
 }
 
 model User {
@@ -252,8 +253,8 @@ model Employee {
   mobileInfo            MobileEmployee?
   schedules             Schedule[]
   assignedClients       Client[]              @relation("EmployeeClients")
-  officeStaff           Boolean  @default(false)
-  facilityStaff         Boolean  @default(false)
+  officeStaff           Boolean               @default(false)
+  facilityStaff         Boolean               @default(false)
 }
 
 model MobileEmployee {
@@ -471,18 +472,18 @@ model Limitation {
 }
 
 model Schedule {
-  id                        String        @id @default(cuid())
+  id                        String             @id @default(cuid())
   startTime                 DateTime
   endTime                   DateTime
   authorizationBillUnitType String
   authorizationNumber       String?
   authorizations            String?
   billAmount                Float?
-  billingOverride           Boolean       @default(false)
+  billingOverride           Boolean            @default(false)
   clientMedicaidId          String?
   comments                  String?
   copay                     Float?
-  createdAt                 DateTime      @default(now())
+  createdAt                 DateTime           @default(now())
   dates                     String[]
   eventCode                 String
   eventDate                 DateTime
@@ -491,18 +492,18 @@ model Schedule {
   rate                      Float?
   scheduleType              String
   serviceId                 String?
-  updatedAt                 DateTime      @updatedAt
+  updatedAt                 DateTime           @updatedAt
   clientID                  String?
   employeeID                String?
-  agencyID                  String        @default("UNITY124")
-  recurring                 Boolean       @default(false)
+  agencyID                  String             @default("UNITY124")
+  recurring                 Boolean            @default(false)
   recurringFrequency        ScheduleFrequency?
-  createdScheduleID         String?       // shared group ID for multi-day creation
-  recurringScheduleID       String?       // shared ID for recurring sets
-  missedVisits              MissedVisit[] @relation("ScheduleToMissedVisit")
-  client                    Client?        @relation(fields: [clientID], references: [id])
-  employee                  Employee?     @relation(fields: [employeeID], references: [id])
-  service                   Service?      @relation(fields: [serviceId], references: [id])
+  createdScheduleID         String? // shared group ID for multi-day creation
+  recurringScheduleID       String? // shared ID for recurring sets
+  missedVisits              MissedVisit[]      @relation("ScheduleToMissedVisit")
+  client                    Client?            @relation(fields: [clientID], references: [id])
+  employee                  Employee?          @relation(fields: [employeeID], references: [id])
+  service                   Service?           @relation(fields: [serviceId], references: [id])
 }
 
 model ChatThread {
@@ -568,21 +569,22 @@ model MissedVisit {
 }
 
 model Task {
-  id            String     @id @default(uuid())
+  id            String        @id @default(uuid())
   name          String
   description   String?
   agencyId      String
-  createdAt     DateTime   @default(now())
-  assignedDate  DateTime?  @default(now())
+  createdAt     DateTime      @default(now())
+  assignedDate  DateTime?     @default(now())
   dueDate       DateTime
-  isDone        Boolean    @default(false)
-  isActive      Boolean    @default(true)
-  recurring     Boolean    @default(false)
+  isDone        Boolean       @default(false)
+  isActive      Boolean       @default(true)
+  recurring     Boolean       @default(false)
   frequency     Frequency?
-  unityTask     Boolean    @default(false)
+  unityTask     Boolean       @default(false)
   completedAt   DateTime?
-  agency        Agency     @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  agency        Agency        @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   assignedRoles TaskRole[]
+  TimelyAudit   TimelyAudit[]
 }
 
 model TaskRole {
@@ -591,6 +593,26 @@ model TaskRole {
   roleId String
   role   RoleType @relation(fields: [roleId], references: [id])
   task   Task     @relation(fields: [taskId], references: [id], onDelete: Cascade)
+}
+
+model TimelyAudit {
+  id             String   @id @default(cuid())
+  agencyId       String
+  startDate      DateTime
+  endDate        DateTime
+  frequency      String
+  createdById    String
+  createdAt      DateTime @default(now())
+  unityTaskId    String? // link to a Task if automated
+  totalVisits    Int?
+  evvCompliance  Float? // %
+  gpsExceptions  Int?
+  exceptionCount Int?
+  completed      Boolean  @default(false)
+  reportUrl      String? // optional, if PDF generated & saved
+
+  agency    Agency @relation(fields: [agencyId], references: [id])
+  unityTask Task?  @relation(fields: [unityTaskId], references: [id])
 }
 
 enum Frequency {

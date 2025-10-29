@@ -7,59 +7,21 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import {
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-} from "@/components/ui/popover";
-import { format } from "date-fns";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
   Select,
-  SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectContent,
+  SelectItem,
 } from "@/components/ui/select";
-
-type Schedule = {
-  id: string;
-  scheduleType: string;
-  clientID: string;
-  client: string; // store client id or object as needed
-  clientMedicaidId: string;
-  authorizations?: string;
-  authorizationNumber?: string;
-  serviceId?: string;
-  service?: string; // store service id or object as needed
-  officeReason?: string;
-  eventCode: string;
-  authorizationBillUnitType: string;
-  eventStatus: string;
-  eventDate: Date;
-  startTime: Date;
-  endTime: Date;
-  employeeID?: string;
-  employee?: string; // store employee id or object as needed
-  recurring: boolean;
-  dates?: string[];
-  comments?: string;
-  billingOverride: boolean;
-  rate?: number;
-  copay?: number;
-  billAmount?: number;
-  createdAt: Date;
-  updatedAt: Date;
-  agencyID: string;
-  // missedVisits omitted for brevity
-};
+import { toast } from "sonner";
 
 type EditScheduleModalProps = {
-  schedule: Schedule;
+  schedule: any;
   onClose: () => void;
 };
 
@@ -67,305 +29,656 @@ export default function EditScheduleModal({
   schedule,
   onClose,
 }: EditScheduleModalProps) {
-  const [formData, setFormData] = useState({
-    ...schedule,
-    dateFrom: new Date(schedule.startTime),
-    dateTo: new Date(schedule.endTime),
-  });
-
-  // New: dynamic options
+  const [groupSchedules, setGroupSchedules] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [employees, setEmployees] = useState<{ id: string; name: string }[]>(
     []
   );
   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
   const [services, setServices] = useState<{ id: string; name: string }[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [formData, setFormData] = useState({
+    employeeIDs: [] as string[],
+    serviceId: "",
+    officeReason: "",
+    startTime: "",
+    endTime: "",
+    recurring: false,
+    recurringFrequency: "WEEKLY",
+  });
+
+  const now = new Date();
 
   useEffect(() => {
-    async function fetchOptions() {
+    async function loadData() {
       try {
-        const [empRes, clientRes, serviceRes] = await Promise.all([
+        const [groupRes, empRes, cliRes, svcRes] = await Promise.all([
+          fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/schedules/group/${schedule.createdScheduleID}`
+          ),
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/employees`),
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients`),
           fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/services`),
         ]);
-
-        if (!empRes.ok || !clientRes.ok || !serviceRes.ok) {
-          throw new Error("Failed to fetch dropdown data");
-        }
-
-        const [empData, clientData, serviceData] = await Promise.all([
+        const [group, emp, cli, svc] = await Promise.all([
+          groupRes.json(),
           empRes.json(),
-          clientRes.json(),
-          serviceRes.json(),
+          cliRes.json(),
+          svcRes.json(),
         ]);
 
-        setEmployees(empData);
-        setClients(clientData);
-        setServices(serviceData);
+        setGroupSchedules(group);
+        setEmployees(emp);
+        setClients(cli);
+        setServices(svc);
+
+        const base = group[0];
+        setFormData({
+          employeeIDs: group.map((s: any) => s.employee?.id).filter(Boolean),
+          serviceId: base?.service?.id || "",
+          officeReason: base?.officeReason || "",
+          startTime: new Date(base.startTime).toISOString().slice(11, 16),
+          endTime: new Date(base.endTime).toISOString().slice(11, 16),
+          recurring: base.recurring,
+          recurringFrequency: base.recurringFrequency || "WEEKLY",
+        });
       } catch (err) {
         console.error(err);
+        toast.error("Failed to load schedule data");
       } finally {
         setLoading(false);
       }
     }
 
-    fetchOptions();
-  }, []);
+    loadData();
+  }, [schedule.createdScheduleID]);
 
   const handleSave = async () => {
     try {
+      const [sh, sm] = formData.startTime.split(":").map(Number);
+      const [eh, em] = formData.endTime.split(":").map(Number);
+      const start = new Date();
+      start.setHours(sh, sm, 0, 0);
+      const end = new Date();
+      end.setHours(eh, em, 0, 0);
+
+      if (end <= start) {
+        toast.error("End time must be after start time");
+        return;
+      }
+
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/schedules/${formData.id}`,
+        `${process.env.NEXT_PUBLIC_API_URL}/api/schedules/group/${schedule.createdScheduleID}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            type: formData.scheduleType,
-            employee: formData.employee,
-            client: formData.client,
-            service: formData.service,
-            startTime: formData.startTime,
-            endTime: formData.endTime,
-            dateFrom: formData.dateFrom,
-            dateTo: formData.dateTo,
+            employeeIDs: formData.employeeIDs,
+            serviceId: formData.serviceId || null,
+            officeReason: formData.officeReason || null,
+            startTime: start,
+            endTime: end,
             recurring: formData.recurring,
+            recurringFrequency: formData.recurring
+              ? formData.recurringFrequency
+              : null,
           }),
         }
       );
 
-      if (!res.ok) throw new Error("Failed to update schedule");
-
+      if (!res.ok) throw new Error(await res.text());
+      toast.success("Schedules updated successfully");
       onClose();
-      // Refresh the page after closing the modal
-      if (typeof window !== "undefined") {
-        window.location.reload();
-      }
-    } catch (err) {
+      window.location.reload();
+    } catch (err: any) {
       console.error(err);
-      alert("Error saving schedule");
+      toast.error(err.message || "Failed to update schedules");
     }
   };
 
-  if (loading) {
+  const handleDelete = async (id: string, type: string, eventDate: string) => {
+    const date = new Date(eventDate);
+    if (date < now) {
+      toast.error("Cannot delete schedules whose date has already passed");
+      return;
+    }
+
+    const confirmed = confirm(
+      type === "visit"
+        ? "Deleting this schedule will NOT delete the linked visit. Continue?"
+        : "Are you sure you want to delete this schedule?"
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/schedules/${id}/safe`,
+        {
+          method: "DELETE",
+        }
+      );
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Schedule deleted");
+        if (data.warning) toast.warning(data.warning);
+        onClose();
+        window.location.reload();
+      } else toast.error(data.error || "Failed to delete");
+    } catch (err) {
+      console.error(err);
+      toast.error("Error deleting schedule");
+    }
+  };
+
+  if (loading)
     return (
       <DialogContent>
+        <p>Loading schedules...</p>
+      </DialogContent>
+    );
+
+  const base = groupSchedules[0];
+  const isPast = base && new Date(base.eventDate) < now;
+
+  return (
+    <DialogContent className="max-w-3xl h-[85vh] flex flex-col overflow-hidden p-0">
+      <div className="flex-1 overflow-y-auto p-6 space-y-4">
         <DialogHeader>
           <h2 className="text-lg font-semibold">Edit Schedule</h2>
         </DialogHeader>
-        <p>Loading options...</p>
-      </DialogContent>
-    );
-  }
 
-  return (
-    <DialogContent>
-      <DialogHeader>
-        <h2 className="text-lg font-semibold">Edit Schedule</h2>
-      </DialogHeader>
-
-      <div className="space-y-4">
-        {/* Employee */}
+        {/* Employees */}
         <div>
-          <Label className="mb-1 block">Employee</Label>
-          <Select
-            value={formData.employee}
-            onValueChange={(val) => setFormData({ ...formData, employee: val })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Employee" />
-            </SelectTrigger>
-            <SelectContent>
-              {employees.map((emp) => (
-                <SelectItem key={emp.id} value={emp.id}>
-                  {emp.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <Label>Employees</Label>
+          <div className="border p-2 rounded max-h-40 overflow-y-auto bg-gray-50">
+            {employees.map((emp) => (
+              <label key={emp.id} className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  disabled={isPast}
+                  checked={formData.employeeIDs.includes(emp.id)}
+                  onChange={(e) => {
+                    const next = e.target.checked
+                      ? [...formData.employeeIDs, emp.id]
+                      : formData.employeeIDs.filter((id) => id !== emp.id);
+                    setFormData({ ...formData, employeeIDs: next });
+                  }}
+                />
+                <span>{emp.name}</span>
+              </label>
+            ))}
+          </div>
         </div>
 
-        {/* Client */}
-        <div>
-          <Label className="mb-1 block">Client</Label>
-          <Select
-            value={formData.client ?? ""}
-            onValueChange={(val) => setFormData({ ...formData, client: val })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Client" />
-            </SelectTrigger>
-            <SelectContent>
-              {clients.map((client) => (
-                <SelectItem key={client.id} value={client.id}>
-                  {client.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Service */}
-        <div>
-          <Label className="mb-1 block">Service / Reason</Label>
-          <Select
-            value={formData.service}
-            onValueChange={(val) => setFormData({ ...formData, service: val })}
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select Service" />
-            </SelectTrigger>
-            <SelectContent>
-              {services.map((service) => (
-                <SelectItem key={service.id} value={service.id}>
-                  {service.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        {/* Service or Office Reason */}
+        {base.scheduleType === "visit" ? (
+          <div>
+            <Label>Service</Label>
+            <Select
+              disabled={isPast}
+              value={formData.serviceId}
+              onValueChange={(v) => setFormData({ ...formData, serviceId: v })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select Service" />
+              </SelectTrigger>
+              <SelectContent>
+                {services.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        ) : (
+          <div>
+            <Label>Office / Facility Reason</Label>
+            <Input
+              disabled={isPast}
+              value={formData.officeReason}
+              onChange={(e) =>
+                setFormData({ ...formData, officeReason: e.target.value })
+              }
+              placeholder="Reason for schedule"
+            />
+          </div>
+        )}
 
         {/* Time */}
         <div className="flex gap-4">
           <div className="flex-1">
-            <Label className="mb-1 block">Scheduled In</Label>
+            <Label>Start Time</Label>
             <Input
               type="time"
-              value={
-                formData.startTime instanceof Date
-                  ? formData.startTime.toLocaleTimeString("en-GB", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false,
-                    })
-                  : formData.startTime
-              }
+              disabled={isPast}
+              value={formData.startTime}
               onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  startTime: (() => {
-                    const [hours, minutes] = e.target.value
-                      .split(":")
-                      .map(Number);
-                    const date =
-                      formData.startTime instanceof Date
-                        ? new Date(formData.startTime)
-                        : new Date();
-                    date.setHours(hours);
-                    date.setMinutes(minutes);
-                    date.setSeconds(0);
-                    date.setMilliseconds(0);
-                    return date;
-                  })(),
-                })
+                setFormData({ ...formData, startTime: e.target.value })
               }
             />
           </div>
           <div className="flex-1">
-            <Label className="mb-1 block">Scheduled Out</Label>
+            <Label>End Time</Label>
             <Input
               type="time"
-              value={
-                formData.endTime instanceof Date
-                  ? formData.endTime.toLocaleTimeString("en-GB", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false,
-                    })
-                  : formData.endTime
-              }
+              disabled={isPast}
+              value={formData.endTime}
               onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  endTime: (() => {
-                    const [hours, minutes] = e.target.value
-                      .split(":")
-                      .map(Number);
-                    const date =
-                      formData.endTime instanceof Date
-                        ? new Date(formData.endTime)
-                        : new Date();
-                    date.setHours(hours);
-                    date.setMinutes(minutes);
-                    date.setSeconds(0);
-                    date.setMilliseconds(0);
-                    return date;
-                  })(),
-                })
+                setFormData({ ...formData, endTime: e.target.value })
               }
             />
           </div>
         </div>
 
-        {/* Dates */}
-        <div className="flex gap-4">
-          <div className="flex-1">
-            <Label className="mb-1 block">Date From</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full text-left">
-                  {format(formData.dateFrom, "PPP")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={formData.dateFrom}
-                  onSelect={(date) =>
-                    setFormData({
-                      ...formData,
-                      dateFrom: date ?? formData.dateFrom,
-                    })
-                  }
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <div className="flex-1">
-            <Label className="mb-1 block">Date To</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full text-left">
-                  {format(formData.dateTo, "PPP")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={formData.dateTo}
-                  onSelect={(date) =>
-                    setFormData({
-                      ...formData,
-                      dateTo: date ?? formData.dateTo,
-                    })
-                  }
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-
-        {/* Recurring toggle */}
+        {/* Recurring */}
         <div className="flex items-center gap-2">
           <Switch
             checked={formData.recurring}
-            onCheckedChange={(val) =>
-              setFormData({ ...formData, recurring: val })
-            }
+            onCheckedChange={(v) => setFormData({ ...formData, recurring: v })}
           />
           <Label>Recurring</Label>
+          {formData.recurring && (
+            <Select
+              value={formData.recurringFrequency}
+              onValueChange={(v) =>
+                setFormData({ ...formData, recurringFrequency: v })
+              }
+            >
+              <SelectTrigger className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="WEEKLY">Weekly</SelectItem>
+                <SelectItem value="BIWEEKLY">Biweekly</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
         </div>
+
+        {/* Delete buttons for each schedule */}
+        {!isPast && (
+          <div className="pt-2 border-t">
+            <Label className="block mb-1">Delete Schedules</Label>
+            <div className="space-y-2">
+              {groupSchedules.map((s) => (
+                <div
+                  key={s.id}
+                  className="flex justify-between items-center text-sm border p-2 rounded"
+                >
+                  <span>
+                    {s.employee?.name || "Unassigned"} —{" "}
+                    {new Date(s.eventDate).toLocaleDateString()}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={() =>
+                      handleDelete(s.id, s.scheduleType, s.eventDate)
+                    }
+                  >
+                    Delete
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
-      <DialogFooter className="pt-4">
+      {/* Footer fixed at bottom */}
+      <DialogFooter className="border-t bg-white sticky bottom-0 p-4 flex justify-end">
         <DialogClose asChild>
           <Button variant="outline">Cancel</Button>
         </DialogClose>
-        <Button onClick={handleSave}>Save Changes</Button>
+        {!isPast && <Button onClick={handleSave}>Save Changes</Button>}
+        {isPast && (
+          <p className="text-sm text-gray-500 italic ml-auto">
+            Past schedules can only toggle recurring.
+          </p>
+        )}
       </DialogFooter>
     </DialogContent>
   );
 }
+// "use client";
+
+// import React, { useState, useEffect } from "react";
+// import {
+//   DialogContent,
+//   DialogHeader,
+//   DialogFooter,
+//   DialogClose,
+// } from "@/components/ui/dialog";
+// import { Button } from "@/components/ui/button";
+// import { Label } from "@/components/ui/label";
+// import { Input } from "@/components/ui/input";
+// import { Switch } from "@/components/ui/switch";
+// import {
+//   Select,
+//   SelectTrigger,
+//   SelectValue,
+//   SelectContent,
+//   SelectItem,
+// } from "@/components/ui/select";
+// import { toast } from "sonner";
+
+// type EditScheduleModalProps = {
+//   schedule: any;
+//   onClose: () => void;
+// };
+
+// export default function EditScheduleModal({
+//   schedule,
+//   onClose,
+// }: EditScheduleModalProps) {
+//   const [groupSchedules, setGroupSchedules] = useState<any[]>([]);
+//   const [loading, setLoading] = useState(true);
+//   const [employees, setEmployees] = useState<{ id: string; name: string }[]>(
+//     []
+//   );
+//   const [clients, setClients] = useState<{ id: string; name: string }[]>([]);
+//   const [services, setServices] = useState<{ id: string; name: string }[]>([]);
+//   const [formData, setFormData] = useState({
+//     employeeIDs: [] as string[],
+//     serviceId: "",
+//     officeReason: "",
+//     startTime: "",
+//     endTime: "",
+//     recurring: false,
+//     recurringFrequency: "WEEKLY",
+//   });
+
+//   const now = new Date();
+
+//   useEffect(() => {
+//     async function loadData() {
+//       try {
+//         const [groupRes, empRes, cliRes, svcRes] = await Promise.all([
+//           fetch(
+//             `${process.env.NEXT_PUBLIC_API_URL}/api/schedules/group/${schedule.createdScheduleID}`
+//           ),
+//           fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/employees`),
+//           fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/clients`),
+//           fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/services`),
+//         ]);
+//         const [group, emp, cli, svc] = await Promise.all([
+//           groupRes.json(),
+//           empRes.json(),
+//           cliRes.json(),
+//           svcRes.json(),
+//         ]);
+
+//         setGroupSchedules(group);
+//         setEmployees(emp);
+//         setClients(cli);
+//         setServices(svc);
+
+//         const base = group[0];
+//         setFormData({
+//           employeeIDs: group.map((s: any) => s.employee?.id).filter(Boolean),
+//           serviceId: base?.service?.id || "",
+//           officeReason: base?.officeReason || "",
+//           startTime: new Date(base.startTime).toISOString().slice(11, 16),
+//           endTime: new Date(base.endTime).toISOString().slice(11, 16),
+//           recurring: base.recurring,
+//           recurringFrequency: base.recurringFrequency || "WEEKLY",
+//         });
+//       } catch (err) {
+//         console.error(err);
+//         toast.error("Failed to load schedule data");
+//       } finally {
+//         setLoading(false);
+//       }
+//     }
+
+//     loadData();
+//   }, [schedule.createdScheduleID]);
+
+//   const handleSave = async () => {
+//     try {
+//       // Validate
+//       const [sh, sm] = formData.startTime.split(":").map(Number);
+//       const [eh, em] = formData.endTime.split(":").map(Number);
+//       const start = new Date();
+//       start.setHours(sh, sm, 0, 0);
+//       const end = new Date();
+//       end.setHours(eh, em, 0, 0);
+
+//       if (end <= start) {
+//         toast.error("End time must be after start time");
+//         return;
+//       }
+
+//       const res = await fetch(
+//         `${process.env.NEXT_PUBLIC_API_URL}/api/schedules/group/${schedule.createdScheduleID}`,
+//         {
+//           method: "PUT",
+//           headers: { "Content-Type": "application/json" },
+//           body: JSON.stringify({
+//             employeeIDs: formData.employeeIDs,
+//             serviceId: formData.serviceId || null,
+//             officeReason: formData.officeReason || null,
+//             startTime: start,
+//             endTime: end,
+//             recurring: formData.recurring,
+//             recurringFrequency: formData.recurring
+//               ? formData.recurringFrequency
+//               : null,
+//           }),
+//         }
+//       );
+
+//       if (!res.ok) throw new Error(await res.text());
+//       toast.success("Schedules updated successfully");
+//       onClose();
+//       window.location.reload();
+//     } catch (err: any) {
+//       console.error(err);
+//       toast.error(err.message || "Failed to update schedules");
+//     }
+//   };
+
+//   const handleDelete = async (id: string, type: string, eventDate: string) => {
+//     const date = new Date(eventDate);
+//     if (date < now) {
+//       toast.error("Cannot delete schedules whose date has already passed");
+//       return;
+//     }
+
+//     const confirmed = confirm(
+//       type === "visit"
+//         ? "Deleting this schedule will NOT delete the linked visit. Continue?"
+//         : "Are you sure you want to delete this schedule?"
+//     );
+//     if (!confirmed) return;
+
+//     try {
+//       const res = await fetch(
+//         `${process.env.NEXT_PUBLIC_API_URL}/api/schedules/${id}/safe`,
+//         {
+//           method: "DELETE",
+//         }
+//       );
+//       const data = await res.json();
+//       if (res.ok) {
+//         toast.success("Schedule deleted");
+//         if (data.warning) toast.warning(data.warning);
+//         onClose();
+//         window.location.reload();
+//       } else toast.error(data.error || "Failed to delete");
+//     } catch (err) {
+//       console.error(err);
+//       toast.error("Error deleting schedule");
+//     }
+//   };
+
+//   if (loading)
+//     return (
+//       <DialogContent>
+//         <p>Loading schedules...</p>
+//       </DialogContent>
+//     );
+
+//   const base = groupSchedules[0];
+//   const isPast = base && new Date(base.eventDate) < now;
+
+//   return (
+//     <DialogContent className="max-w-2xl">
+//       <DialogHeader>
+//         <h2 className="text-lg font-semibold">Edit Schedule</h2>
+//       </DialogHeader>
+
+//       <div className="space-y-4">
+//         {/* Employees */}
+//         <div>
+//           <Label>Employees</Label>
+//           <div className="border p-2 rounded max-h-40 overflow-auto">
+//             {employees.map((emp) => (
+//               <label key={emp.id} className="flex items-center space-x-2">
+//                 <input
+//                   type="checkbox"
+//                   disabled={isPast}
+//                   checked={formData.employeeIDs.includes(emp.id)}
+//                   onChange={(e) => {
+//                     const next = e.target.checked
+//                       ? [...formData.employeeIDs, emp.id]
+//                       : formData.employeeIDs.filter((id) => id !== emp.id);
+//                     setFormData({ ...formData, employeeIDs: next });
+//                   }}
+//                 />
+//                 <span>{emp.name}</span>
+//               </label>
+//             ))}
+//           </div>
+//         </div>
+
+//         {/* Service or Office Reason */}
+//         {base.scheduleType === "visit" ? (
+//           <div>
+//             <Label>Service</Label>
+//             <Select
+//               disabled={isPast}
+//               value={formData.serviceId}
+//               onValueChange={(v) => setFormData({ ...formData, serviceId: v })}
+//             >
+//               <SelectTrigger>
+//                 <SelectValue placeholder="Select Service" />
+//               </SelectTrigger>
+//               <SelectContent>
+//                 {services.map((s) => (
+//                   <SelectItem key={s.id} value={s.id}>
+//                     {s.name}
+//                   </SelectItem>
+//                 ))}
+//               </SelectContent>
+//             </Select>
+//           </div>
+//         ) : (
+//           <div>
+//             <Label>Office / Facility Reason</Label>
+//             <Input
+//               disabled={isPast}
+//               value={formData.officeReason}
+//               onChange={(e) =>
+//                 setFormData({ ...formData, officeReason: e.target.value })
+//               }
+//               placeholder="Reason for schedule"
+//             />
+//           </div>
+//         )}
+
+//         {/* Time */}
+//         <div className="flex gap-4">
+//           <div className="flex-1">
+//             <Label>Start Time</Label>
+//             <Input
+//               type="time"
+//               disabled={isPast}
+//               value={formData.startTime}
+//               onChange={(e) =>
+//                 setFormData({ ...formData, startTime: e.target.value })
+//               }
+//             />
+//           </div>
+//           <div className="flex-1">
+//             <Label>End Time</Label>
+//             <Input
+//               type="time"
+//               disabled={isPast}
+//               value={formData.endTime}
+//               onChange={(e) =>
+//                 setFormData({ ...formData, endTime: e.target.value })
+//               }
+//             />
+//           </div>
+//         </div>
+
+//         {/* Recurring */}
+//         <div className="flex items-center gap-2">
+//           <Switch
+//             checked={formData.recurring}
+//             onCheckedChange={(v) => setFormData({ ...formData, recurring: v })}
+//           />
+//           <Label>Recurring</Label>
+//           {formData.recurring && (
+//             <Select
+//               value={formData.recurringFrequency}
+//               onValueChange={(v) =>
+//                 setFormData({ ...formData, recurringFrequency: v })
+//               }
+//             >
+//               <SelectTrigger className="w-32">
+//                 <SelectValue />
+//               </SelectTrigger>
+//               <SelectContent>
+//                 <SelectItem value="WEEKLY">Weekly</SelectItem>
+//                 <SelectItem value="BIWEEKLY">Biweekly</SelectItem>
+//               </SelectContent>
+//             </Select>
+//           )}
+//         </div>
+
+//         {/* Delete buttons for each schedule */}
+//         {!isPast && (
+//           <div className="pt-2 border-t">
+//             <Label className="block mb-1">Delete Schedules</Label>
+//             <div className="space-y-2">
+//               {groupSchedules.map((s) => (
+//                 <div
+//                   key={s.id}
+//                   className="flex justify-between items-center text-sm border p-2 rounded"
+//                 >
+//                   <span>
+//                     {s.employee?.name || "Unassigned"} —{" "}
+//                     {new Date(s.eventDate).toLocaleDateString()}
+//                   </span>
+//                   <Button
+//                     size="sm"
+//                     variant="destructive"
+//                     onClick={() =>
+//                       handleDelete(s.id, s.scheduleType, s.eventDate)
+//                     }
+//                   >
+//                     Delete
+//                   </Button>
+//                 </div>
+//               ))}
+//             </div>
+//           </div>
+//         )}
+//       </div>
+
+//       <DialogFooter className="pt-4">
+//         <DialogClose asChild>
+//           <Button variant="outline">Cancel</Button>
+//         </DialogClose>
+//         {!isPast && <Button onClick={handleSave}>Save Changes</Button>}
+//         {isPast && (
+//           <p className="text-sm text-gray-500 italic">
+//             Past schedules can only toggle recurring.
+//           </p>
+//         )}
+//       </DialogFooter>
+//     </DialogContent>
+//   );
+// }
