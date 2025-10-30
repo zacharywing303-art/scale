@@ -25,7 +25,7 @@ interface GenerateAuditInput {
     | "QUARTERLY"
     | "YEARLY"
     | "DAILY"
-    | "SPECIFC_DATE";
+    | "SPECIFIC_DATE";
   customStart?: string;
   customEnd?: string;
   unityTaskId?: string;
