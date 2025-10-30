@@ -19,7 +19,7 @@ import { Response } from "express";
 
 interface GenerateAuditInput {
   agencyId: string;
-  frequency: "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY" | "CUSTOM";
+  frequency: "WEEKLY" | "MONTHLY" | "QUARTERLY" | "YEARLY" | "DAILY" | "CUSTOM";
   customStart?: string;
   customEnd?: string;
   unityTaskId?: string;
