@@ -141,6 +141,16 @@ export async function getAuditForTask(req: Request, res: Response) {
       end.setTime(endOfYear(auditYear).getTime());
     }
 
+    // User specific dates
+    if (
+      task.frequency === "SPECIFIC_DATE" &&
+      task.customStart &&
+      task.customEnd
+    ) {
+      start.setTime(new Date(task.customStart).getTime());
+      end.setTime(new Date(task.customEnd).getTime());
+    }
+
     const now = new Date();
     if (now < end) {
       return res.status(200).json({

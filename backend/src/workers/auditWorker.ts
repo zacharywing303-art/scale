@@ -60,6 +60,15 @@ cron.schedule("0 0 * * 0", async () => {
         start.setTime(startOfYear(auditYear).getTime());
         end.setTime(endOfYear(auditYear).getTime());
       }
+      // User specific dates
+      if (
+        task.frequency === "SPECIFIC_DATE" &&
+        task.customStart &&
+        task.customEnd
+      ) {
+        start.setTime(new Date(task.customStart).getTime());
+        end.setTime(new Date(task.customEnd).getTime());
+      }
 
       // Skip if the week hasn’t finished yet
       if (new Date() < end) continue;

@@ -45,6 +45,10 @@ function calculateRange(
   let endDate: Date;
 
   switch (frequency) {
+    case "DAILY":
+      startDate = subDays(today, 1);
+      endDate = subDays(today, 1);
+      break;
     case "WEEKLY":
       startDate = startOfWeek(subDays(today, 7), { weekStartsOn: 0 });
       endDate = endOfWeek(subDays(today, 7), { weekStartsOn: 0 });
@@ -61,7 +65,7 @@ function calculateRange(
       startDate = startOfYear(subYears(today, 1));
       endDate = endOfYear(subYears(today, 1));
       break;
-    case "CUSTOM":
+    case "SPECIFIC_DATE":
       startDate = new Date(customStart!);
       endDate = new Date(customEnd!);
       break;
@@ -84,7 +88,7 @@ export async function generateAudit({
   createdById,
 }: GenerateAuditInput) {
   const { startDate, endDate } =
-    frequency === "CUSTOM" && customStart && customEnd
+    frequency === "SPECIFIC_DATE" && customStart && customEnd
       ? { startDate: new Date(customStart), endDate: new Date(customEnd) }
       : calculateRange(frequency, customStart, customEnd);
 
