@@ -21,8 +21,9 @@ import VisitDetailModal from "./[visit_id]/VisitDetailModal";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import { exportTableData } from "@/lib/exportData";
 import ExportButton from "@/components/ExportButton";
+import { format } from "date-fns";
+import { toast } from "sonner";
 
 // Default display columns
 const defaultDisplayColumns = [
@@ -43,6 +44,8 @@ const defaultDisplayColumns = [
 ];
 
 export default function VisitsPage() {
+  const [taskInfo, setTaskInfo] = useState<any>(null);
+
   const [visits, setVisits] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,9 +53,11 @@ export default function VisitsPage() {
   const [selectedVisit, setSelectedVisit] = useState<any | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const searchParams = useSearchParams();
-  const router = useRouter();
-
+  const taskId = searchParams.get("taskId");
   const exceptionOnlyParam = searchParams.get("exceptionOnly") === "true";
+  const dateFromParam = searchParams.get("from") || "";
+  const dateToParam = searchParams.get("to") || "";
+  const router = useRouter();
 
   const [filters, setFilters] = useState({
     employee: "",
@@ -62,13 +67,51 @@ export default function VisitsPage() {
     payer: "",
     medicaidId: "",
     exceptionOnly: exceptionOnlyParam,
-    dateFrom: "",
-    dateTo: "",
+    dateFrom: dateFromParam,
+    dateTo: dateToParam,
   });
 
   const [perPage, setPerPage] = useState("25");
   const [displayColumns, setDisplayColumns] = useState(defaultDisplayColumns);
   const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    async function fetchTaskInfo() {
+      if (!taskId) return;
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${taskId}`
+        );
+        if (!res.ok) {
+          // Treat 404 (not found) as "no task" instead of throwing an error
+          if (res.status === 404) {
+            setTaskInfo(null);
+            return;
+          }
+          // Try to surface a useful server error message if available
+          let errorMsg = "Failed to fetch task info";
+          try {
+            const errBody = await res.json();
+            if (errBody?.message) errorMsg = errBody.message;
+          } catch {
+            try {
+              const text = await res.text();
+              if (text) errorMsg = text;
+            } catch {
+              /* ignore */
+            }
+          }
+          throw new Error(errorMsg);
+        }
+        const data = await res.json();
+        setTaskInfo(data);
+      } catch (err: any) {
+        console.error(err);
+        toast.error(err.message);
+      }
+    }
+    fetchTaskInfo();
+  }, [taskId]);
 
   // ✅ Fetch visits from backend for user's agency
   useEffect(() => {
@@ -303,6 +346,23 @@ export default function VisitsPage() {
     return sorted;
   }, [filteredVisits, sortConfig]);
 
+  const handleMarkComplete = async () => {
+    if (!taskId) return;
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${taskId}/complete`,
+        {
+          method: "PATCH",
+        }
+      );
+      if (!res.ok) throw new Error("Failed to mark task complete");
+      toast.success("Task marked as complete!");
+      setTaskInfo((prev: any) => ({ ...prev, isDone: true }));
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
   const paginatedVisits = sortedVisits.slice(
     (currentPage - 1) * parseInt(perPage),
     currentPage * parseInt(perPage)
@@ -310,13 +370,6 @@ export default function VisitsPage() {
 
   const totalPages = Math.ceil(filteredVisits.length / parseInt(perPage));
 
-  // const handleDisplayToggle = (colKey: string) => {
-  //   setDisplayColumns((prev) =>
-  //     prev.includes(colKey)
-  //       ? prev.filter((k) => k !== colKey)
-  //       : [...prev, colKey]
-  //   );
-  // };
   const handleDisplayToggle = (colKey: string) => {
     setDisplayColumns((prev) => {
       if (prev.includes(colKey)) {
@@ -345,6 +398,44 @@ export default function VisitsPage() {
 
   return (
     <ProtectedRoute allowedRoles={["AGENCY_ADMIN"]} permission="View Visits">
+      {taskInfo && (
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-blue-50 border border-blue-200 p-4 rounded-md mb-4">
+          <div>
+            <h2 className="text-lg font-semibold text-blue-700">
+              Fix Visit Exceptions Task
+            </h2>
+            <p className="text-sm text-gray-600">
+              Assigned:{" "}
+              {taskInfo.assignedDate
+                ? format(new Date(taskInfo.assignedDate), "PPP")
+                : "N/A"}{" "}
+              | Due:{" "}
+              {taskInfo.dueDate
+                ? format(new Date(taskInfo.dueDate), "PPP")
+                : "N/A"}
+            </p>
+          </div>
+          <div className="flex gap-2 mt-3 md:mt-0">
+            <ExportButton
+              filteredVisits={filteredVisits}
+              displayColumns={displayColumns}
+            />
+            {taskInfo.isDone ? (
+              <Button disabled variant="secondary">
+                ✅ Completed
+              </Button>
+            ) : (
+              <Button
+                onClick={handleMarkComplete}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                Mark Complete
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center">

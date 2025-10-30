@@ -100,3 +100,18 @@ export const deleteTask = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Failed to delete task" });
   }
 };
+
+export const getTaskById = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const task = await prisma.task.findUnique({
+      where: { id },
+      include: { assignedRoles: { include: { role: true } } },
+    });
+    if (!task) return res.status(404).json({ message: "Task not found" });
+    res.json(task);
+  } catch (err) {
+    console.error("Error fetching task:", err);
+    res.status(500).json({ message: "Failed to fetch task" });
+  }
+};

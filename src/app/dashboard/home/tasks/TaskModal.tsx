@@ -12,7 +12,21 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { format } from "date-fns";
+import {
+  format,
+  subWeeks,
+  startOfWeek,
+  endOfWeek,
+  startOfMonth,
+  endOfMonth,
+  subMonths,
+  subQuarters,
+  startOfQuarter,
+  endOfQuarter,
+  subYears,
+  startOfYear,
+  endOfYear,
+} from "date-fns";
 import CreateTaskModal from "./CreateTaskModal";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
 import { useRouter } from "next/navigation";
@@ -158,6 +172,64 @@ export default function TaskModal({
   };
 
   const handleGoToUnityTask = async (task: Task) => {
+    const baseUrl = "/dashboard/visits";
+
+    if (task.name === "Fix Visit Exceptions") {
+      const due = new Date(task.dueDate ?? new Date());
+      let dateFrom: string;
+      let dateTo: string;
+
+      // Determine previous period
+      switch (task.frequency) {
+        case "WEEKLY":
+          dateFrom = startOfWeek(subWeeks(due, 1), { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfWeek(subWeeks(due, 1), { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          break;
+        case "MONTHLY":
+          dateFrom = startOfMonth(subMonths(due, 1))
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfMonth(subMonths(due, 1)).toISOString().split("T")[0];
+          break;
+        case "QUARTERLY":
+          dateFrom = startOfQuarter(subQuarters(due, 1))
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfQuarter(subQuarters(due, 1))
+            .toISOString()
+            .split("T")[0];
+          break;
+        case "YEARLY":
+          dateFrom = startOfYear(subYears(due, 1)).toISOString().split("T")[0];
+          dateTo = endOfYear(subYears(due, 1)).toISOString().split("T")[0];
+          break;
+        case "CUSTOM":
+          // For CUSTOM, use the due date as end, and calculate start based on a default range (e.g., 7 days)
+          dateTo = due.toISOString().split("T")[0];
+          const customStart = subWeeks(due, 1);
+          dateFrom = startOfWeek(customStart, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          break;
+        default:
+          // fallback: past 7 days
+          dateFrom = startOfWeek(subWeeks(due, 1), { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfWeek(subWeeks(due, 1), { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+      }
+
+      router.push(
+        `${baseUrl}?from=${dateFrom}&to=${dateTo}&exceptionOnly=true&taskId=${task.id}`
+      );
+      return;
+    }
     if (task.name === "Conduct/Review Timely Audits") {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/timely-audits/for-task/${task.id}`

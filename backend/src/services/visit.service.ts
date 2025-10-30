@@ -324,41 +324,6 @@ export async function updateVisit(id: number, data: any) {
 
   return updated;
 }
-
-// export async function updateVisit(id: number, data: any) {
-//   const exceptions = computeExceptions(data);
-
-//   const updated = await prisma.$transaction(async (tx) => {
-//     // Update visit fields + exceptions
-//     const visit = await tx.visit.update({
-//       where: { id },
-//       data: { ...data, ...exceptions },
-//     });
-
-//     // Reset VisitException records
-//     await tx.visitException.deleteMany({ where: { visitId: id } });
-
-//     const trueExceptions = Object.entries(exceptions)
-//       .filter(([_, val]) => val)
-//       .map(([key]) => ({ visitId: id, exceptionType: key, date: new Date() }));
-
-//     if (trueExceptions.length) {
-//       await tx.visitException.createMany({ data: trueExceptions });
-//       await tx.visit.update({
-//         where: { id },
-//         data: {
-//           totalCurrentExceptions: trueExceptions.length,
-//           totalOriginalExceptions: trueExceptions.length,
-//         },
-//       });
-//     }
-
-//     return visit;
-//   });
-
-//   return updated;
-// }
-
 /**
  * Delete a visit
  */
