@@ -9,39 +9,40 @@ datasource db {
 }
 
 model Agency {
-  id               String        @id @default(cuid())
+  id               String           @id @default(cuid())
   name             String
-  code             String        @unique
+  code             String           @unique
   state            String
-  allowEvv         Boolean       @default(false)
-  status           String        @default("Active")
+  allowEvv         Boolean          @default(false)
+  status           String           @default("Active")
   subscriptionPlan String?
   paymentMethod    String?
-  createdAt        DateTime      @default(now())
-  updatedAt        DateTime      @updatedAt
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
   email            String?
-  numEmployees     Int           @default(0)
+  numEmployees     Int              @default(0)
   phone            String?
   santraxID        String?
-  addressLine1     String        @default("N/A")
+  addressLine1     String           @default("N/A")
   addressLine2     String?
   addressLine3     String?
-  addressState     String        @default("N/A")
-  city             String        @default("N/A")
-  zipCode          String        @default("N/A")
+  addressState     String           @default("N/A")
+  city             String           @default("N/A")
+  zipCode          String           @default("N/A")
   billingEmail     String?
   billingPhone     String?
-  numClients       Int           @default(0)
-  numVisits        Int           @default(0)
-  paymentStatus    String        @default("Not Required")
-  agencyAdminId    String?       @unique
-  agencyAdmin      User?         @relation("AgencyAdminRelation", fields: [agencyAdminId], references: [id])
+  numClients       Int              @default(0)
+  numVisits        Int              @default(0)
+  paymentStatus    String           @default("Not Required")
+  agencyAdminId    String?          @unique
+  agencyAdmin      User?            @relation("AgencyAdminRelation", fields: [agencyAdminId], references: [id])
   invoices         Invoice[]
   RoleType         RoleType[]
   Task             Task[]
   users            User[]
   Visit            Visit[]
   TimelyAudit      TimelyAudit[]
+  MobileEmployee   MobileEmployee[]
 }
 
 model User {
@@ -261,11 +262,13 @@ model MobileEmployee {
   id           String   @id @default(cuid())
   employeeID   String   @unique
   email        String   @unique
+  agencyID     String
   agencyCode   String
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
   employee     Employee @relation(fields: [employeeID], references: [id])
+  agency       Agency   @relation(fields: [agencyID], references: [id])
 }
 
 model EmploymentInfo {

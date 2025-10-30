@@ -19,13 +19,34 @@ export const createEmployee = async (req: Request, res: Response) => {
       return res.status(400).json({ message: "Agency ID is required" });
     }
 
-    const employee = await employeeService.createEmployee(req.body);
-    res.status(201).json(employee);
+    const { employee, rawPassword } = await employeeService.createEmployee(
+      req.body
+    );
+
+    res.status(201).json({
+      message: "Employee created successfully",
+      employee,
+      password: rawPassword || null, // ✅ show password
+    });
   } catch (err: any) {
     console.error("Error creating employee:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
+// export const createEmployee = async (req: Request, res: Response) => {
+//   try {
+//     if (!req.body.agencyID) {
+//       return res.status(400).json({ message: "Agency ID is required" });
+//     }
+
+//     const employee = await employeeService.createEmployee(req.body);
+//     res.status(201).json(employee);
+//   } catch (err: any) {
+//     console.error("Error creating employee:", err);
+//     res.status(500).json({ message: err.message });
+//   }
+// };
 
 export const updateEmployee = async (req: Request, res: Response) => {
   const employee = await employeeService.updateEmployee(

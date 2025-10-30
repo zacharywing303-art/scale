@@ -6,7 +6,7 @@ import { getLoggedInUser } from "@/lib/auth/authHelpers";
 
 interface ScheduleItem {
   id: string;
-  scheduleType: "Office" | "Visit";
+  scheduleType: "office" | "visit" | "facility";
   title: string;
   time: string;
   employeeName: string;
@@ -21,7 +21,7 @@ export default function DailySchedule() {
   const fetchSchedules = async (date: Date) => {
     const dateStr = date.toISOString().split("T")[0];
     const user = await getLoggedInUser();
-    const agencyId = user?.agency?.code; // Replace with actual agency ID logic
+    const agencyId = user?.agency?.id;
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/api/dashboard/daily-schedules?agencyID=${agencyId}&date=${dateStr}`
     );
@@ -37,8 +37,11 @@ export default function DailySchedule() {
     setCurrentDate((prev) => new Date(prev.getTime() + days * 86400000));
   };
 
-  const officeSchedules = schedules.filter((s) => s.scheduleType === "Office");
-  const visitSchedules = schedules.filter((s) => s.scheduleType === "Visit");
+  const officeSchedules = schedules.filter((s) => s.scheduleType === "office");
+  const visitSchedules = schedules.filter((s) => s.scheduleType === "visit");
+  const facilitySchedules = schedules.filter(
+    (s) => s.scheduleType === "facility"
+  );
 
   return (
     <div className="bg-white dark:bg-card border border-border rounded-lg p-6 shadow-md">
@@ -96,6 +99,23 @@ export default function DailySchedule() {
                     <span className="font-medium">{item.time}:</span>{" "}
                     {item.employeeName} Visit w/ {item.clientName} (
                     {item.detail})
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Facility Schedules */}
+          {facilitySchedules.length > 0 && (
+            <div>
+              <h4 className="font-semibold text-muted-foreground mb-2">
+                Facilities
+              </h4>
+              <ul className="space-y-1">
+                {facilitySchedules.map((item) => (
+                  <li key={item.id}>
+                    <span className="font-medium">{item.time}:</span>{" "}
+                    {item.employeeName} ({item.detail})
                   </li>
                 ))}
               </ul>
