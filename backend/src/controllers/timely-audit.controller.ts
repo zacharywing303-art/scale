@@ -107,116 +107,55 @@ export async function getAuditForTask(req: Request, res: Response) {
     const task = await prisma.task.findUnique({ where: { id: taskId } });
     if (!task) return res.status(404).json({ error: "Task not found" });
 
-    // const due = new Date(task.dueDate);
-
-    // // ✅ Use the *previous* week before due date
-    // const auditWeek = subWeeks(due, 1);
-    // const start = startOfWeek(auditWeek, { weekStartsOn: 0 });
-    // const end = endOfWeek(auditWeek, { weekStartsOn: 0 });
-
-    // if (task.frequency === "DAILY") {
-    //   const auditDay = subDays(due, 1);
-    //   start.setTime(auditDay.getTime());
-    //   end.setTime(auditDay.getTime());
-    // }
-
-    // // User *previous* month before due date
-    // if (task.frequency === "MONTHLY") {
-    //   const auditMonth = subMonths(due, 1);
-    //   start.setTime(startOfMonth(auditMonth).getTime());
-    //   end.setTime(endOfMonth(auditMonth).getTime());
-    // }
-
-    // // User *previous* quarter before due date
-    // if (task.frequency === "QUARTERLY") {
-    //   const auditQuarter = subQuarters(due, 1);
-    //   start.setTime(startOfQuarter(auditQuarter).getTime());
-    //   end.setTime(endOfQuarter(auditQuarter).getTime());
-    // }
-
-    // // User *previous* year before due date
-    // if (task.frequency === "YEARLY") {
-    //   const auditYear = subYears(due, 1);
-    //   start.setTime(startOfYear(auditYear).getTime());
-    //   end.setTime(endOfYear(auditYear).getTime());
-    // }
-
-    // // User custom date range (as-is)
-    // if (task.frequency === "CUSTOM") {
-    //   if (task.frequency === "CUSTOM" && task.customDateRange) {
-    //     const [customStart, customEnd] = task.customDateRange.split(" to ");
-    //     const cs = new Date(customStart);
-    //     const ce = new Date(customEnd);
-    //     if (!isNaN(cs.getTime()) && !isNaN(ce.getTime())) {
-    //       start.setTime(cs.getTime());
-    //       end.setTime(ce.getTime());
-    //     }
-    //   }
-    // }
-
-    // const now = new Date();
-    // if (now < end) {
-    //   return res.status(200).json({
-    //     ready: false,
-    //     message: `Audit not ready — available after ${end.toDateString()}`,
-    //   });
-    // }
-
-    // const userId =
-    //   typeof req.query.userId === "string" ? req.query.userId : undefined;
-
-    // const result = await timelyAuditService.generateAudit({
-    //   agencyId: task.agencyId,
-    //   frequency: task.frequency || "WEEKLY",
-    //   customStart: start.toISOString(),
-    //   customEnd: end.toISOString(),
-    //   unityTaskId: task.id,
-    //   createdById: userId || "system",
-    // });
-    // ⬇️ inside getAuditForTask
     const due = new Date(task.dueDate);
-    let start: Date, end: Date;
 
-    switch (task.frequency) {
-      case "DAILY":
-        const day = subDays(due, 1);
-        start = day;
-        end = day;
-        break;
-      case "WEEKLY":
-        start = startOfWeek(subWeeks(due, 1), { weekStartsOn: 0 });
-        end = endOfWeek(subWeeks(due, 1), { weekStartsOn: 0 });
-        break;
-      case "MONTHLY":
-        start = startOfMonth(subMonths(due, 1));
-        end = endOfMonth(subMonths(due, 1));
-        break;
-      case "QUARTERLY":
-        start = startOfQuarter(subQuarters(due, 1));
-        end = endOfQuarter(subQuarters(due, 1));
-        break;
-      case "YEARLY":
-        start = startOfYear(subYears(due, 1));
-        end = endOfYear(subYears(due, 1));
-        break;
-      case "CUSTOM":
-        if (task.customDateRange) {
-          const [cs, ce] = task.customDateRange.split(" to ");
-          const s = new Date(cs);
-          const e = new Date(ce);
-          if (!isNaN(s.getTime()) && !isNaN(e.getTime())) {
-            start = s;
-            end = e;
-            break;
-          }
-        }
-      default:
-        // fallback to previous week
-        start = startOfWeek(subWeeks(due, 1), { weekStartsOn: 0 });
-        end = endOfWeek(subWeeks(due, 1), { weekStartsOn: 0 });
+    // ✅ Use the *previous* week before due date
+    const auditWeek = subWeeks(due, 1);
+    const start = startOfWeek(auditWeek, { weekStartsOn: 0 });
+    const end = endOfWeek(auditWeek, { weekStartsOn: 0 });
+
+    if (task.frequency === "DAILY") {
+      const auditDay = subDays(due, 1);
+      start.setTime(auditDay.getTime());
+      end.setTime(auditDay.getTime());
     }
 
-    if (new Date() < end) {
+    // User *previous* month before due date
+    if (task.frequency === "MONTHLY") {
+      const auditMonth = subMonths(due, 1);
+      start.setTime(startOfMonth(auditMonth).getTime());
+      end.setTime(endOfMonth(auditMonth).getTime());
+    }
+
+    // User *previous* quarter before due date
+    if (task.frequency === "QUARTERLY") {
+      const auditQuarter = subQuarters(due, 1);
+      start.setTime(startOfQuarter(auditQuarter).getTime());
+      end.setTime(endOfQuarter(auditQuarter).getTime());
+    }
+
+    // User *previous* year before due date
+    if (task.frequency === "YEARLY") {
+      const auditYear = subYears(due, 1);
+      start.setTime(startOfYear(auditYear).getTime());
+      end.setTime(endOfYear(auditYear).getTime());
+    }
+
+    // User custom date range (as-is)
+    if (task.frequency === "CUSTOM") {
+      if (task.frequency === "CUSTOM" && task.customDateRange) {
+        const [customStart, customEnd] = task.customDateRange.split(" to ");
+        const cs = new Date(customStart);
+        const ce = new Date(customEnd);
+        if (!isNaN(cs.getTime()) && !isNaN(ce.getTime())) {
+          start.setTime(cs.getTime());
+          end.setTime(ce.getTime());
+        }
+      }
+    }
+
+    const now = new Date();
+    if (now < end) {
       return res.status(200).json({
         ready: false,
         message: `Audit not ready — available after ${end.toDateString()}`,
