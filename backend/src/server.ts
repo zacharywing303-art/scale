@@ -25,6 +25,7 @@ import visitRoutes from "./routes/visit.route";
 import programRoutes from "./routes/program.route";
 import payerRoutes from "./routes/payer.route";
 import timelyAuditRoutes from "./routes/timely-audit.route";
+import mobileVisitRoutes from "./routes/mobile.visit.route";
 import "./workers";
 
 // Load env variables

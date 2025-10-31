@@ -43,6 +43,7 @@ model Agency {
   Visit            Visit[]
   TimelyAudit      TimelyAudit[]
   MobileEmployee   MobileEmployee[]
+  VisitRequest     VisitRequest[]
 }
 
 model User {
@@ -256,6 +257,7 @@ model Employee {
   assignedClients       Client[]              @relation("EmployeeClients")
   officeStaff           Boolean               @default(false)
   facilityStaff         Boolean               @default(false)
+  VisitRequest          VisitRequest[]
 }
 
 model MobileEmployee {
@@ -353,6 +355,8 @@ model Address {
   employeeID   String?
   clientID     String?
   city         String
+  latitude     Float?
+  longitude    Float?
   client       Client?   @relation(fields: [clientID], references: [id])
   employee     Employee? @relation(fields: [employeeID], references: [id])
 }
@@ -569,6 +573,21 @@ model MissedVisit {
   visit                 Visit     @relation("VisitToMissedVisit", fields: [visitId], references: [id])
 
   @@index([expiresAt])
+}
+
+model VisitRequest {
+  id         String   @id @default(cuid())
+  agencyID   String
+  employeeID String
+  clientName String
+  serviceID  String
+  location   String
+  latitude   Float?
+  longitude  Float?
+  status     String   @default("Pending")
+  createdAt  DateTime @default(now())
+  agency     Agency   @relation(fields: [agencyID], references: [id])
+  employee   Employee @relation(fields: [employeeID], references: [id])
 }
 
 model Task {

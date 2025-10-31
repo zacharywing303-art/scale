@@ -29,7 +29,12 @@ export async function loginMobileEmployee(
   }
 
   const token = jwt.sign(
-    { id: user.id, email: user.email, agencyCode: user.agencyCode },
+    {
+      id: user.id,
+      email: user.email,
+      agencyCode: user.agencyCode,
+      agencyID: user.agencyID,
+    },
     JWT_SECRET,
     { expiresIn: TOKEN_EXPIRES_IN }
   );
