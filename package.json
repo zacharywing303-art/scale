@@ -61,6 +61,7 @@
     "@tailwindcss/postcss": "^4",
     "@types/bcrypt": "^6.0.0",
     "@types/file-saver": "^2.0.7",
+    "@types/geolib": "^2.0.3",
     "@types/lodash.isequal": "^4.5.8",
     "@types/node": "^20.19.9",
     "@types/react": "^19",
