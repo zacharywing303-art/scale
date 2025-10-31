@@ -47,18 +47,76 @@ export default function CreateEmployeeModal() {
   const [phone, setPhone] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
 
+  // const handleSubmit = async () => {
+  //   try {
+  //     // Get agency code from logged-in user
+  //     const agencyID = getLoggedInUser()?.agency?.id;
+  //     if (!agencyID) throw new Error("Agency code not found");
+
+  //     // Generate random password if mobile user
+  //     let password: string | undefined;
+  //     if (mobileUser) {
+  //       password = generateRandomPassword(16); // example length
+  //       console.log("Generated password for mobile employee:", password);
+  //     }
+
+  //     const res = await fetch(
+  //       `${process.env.NEXT_PUBLIC_API_URL}/api/employees`,
+  //       {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         credentials: "include",
+  //         body: JSON.stringify({
+  //           firstName,
+  //           lastName,
+  //           last5SSN,
+  //           dateOfBirth,
+  //           gender,
+  //           language,
+  //           phone,
+  //           supervisor,
+  //           position,
+  //           nationalProviderId,
+  //           email,
+  //           mobileUser,
+  //           agencyID,
+  //           password,
+  //         }),
+  //       }
+  //     );
+
+  //     if (!res.ok) throw new Error("Failed to create employee");
+  //     const newEmployee = await res.json();
+  //     console.log("Employee created:", newEmployee);
+  //     // Optionally reset form or close modal here
+  //     setFirstName("");
+  //     setLastName("");
+  //     setLast5SSN("");
+  //     setDateOfBirth("");
+  //     setGender("");
+  //     setLanguage("");
+  //     setPhone("");
+  //     setSupervisor(false);
+  //     setPosition("");
+  //     setNationalProviderId("");
+  //     setEmail("");
+  //     setMobileUser(true);
+  //     alert("Employee created successfully");
+  //     window.location.reload();
+  //   } catch (err) {
+  //     console.error(err);
+  //     alert("Error creating employee");
+  //   }
+  // };
+
   const handleSubmit = async () => {
     try {
-      // Get agency code from logged-in user
-      const agencyID = getLoggedInUser()?.agency?.id;
-      if (!agencyID) throw new Error("Agency code not found");
+      const user = await getLoggedInUser();
+      const agencyID = user?.agency?.id;
+      if (!agencyID) throw new Error("Agency ID not found");
 
-      // Generate random password if mobile user
       let password: string | undefined;
-      if (mobileUser) {
-        password = generateRandomPassword(16); // example length
-        console.log("Generated password for mobile employee:", password);
-      }
+      if (mobileUser) password = generateRandomPassword(16);
 
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/employees`,
@@ -86,22 +144,16 @@ export default function CreateEmployeeModal() {
       );
 
       if (!res.ok) throw new Error("Failed to create employee");
-      const newEmployee = await res.json();
-      console.log("Employee created:", newEmployee);
-      // Optionally reset form or close modal here
-      setFirstName("");
-      setLastName("");
-      setLast5SSN("");
-      setDateOfBirth("");
-      setGender("");
-      setLanguage("");
-      setPhone("");
-      setSupervisor(false);
-      setPosition("");
-      setNationalProviderId("");
-      setEmail("");
-      setMobileUser(true);
-      alert("Employee created successfully");
+      const result = await res.json();
+
+      alert(
+        `✅ Employee created successfully!\n\nName: ${
+          result.employee.name
+        }\nEmployee ID: ${result.employee.employeeID}\nTemporary Password: ${
+          result.password || "N/A"
+        }`
+      );
+
       window.location.reload();
     } catch (err) {
       console.error(err);
