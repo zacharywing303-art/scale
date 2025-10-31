@@ -66,6 +66,7 @@ app.use("/api/visits", visitRoutes);
 app.use("/api/programs", programRoutes);
 app.use("/api/payers", payerRoutes);
 app.use("/api/timely-audits", timelyAuditRoutes);
+app.use("/api/mobile/visits", mobileVisitRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {
