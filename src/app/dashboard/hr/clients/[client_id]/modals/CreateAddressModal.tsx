@@ -248,7 +248,7 @@ export default function CreateAddressModal({
 
         <div className="space-y-3">
           <div>
-            <Label>Label</Label>
+            <Label className="mb-1">Label</Label>
             <Input
               value={form.addressLabel}
               onChange={(e) => handleChange("addressLabel", e.target.value)}
@@ -257,7 +257,7 @@ export default function CreateAddressModal({
           </div>
 
           <div>
-            <Label>Address Line 1 *</Label>
+            <Label className="mb-1">Address Line 1 *</Label>
             <Input
               className={errors.addressLine1 ? "border-red-500" : ""}
               value={form.addressLine1}
@@ -266,7 +266,7 @@ export default function CreateAddressModal({
           </div>
 
           <div>
-            <Label>City *</Label>
+            <Label className="mb-1">City *</Label>
             <Input
               className={errors.city ? "border-red-500" : ""}
               value={form.city}
@@ -276,7 +276,7 @@ export default function CreateAddressModal({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>State *</Label>
+              <Label className="mb-1">State *</Label>
               <Select
                 value={form.state}
                 onValueChange={(v) => handleChange("state", v)}
@@ -296,7 +296,7 @@ export default function CreateAddressModal({
               </Select>
             </div>
             <div>
-              <Label>Zip Code *</Label>
+              <Label className="mb-1">Zip Code *</Label>
               <Input
                 className={errors.zipcode ? "border-red-500" : ""}
                 value={form.zipcode}
@@ -320,8 +320,14 @@ export default function CreateAddressModal({
             <div className="mt-3 p-3 border rounded-md bg-muted">
               <p className="font-medium">Suggested Address:</p>
               <p className="text-sm text-muted-foreground">
-                {suggested.formatted}
+                {suggested.formattedAddress}
               </p>
+              {suggested.latitude && suggested.longitude && (
+                <p className="text-xs text-muted-foreground">
+                  Lat: {suggested.latitude}, Lng: {suggested.longitude}
+                </p>
+              )}
+
               <div className="flex gap-2 mt-2">
                 <Button
                   size="sm"
