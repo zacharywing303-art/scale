@@ -4,8 +4,19 @@ export const getAllClients = async () => {
   return prisma.client.findMany();
 };
 
+// export const getClientById = async (id: string) => {
+//   return prisma.client.findUnique({ where: { id } });
+// };
 export const getClientById = async (id: string) => {
-  return prisma.client.findUnique({ where: { id } });
+  return prisma.client.findUnique({
+    where: { id },
+    include: {
+      addresses: true,
+      contacts: true,
+      program: { select: { name: true } },
+      services: { select: { name: true } },
+    },
+  });
 };
 
 export const createClient = async (data: any) => {
