@@ -28,6 +28,7 @@ import timelyAuditRoutes from "./routes/timely-audit.route";
 import mobileVisitRoutes from "./routes/mobile.visit.route";
 import addressRoutes from "./routes/address.route";
 import contactRoutes from "./routes/contact.route";
+import verifyAddressRoute from "./routes/verifyAddress.route";
 import "./workers";
 
 // Load env variables
@@ -71,6 +72,7 @@ app.use("/api/timely-audits", timelyAuditRoutes);
 app.use("/api/mobile/visits", mobileVisitRoutes);
 app.use("/api/addresses", addressRoutes);
 app.use("/api/contacts", contactRoutes);
+app.use("/api/verify-address", verifyAddressRoute);
 
 const server = http.createServer(app);
 const io = new Server(server, {

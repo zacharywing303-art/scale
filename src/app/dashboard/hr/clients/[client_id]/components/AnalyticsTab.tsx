@@ -5,12 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import SaveChangesButton from "./SaveChangesButton";
 import AddTasksModal from "../modals/AddTasksModal";
 
 const mockDailyTasks = ["Take meds", "Shower assistance", "Meal prep"];
 
-export default function AnalyticsTab() {
+export default function AnalyticsTab({ client }: { client: any }) {
   return (
     <div className="p-4 space-y-6">
       {/* Assigned Employees */}
@@ -52,7 +51,7 @@ export default function AnalyticsTab() {
         </ScrollArea>
       </div>
       {/* Save Button */}
-      <SaveChangesButton />
+      <Button>Save Changes</Button>
     </div>
   );
 }

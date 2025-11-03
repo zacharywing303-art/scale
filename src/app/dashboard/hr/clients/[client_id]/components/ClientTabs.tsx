@@ -6,7 +6,7 @@ import ScheduleTab from "./ScheduleTab";
 import InvoicesTab from "./InvoicesTab";
 import AnalyticsTab from "./AnalyticsTab";
 
-export default function ClientTabs({ clientId }: { clientId: string }) {
+export default function ClientTabs({ client }: { client: any }) {
   return (
     <Tabs defaultValue="general" className="w-full">
       <TabsList>
@@ -17,19 +17,19 @@ export default function ClientTabs({ clientId }: { clientId: string }) {
         <TabsTrigger value="analytics">Analytics</TabsTrigger>
       </TabsList>
       <TabsContent value="general">
-        <GeneralTab />
+        <GeneralTab client={client} />
       </TabsContent>
       <TabsContent value="program">
-        <ProgramTab />
+        <ProgramTab client={client} />
       </TabsContent>
       <TabsContent value="schedule">
-        <ScheduleTab />
+        <ScheduleTab client={client} />
       </TabsContent>
       <TabsContent value="invoices">
-        <InvoicesTab />
+        <InvoicesTab client={client} />
       </TabsContent>
       <TabsContent value="analytics">
-        <AnalyticsTab />
+        <AnalyticsTab client={client} />
       </TabsContent>
     </Tabs>
   );

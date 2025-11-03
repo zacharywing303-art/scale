@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Calendar } from "@/components/ui/calendar"; // Optional: if you use calendar pickers
-import SaveChangesButton from "./SaveChangesButton";
 
 const mockSchedules = [
   {
@@ -29,7 +28,7 @@ const mockSchedules = [
   },
 ];
 
-export default function ScheduleTab() {
+export default function ScheduleTab({ client }: { client: any }) {
   const [filters, setFilters] = useState({
     from: "",
     to: "",
@@ -82,7 +81,7 @@ export default function ScheduleTab() {
         </table>
       </ScrollArea>
       {/* Save Button */}
-      <SaveChangesButton />
+      <Button>Save Changes</Button>
     </div>
   );
 }

@@ -13,14 +13,13 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
-import SaveChangesButton from "./SaveChangesButton";
 import AddAuthorizationModal from "../modals/AddAuthorizationModal";
 import AddDiagnosisModal from "../modals/AddDiagnosisModal";
 import AddPayerModal from "../modals/AddPayerModal";
 import AddServiceModal from "../modals/AddServiceModal";
 import AddProviderModal from "../modals/AddProviderModal";
 
-export default function ProgramTab() {
+export default function ProgramTab({ client }: { client: any }) {
   return (
     <ScrollArea className="p-4 space-y-6">
       {/* Status */}
@@ -180,7 +179,7 @@ export default function ProgramTab() {
         </ScrollArea>
       </div>
       {/* Save Button */}
-      <SaveChangesButton />
+      <Button>Save Changes</Button>
     </ScrollArea>
   );
 }

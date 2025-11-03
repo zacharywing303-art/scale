@@ -2,7 +2,7 @@
 
 import React from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import SaveChangesButton from "./SaveChangesButton";
+import { Button } from "@/components/ui/button";
 
 const mockInvoices = [
   {
@@ -21,7 +21,7 @@ const mockInvoices = [
   },
 ];
 
-export default function InvoicesTab() {
+export default function InvoicesTab({ client }: { client: any }) {
   return (
     <div className="p-4">
       <ScrollArea className="border rounded h-[300px]">
@@ -49,7 +49,7 @@ export default function InvoicesTab() {
         </table>
       </ScrollArea>
       {/* Save Button */}
-      <SaveChangesButton />
+      <Button>Save Changes</Button>
     </div>
   );
 }
