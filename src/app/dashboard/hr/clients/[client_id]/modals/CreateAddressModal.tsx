@@ -21,7 +21,6 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
-// Common US states for abbreviation ↔ full name mapping
 const US_STATES = [
   { abbr: "AL", name: "Alabama" },
   { abbr: "AK", name: "Alaska" },
@@ -129,32 +128,30 @@ export default function CreateAddressModal({
   };
 
   /** 🔎 Validate with Google Maps API */
+  /** 🔎 Verify address securely via backend */
   const verifyAddress = async () => {
     if (!validateForm()) return;
     setVerifying(true);
     try {
-      const addr = `${form.addressLine1}, ${form.city}, ${form.state} ${form.zipcode}`;
       const res = await fetch(
-        `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
-          addr
-        )}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/verify-address`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            addressLine1: form.addressLine1,
+            city: form.city,
+            state: form.state,
+            zipcode: form.zipcode,
+          }),
+        }
       );
-      const data = await res.json();
 
-      if (data.status === "OK" && data.results?.length > 0) {
-        const best = data.results[0];
-        const formatted = best.formatted_address;
-        setSuggested({
-          formatted,
-          components: best.address_components,
-        });
-        toast.success("Suggested verified address found");
-      } else {
-        toast.warning(
-          "No verified address found; you can still use your entry."
-        );
-        setSuggested(null);
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Failed to verify address");
+
+      setSuggested(data.standardized);
+      toast.success("Suggested verified address found");
     } catch (err) {
       console.error("Error verifying address:", err);
       toast.error("Failed to verify address");
@@ -163,14 +160,24 @@ export default function CreateAddressModal({
     }
   };
 
-  /** 📨 Save address (optionally with suggestion) */
+  /** 📨 Save address (with lat/long if verified) */
   const handleSubmit = async (useSuggested = false) => {
     if (!validateForm()) return;
 
     const normalizedState = normalizeState(form.state);
+
     const addressToSave =
       useSuggested && suggested
-        ? parseSuggested(suggested)
+        ? {
+            ...form,
+            addressLine1: suggested.addressLine1,
+            city: suggested.city,
+            state: suggested.state,
+            zipcode: suggested.zipcode,
+            county: suggested.county,
+            latitude: suggested.latitude,
+            longitude: suggested.longitude,
+          }
         : { ...form, state: normalizedState };
 
     try {
@@ -183,8 +190,8 @@ export default function CreateAddressModal({
           body: JSON.stringify({ ...addressToSave, clientID: clientId }),
         }
       );
-      if (!res.ok) throw new Error("Failed to create address");
 
+      if (!res.ok) throw new Error("Failed to create address");
       toast.success("Address saved successfully");
       setOpen(false);
       onCreated?.();

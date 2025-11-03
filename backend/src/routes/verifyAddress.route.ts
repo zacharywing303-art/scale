@@ -16,7 +16,7 @@ router.post("/", async (req: Request, res: Response) => {
     const address = `${addressLine1}, ${city}, ${state} ${zipcode}`;
     const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(
       address
-    )}&key=${process.env.GOOGLE_MAPS_API_KEY}`;
+    )}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`;
 
     const response = await fetch(url);
     const data = await response.json();
