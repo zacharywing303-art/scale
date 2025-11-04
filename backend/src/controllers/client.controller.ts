@@ -28,56 +28,59 @@ export const createClient = async (req: Request, res: Response) => {
   }
 };
 
-// export const updateClient = async (req: Request, res: Response) => {
-//   const client = await clientService.updateClient(req.params.id, req.body);
-//   res.json(client);
-// };
 export const updateClient = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const data = req.body;
 
-    // 1️⃣ Remove non-updatable fields
-    const {
-      addresses,
-      contacts,
-      program,
-      services,
-      agency,
-      createdAt,
-      updatedAt,
-      ...safeData
-    } = data;
+    // 💡 Map frontend field names to actual Prisma columns
+    const safeData: Record<string, any> = {
+      ssn: data.ssn,
+      name: data.name,
+      title: data.title,
+      middleInitial: data.middleInitial,
+      suffix: data.suffix,
+      gender: data.gender,
+      email: data.primaryEmail || data.email,
+      mainPhone: data.primaryPhoneNumber || data.mainPhone,
+      phone2: data.phone2,
+      phone3: data.phone3,
+      phone4: data.phone4,
+      languages: data.primaryLanguage ? [data.primaryLanguage] : data.languages,
+      dateOfBirth: data.birthDate || data.dateOfBirth,
+      updatedAt: new Date(),
+    };
 
-    // 2️⃣ Fetch current client
+    // Remove undefined/null
+    Object.keys(safeData).forEach((key) => {
+      if (safeData[key] === undefined) delete safeData[key];
+    });
+
     const existing = await prisma.client.findUnique({ where: { id } });
     if (!existing) return res.status(404).json({ message: "Client not found" });
 
-    // 3️⃣ Compute differences (basic shallow diff)
     const changedFields: Record<string, { old: any; new: any }> = {};
-    Object.keys(safeData).forEach((key) => {
+    for (const key of Object.keys(safeData)) {
       if (safeData[key] !== (existing as any)[key]) {
         changedFields[key] = {
           old: (existing as any)[key],
           new: safeData[key],
         };
       }
-    });
+    }
 
-    // 4️⃣ Update client
     const updatedClient = await prisma.client.update({
       where: { id },
       data: safeData,
     });
 
-    // 5️⃣ Log to ClientHistory if anything changed
     if (Object.keys(changedFields).length > 0) {
       await prisma.clientHistory.create({
         data: {
           clientId: id,
           title: "Client Info Updated",
           reason: "General info change",
-          changedBy: req.body.updatedBy || "System", // optional user tracking
+          changedBy: req.body.updatedBy || "System",
           changes: changedFields,
         },
       });
