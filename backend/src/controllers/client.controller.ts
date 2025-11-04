@@ -125,3 +125,17 @@ export const getClientsByAgency = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to fetch clients" });
   }
 };
+
+export const getClientHistory = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const history = await prisma.clientHistory.findMany({
+      where: { clientId: id },
+      orderBy: { changedAt: "desc" },
+    });
+    res.json(history);
+  } catch (error: any) {
+    console.error("Error fetching client history:", error);
+    res.status(500).json({ message: "Failed to fetch client history" });
+  }
+};

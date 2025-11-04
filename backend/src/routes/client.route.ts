@@ -6,6 +6,7 @@ const router = Router();
 router.get("/", clientController.getClients);
 router.get("/agency/:agencyId", clientController.getClientsByAgency);
 router.get("/:id", clientController.getClient);
+router.get("/:id/history", clientController.getClientHistory);
 router.post("/", clientController.createClient);
 router.patch("/:id", clientController.updateClient);
 router.delete("/:id", clientController.deleteClient);
