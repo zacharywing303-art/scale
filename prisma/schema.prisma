@@ -374,6 +374,9 @@ model Client {
   medicaidID        String
   agencyID          String
   name              String
+  title             String?
+  middleInitial     String?
+  suffix            String?
   dateOfBirth       DateTime
   gender            String
   languages         String[]

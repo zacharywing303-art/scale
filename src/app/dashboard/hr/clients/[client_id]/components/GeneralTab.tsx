@@ -164,10 +164,31 @@ export default function GeneralTab({ client }: { client: any }) {
 
         <div>
           <Label className="mb-1">Title</Label>
-          <Input
+          <Select
             value={form.title || ""}
-            onChange={(e) => handleChange("title", e.target.value)}
-          />
+            onValueChange={(val) => handleChange("title", val)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Title" />
+            </SelectTrigger>
+            <SelectContent>
+              {[
+                "Mr.",
+                "Mrs.",
+                "Ms.",
+                "Miss",
+                "Dr.",
+                "Prof.",
+                "Rev.",
+                "Mx.",
+                "Other",
+              ].map((t) => (
+                <SelectItem key={t} value={t}>
+                  {t}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
