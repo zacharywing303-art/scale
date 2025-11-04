@@ -41,13 +41,13 @@ export const updateClient = async (req: Request, res: Response) => {
       middleInitial: data.middleInitial,
       suffix: data.suffix,
       gender: data.gender,
-      email: data.primaryEmail || data.email,
-      mainPhone: data.primaryPhoneNumber || data.mainPhone,
+      email: data.email,
+      mainPhone: data.mainPhone,
       phone2: data.phone2,
       phone3: data.phone3,
       phone4: data.phone4,
-      languages: data.primaryLanguage ? [data.primaryLanguage] : data.languages,
-      dateOfBirth: data.birthDate || data.dateOfBirth,
+      languages: Array.isArray(data.languages) ? data.languages : [],
+      dateOfBirth: data.dateOfBirth,
       updatedAt: new Date(),
     };
 

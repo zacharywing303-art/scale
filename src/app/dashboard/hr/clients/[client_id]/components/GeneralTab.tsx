@@ -24,42 +24,77 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
+import { Checkbox } from "@/components/ui/checkbox";
+
+const LANGUAGE_OPTIONS = [
+  "English",
+  "Spanish",
+  "Italian",
+  "German",
+  "French",
+  "Portuguese",
+  "Mandarin",
+  "Russian",
+  "Arabic",
+  "Hindi",
+  "Other",
+];
 
 export default function GeneralTab({ client }: { client: any }) {
   const [form, setForm] = useState(client);
   const [showSSN, setShowSSN] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-
+  const [languages, setLanguages] = useState<string[]>(client.languages || []);
   const currentUser = getLoggedInUser();
-
-  // Keep a copy of the original client to detect changes
   const [original, setOriginal] = useState(client);
 
   useEffect(() => {
     setForm(client || {});
+    setLanguages(client.languages || []);
     setOriginal(client || {});
   }, [client]);
 
-  /** Detect if form differs from original */
-  const hasChanges = useMemo(() => {
-    return JSON.stringify(form) !== JSON.stringify(original);
-  }, [form, original]);
+  const hasChanges = useMemo(
+    () => JSON.stringify(form) !== JSON.stringify(original),
+    [form, original]
+  );
 
-  /** Input handler */
   const handleChange = (key: string, value: string) =>
     setForm((prev: any) => ({ ...prev, [key]: value }));
 
-  /** Save changes request */
+  /** Primary Language = first element in array */
+  const primaryLanguage = languages[0] || "";
+
+  const handlePrimaryLanguageChange = (newLang: string) => {
+    setLanguages((prev) => {
+      const filtered = prev.filter((l) => l !== newLang);
+      return [newLang, ...filtered];
+    });
+  };
+
+  /** Handle adding/removing other languages */
+  const toggleOtherLanguage = (lang: string) => {
+    setLanguages((prev) => {
+      if (prev.includes(lang)) {
+        return prev.filter((l) => l !== lang);
+      } else {
+        return [...prev, lang];
+      }
+    });
+  };
+
   const saveChanges = async () => {
-    if (!hasChanges) {
+    if (
+      !hasChanges &&
+      JSON.stringify(languages) === JSON.stringify(original.languages)
+    ) {
       toast.info("No changes detected.");
       return;
     }
     setConfirmOpen(true);
   };
 
-  /** Confirm and perform save */
   const confirmSave = async () => {
     try {
       setSaving(true);
@@ -70,13 +105,13 @@ export default function GeneralTab({ client }: { client: any }) {
         middleInitial: form.middleInitial,
         suffix: form.suffix,
         gender: form.gender,
-        primaryPhoneNumber: form.primaryPhoneNumber,
-        primaryEmail: form.primaryEmail,
-        primaryLanguage: form.primaryLanguage,
-        birthDate: form.birthDate,
+        mainPhone: form.primaryPhoneNumber || form.mainPhone,
+        email: form.primaryEmail || form.email,
         phone2: form.phone2,
         phone3: form.phone3,
         phone4: form.phone4,
+        dateOfBirth: form.dateOfBirth,
+        languages: languages,
         updatedBy: currentUser?.name,
       };
 
@@ -119,6 +154,7 @@ export default function GeneralTab({ client }: { client: any }) {
               variant="ghost"
               onClick={() => {
                 setForm(original);
+                setLanguages(original.languages || []);
                 setConfirmOpen(false);
               }}
             >
@@ -243,41 +279,52 @@ export default function GeneralTab({ client }: { client: any }) {
           <Label className="mb-1">Birth Date</Label>
           <Input
             type="date"
-            value={form.birthDate || ""}
-            onChange={(e) => handleChange("birthDate", e.target.value)}
+            value={form.dateOfBirth || ""}
+            onChange={(e) => handleChange("dateOfBirth", e.target.value)}
           />
         </div>
 
+        {/* Primary Language */}
         <div>
           <Label className="mb-1">Primary Language</Label>
           <Select
-            value={form.primaryLanguage || ""}
-            onValueChange={(val) => handleChange("primaryLanguage", val)}
-            required
+            value={primaryLanguage}
+            onValueChange={handlePrimaryLanguageChange}
           >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Select Language" />
             </SelectTrigger>
             <SelectContent>
-              {[
-                "English",
-                "Spanish",
-                "Italian",
-                "German",
-                "French",
-                "Portuguese",
-                "Mandarin",
-                "Russian",
-                "Arabic",
-                "Hindi",
-                "Other",
-              ].map((lang) => (
+              {LANGUAGE_OPTIONS.map((lang) => (
                 <SelectItem key={lang} value={lang}>
                   {lang}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Other Languages (multi-select checkboxes) */}
+        <div>
+          <Label className="mb-1">Other Languages</Label>
+          <div className="grid grid-cols-2 gap-2 mt-1">
+            {LANGUAGE_OPTIONS.map((lang) => {
+              if (lang === primaryLanguage) return null;
+              const selected = languages.includes(lang);
+              return (
+                <label
+                  key={lang}
+                  className="flex items-center gap-2 text-sm cursor-pointer"
+                >
+                  <Checkbox
+                    checked={selected}
+                    onCheckedChange={() => toggleOtherLanguage(lang)}
+                  />
+                  {lang}
+                </label>
+              );
+            })}
+          </div>
         </div>
 
         <div>
