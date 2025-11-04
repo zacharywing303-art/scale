@@ -368,6 +368,7 @@ model Client {
   effectiveDate     DateTime        @updatedAt
   clientID          String
   startDate         DateTime        @default(now())
+  updatedAt         DateTime?       @updatedAt
   endDate           DateTime?
   supervisor        String?
   medicaidID        String
@@ -391,6 +392,19 @@ model Client {
   services          Service[]       @relation("ClientServices")
   payers            Payer[]         @relation("ClientToPayer")
   assignedEmployees Employee[]      @relation("EmployeeClients")
+  ClientHistory     ClientHistory[]
+}
+
+model ClientHistory {
+  id        String   @id @default(cuid())
+  clientId  String
+  title     String
+  reason    String?
+  changedBy String // user who made the change
+  changedAt DateTime @default(now())
+  changes   Json?
+
+  client Client @relation(fields: [clientId], references: [id])
 }
 
 model Service {

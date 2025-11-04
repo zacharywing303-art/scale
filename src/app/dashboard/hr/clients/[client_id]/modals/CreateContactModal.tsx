@@ -94,14 +94,14 @@ export default function CreateContactModal({
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label>First Name *</Label>
+              <Label className="mb-1">First Name *</Label>
               <Input
                 value={form.firstName}
                 onChange={(e) => handleChange("firstName", e.target.value)}
               />
             </div>
             <div>
-              <Label>Last Name</Label>
+              <Label className="mb-1">Last Name</Label>
               <Input
                 value={form.lastName}
                 onChange={(e) => handleChange("lastName", e.target.value)}
@@ -109,25 +109,63 @@ export default function CreateContactModal({
             </div>
           </div>
           <div>
-            <Label>Relation</Label>
+            <Label className="mb-1">Relation</Label>
             <Input
               value={form.relation}
               onChange={(e) => handleChange("relation", e.target.value)}
             />
           </div>
           <div>
-            <Label>Phone *</Label>
+            <Label className="mb-1">Phone *</Label>
             <Input
               value={form.phone1}
-              onChange={(e) => handleChange("phone1", e.target.value)}
+              onChange={(e) => {
+                const v = e.target.value;
+                const digits = v.replace(/\D/g, "").slice(0, 10);
+                let formatted = digits;
+                if (digits.length === 0) formatted = "";
+                else if (digits.length <= 3) formatted = `(${digits}`;
+                else if (digits.length <= 6)
+                  formatted = `(${digits.slice(0, 3)}) ${digits.slice(3)}`;
+                else
+                  formatted = `(${digits.slice(0, 3)}) ${digits.slice(
+                    3,
+                    6
+                  )}-${digits.slice(6)}`;
+                handleChange("phone1", formatted);
+              }}
+              onBlur={(e) => {
+                const digits = e.target.value.replace(/\D/g, "");
+                if (digits && digits.length < 10) {
+                  toast.error("Phone number must be 10 digits (XXX) XXX-XXXX");
+                }
+              }}
             />
+            {form.phone1.replace(/\D/g, "").length > 0 &&
+              form.phone1.replace(/\D/g, "").length < 10 && (
+                <p className="text-sm text-red-500">Phone must be 10 digits</p>
+              )}
           </div>
           <div>
-            <Label>Email</Label>
+            <Label className="mb-1">Email</Label>
             <Input
               value={form.email}
               onChange={(e) => handleChange("email", e.target.value)}
+              onBlur={(e) => {
+                const v = e.target.value.trim();
+                if (v && !/^[^\s@]+@[^\s@]+\.com$/i.test(v)) {
+                  toast.error(
+                    "Email must be in the format something@something.com"
+                  );
+                }
+              }}
             />
+            {form.email &&
+              !/^[^\s@]+@[^\s@]+\.com$/i.test(form.email.trim()) && (
+                <p className="text-sm text-red-500">
+                  Email must be in the format something@something.com
+                </p>
+              )}
           </div>
         </div>
         <DialogFooter className="pt-4">

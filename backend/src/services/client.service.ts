@@ -4,9 +4,6 @@ export const getAllClients = async () => {
   return prisma.client.findMany();
 };
 
-// export const getClientById = async (id: string) => {
-//   return prisma.client.findUnique({ where: { id } });
-// };
 export const getClientById = async (id: string) => {
   return prisma.client.findUnique({
     where: { id },
