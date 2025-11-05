@@ -57,6 +57,7 @@ export async function getMobileProfile(req: Request, res: Response) {
         name: user.employee?.name,
         participantType: "MOBILE_EMPLOYEE",
         role: "MOBILE_EMPLOYEE",
+        employeeID: user.employeeID,
       },
     });
   } catch (err) {

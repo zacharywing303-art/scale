@@ -51,6 +51,7 @@ export async function loginMobileEmployee(
       displayName: user.employee?.name || user.email,
       role: "MOBILE_EMPLOYEE",
       employee: user.employee,
+      employeeID: user.employeeID,
     },
   };
 }
