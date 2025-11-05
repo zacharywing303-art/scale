@@ -52,7 +52,7 @@ export function ClientHeader({ client }: { client: any }) {
           </SelectContent>
         </Select>
       </div>
-      <ViewHistoryModal />
+      <ViewHistoryModal clientId={client.id} />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import prisma from "../lib/db";
 import { getDistance } from "geolib";
+import * as visitService from "../services/visit.service";
 
 /**
  * GET /api/mobile/visit/search-client/:clientID
@@ -57,6 +58,10 @@ export async function searchClientByClientID(req: Request, res: Response) {
  * POST /api/mobile/visit/start
  * Start a new visit (clock-in)
  */
+/**
+ * POST /api/mobile/visit/start
+ * Start a new visit (clock-in)
+ */
 export async function startVisit(req: Request, res: Response) {
   try {
     const {
@@ -67,6 +72,7 @@ export async function startVisit(req: Request, res: Response) {
       longitude,
       locationType, // home or community
       agencyID,
+      proceedAnyway = false, // flag for confirmation step
     } = req.body;
 
     if (!clientID || !employeeID || !serviceID)
@@ -88,10 +94,13 @@ export async function startVisit(req: Request, res: Response) {
         .status(404)
         .json({ success: false, message: "Client or employee not found" });
 
+    // ---------------------------------
+    // 1️⃣ GPS Distance Validation
+    // ---------------------------------
     const clientAddr = client.addresses?.[0];
-    let gpsWarning = null;
+    let gpsWarning: string | null = null;
+    let gpsException = false;
 
-    // Calculate distance
     if (
       clientAddr?.latitude &&
       clientAddr?.longitude &&
@@ -106,32 +115,161 @@ export async function startVisit(req: Request, res: Response) {
       if (miles > 0.25) {
         gpsWarning = `You are ${miles.toFixed(
           2
-        )} miles away from client's home (${clientAddr.addressLine1}).`;
+        )} miles away from client's location (${clientAddr.addressLine1}).`;
+        gpsException = true;
       }
     }
 
-    // Check if service is valid
+    // ---------------------------------
+    // 2️⃣ Service Validation
+    // ---------------------------------
     const validService = client.services.some((s) => s.id === serviceID);
     const serviceWarning = validService
       ? null
       : "Selected service is not assigned to this client.";
+    const unauthorizedServiceException = !validService;
+
+    // ---------------------------------
+    // 3️⃣ If user has NOT confirmed yet, show warnings
+    // ---------------------------------
+    if (!proceedAnyway && (gpsWarning || serviceWarning)) {
+      return res.json({
+        success: true,
+        confirmationRequired: true,
+        warnings: { gpsWarning, serviceWarning },
+        client: {
+          name: client.name,
+          clientID: client.clientID,
+          address: clientAddr
+            ? `${clientAddr.addressLine1}, ${clientAddr.city}, ${clientAddr.state}`
+            : "N/A",
+        },
+      });
+    }
+
+    // ---------------------------------
+    // 4️⃣ Proceed — Create Visit
+    // ---------------------------------
+    const visitData = {
+      agencyID,
+      employeeId: employee.id,
+      clientId: client.id,
+      callIn: new Date(),
+      serviceId: service.id,
+      source: "mobile",
+      location: locationType,
+      latitudeIn: latitude,
+      longitudeIn: longitude,
+    };
+
+    const visit = await visitService.createVisit(visitData);
+
+    // ---------------------------------
+    // 5️⃣ Apply custom exceptions for warnings
+    // ---------------------------------
+    const updateExceptions: any = {};
+    if (gpsException) updateExceptions.missingLocationException = true;
+    if (unauthorizedServiceException)
+      updateExceptions.unauthorizedServiceException = true;
+    // Always true until clock-out
+    updateExceptions.visitWithoutOutCallException = true;
+
+    if (Object.keys(updateExceptions).length > 0) {
+      await prisma.visit.update({
+        where: { id: visit.id },
+        data: {
+          ...updateExceptions,
+          totalCurrentExceptions: Object.keys(updateExceptions).length,
+          totalOriginalExceptions: Object.keys(updateExceptions).length,
+        },
+      });
+    }
 
     return res.json({
       success: true,
-      warnings: { gpsWarning, serviceWarning },
-      client: {
-        name: client.name,
-        clientID: client.clientID,
-        address: clientAddr
-          ? `${clientAddr.addressLine1}, ${clientAddr.city}, ${clientAddr.state}`
-          : "N/A",
-      },
+      message: `Visit started for ${client.name}`,
+      visit,
     });
   } catch (err) {
     console.error("startVisit error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 }
+// export async function startVisit(req: Request, res: Response) {
+//   try {
+//     const {
+//       clientID,
+//       employeeID,
+//       serviceID,
+//       latitude,
+//       longitude,
+//       locationType, // home or community
+//       agencyID,
+//     } = req.body;
+
+//     if (!clientID || !employeeID || !serviceID)
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Missing required fields" });
+
+//     const [client, employee, service] = await Promise.all([
+//       prisma.client.findFirst({
+//         where: { clientID, agencyID },
+//         include: { addresses: true, services: true },
+//       }),
+//       prisma.employee.findUnique({ where: { id: employeeID } }),
+//       prisma.service.findUnique({ where: { id: serviceID } }),
+//     ]);
+
+//     if (!client || !employee)
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Client or employee not found" });
+
+//     const clientAddr = client.addresses?.[0];
+//     let gpsWarning = null;
+
+//     // Calculate distance
+//     if (
+//       clientAddr?.latitude &&
+//       clientAddr?.longitude &&
+//       latitude &&
+//       longitude
+//     ) {
+//       const distanceMeters = getDistance(
+//         { latitude, longitude },
+//         { latitude: clientAddr.latitude, longitude: clientAddr.longitude }
+//       );
+//       const miles = distanceMeters / 1609.34;
+//       if (miles > 0.25) {
+//         gpsWarning = `You are ${miles.toFixed(
+//           2
+//         )} miles away from client's home (${clientAddr.addressLine1}).`;
+//       }
+//     }
+
+//     // Check if service is valid
+//     const validService = client.services.some((s) => s.id === serviceID);
+//     const serviceWarning = validService
+//       ? null
+//       : "Selected service is not assigned to this client.";
+
+//     return res.json({
+//       success: true,
+//       warnings: { gpsWarning, serviceWarning },
+//       client: {
+//         name: client.name,
+//         clientID: client.clientID,
+//         address: clientAddr
+//           ? `${clientAddr.addressLine1}, ${clientAddr.city}, ${clientAddr.state}`
+//           : "N/A",
+//       },
+//     });
+//   } catch (err) {
+//     console.error("startVisit error:", err);
+//     res.status(500).json({ success: false, message: "Server error" });
+//   }
+// }
 
 /**
  * POST /api/mobile/visit/manual-entry
