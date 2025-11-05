@@ -155,7 +155,7 @@ export async function startVisit(req: Request, res: Response) {
       employeeId: employee.id,
       clientId: client.id,
       callIn: new Date(),
-      serviceId: service.id,
+      serviceId: service?.id,
       source: "mobile",
       location: locationType,
       latitudeIn: latitude,
