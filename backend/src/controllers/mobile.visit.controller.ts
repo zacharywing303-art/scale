@@ -89,45 +89,67 @@ export async function startVisit(req: Request, res: Response) {
       prisma.service.findUnique({ where: { id: serviceID } }),
     ]);
 
-    if (!client || !employee)
+    if (!client && !employee)
       return res
         .status(404)
-        .json({ success: false, message: "Client or employee not found" });
+        .json({ success: false, message: "Client and employee not found" });
+    else if (!employee)
+      return res
+        .status(404)
+        .json({ success: false, message: "Employee not found" });
+    else if (!client)
+      return res
+        .status(404)
+        .json({ success: false, message: "Client not found" });
 
     // ---------------------------------
-    // 1️⃣ GPS Distance Validation
+    // 1️⃣ GPS Distance Validation (safe if no address)
     // ---------------------------------
-    const clientAddr = client.addresses?.[0];
+    const clientAddr =
+      Array.isArray(client.addresses) && client.addresses.length > 0
+        ? client.addresses[0]
+        : null;
+
     let gpsWarning: string | null = null;
     let gpsException = false;
 
-    if (
-      clientAddr?.latitude &&
-      clientAddr?.longitude &&
-      latitude &&
-      longitude
-    ) {
-      const distanceMeters = getDistance(
-        { latitude, longitude },
-        { latitude: clientAddr.latitude, longitude: clientAddr.longitude }
-      );
-      const miles = distanceMeters / 1609.34;
-      if (miles > 0.25) {
-        gpsWarning = `You are ${miles.toFixed(
-          2
-        )} miles away from client's location (${clientAddr.addressLine1}).`;
+    if (clientAddr && latitude && longitude) {
+      if (clientAddr.latitude && clientAddr.longitude) {
+        const distanceMeters = getDistance(
+          { latitude, longitude },
+          { latitude: clientAddr.latitude, longitude: clientAddr.longitude }
+        );
+        const miles = distanceMeters / 1609.34;
+        if (miles > 0.25) {
+          gpsWarning = `You are ${miles.toFixed(
+            2
+          )} miles away from client's location (${clientAddr.addressLine1}).`;
+          gpsException = true;
+        }
+      } else {
+        gpsWarning = "Client address has no coordinates recorded.";
         gpsException = true;
       }
     }
 
     // ---------------------------------
-    // 2️⃣ Service Validation
+    // 2️⃣ Service Validation (safe if no services)
     // ---------------------------------
-    const validService = client.services.some((s) => s.id === serviceID);
-    const serviceWarning = validService
-      ? null
-      : "Selected service is not assigned to this client.";
-    const unauthorizedServiceException = !validService;
+    const hasServices =
+      Array.isArray(client.services) && client.services.length > 0;
+    let validService = false;
+
+    if (hasServices) {
+      validService = client.services.some((s) => s.id === serviceID);
+    }
+
+    const serviceWarning = !hasServices
+      ? "This client has no services linked. You may still continue if allowed."
+      : !validService
+      ? "Selected service is not assigned to this client."
+      : null;
+
+    const unauthorizedServiceException = !hasServices || !validService;
 
     // ---------------------------------
     // 3️⃣ If user has NOT confirmed yet, show warnings
