@@ -89,18 +89,10 @@ export async function startVisit(req: Request, res: Response) {
       prisma.service.findUnique({ where: { id: serviceID } }),
     ]);
 
-    if (!client && !employee)
+    if (!client || !employee)
       return res
         .status(404)
-        .json({ success: false, message: "Client and employee not found" });
-    else if (!employee)
-      return res
-        .status(404)
-        .json({ success: false, message: "Employee not found" });
-    else if (!client)
-      return res
-        .status(404)
-        .json({ success: false, message: "Client not found" });
+        .json({ success: false, message: "Client or employee not found" });
 
     // ---------------------------------
     // 1️⃣ GPS Distance Validation (safe if no address)
@@ -183,6 +175,22 @@ export async function startVisit(req: Request, res: Response) {
       latitudeIn: latitude,
       longitudeIn: longitude,
     };
+
+    // Prevent duplicate "active" visits for same employee + client
+    const existingActive = await prisma.visit.findFirst({
+      where: {
+        employeeID,
+        clientID: client.id,
+        callOut: null, // still active
+        visitStatus: { in: ["InProcess"] },
+      },
+    });
+    if (existingActive) {
+      return res.json({
+        success: false,
+        message: "You already have an active visit for this client.",
+      });
+    }
 
     const visit = await visitService.createVisit(visitData);
 
