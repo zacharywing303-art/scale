@@ -14,7 +14,12 @@ export async function searchClientByClientID(req: Request, res: Response) {
 
     const client = await prisma.client.findFirst({
       where: { clientID },
-      include: { addresses: true, services: true, assignedEmployees: true },
+      include: {
+        addresses: true,
+        services: true,
+        assignedEmployees: true,
+        contacts: true,
+      },
     });
 
     if (!client)
@@ -40,10 +45,16 @@ export async function searchClientByClientID(req: Request, res: Response) {
         name: client.name,
         clientID: client.clientID,
         address: fullAddress,
+        mainPhone: client.mainPhone,
         services: client.services.map((s) => ({
           id: s.id,
           name: s.name,
           code: s.code,
+        })),
+        contacts: client.contacts.map((c) => ({
+          name: `${c.firstName} ${c.lastName}`,
+          phone: c.phone1 || c.phone2,
+          relation: c.relation,
         })),
         isAssigned,
       },
@@ -225,81 +236,6 @@ export async function startVisit(req: Request, res: Response) {
     res.status(500).json({ success: false, message: "Server error" });
   }
 }
-// export async function startVisit(req: Request, res: Response) {
-//   try {
-//     const {
-//       clientID,
-//       employeeID,
-//       serviceID,
-//       latitude,
-//       longitude,
-//       locationType, // home or community
-//       agencyID,
-//     } = req.body;
-
-//     if (!clientID || !employeeID || !serviceID)
-//       return res
-//         .status(400)
-//         .json({ success: false, message: "Missing required fields" });
-
-//     const [client, employee, service] = await Promise.all([
-//       prisma.client.findFirst({
-//         where: { clientID, agencyID },
-//         include: { addresses: true, services: true },
-//       }),
-//       prisma.employee.findUnique({ where: { id: employeeID } }),
-//       prisma.service.findUnique({ where: { id: serviceID } }),
-//     ]);
-
-//     if (!client || !employee)
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "Client or employee not found" });
-
-//     const clientAddr = client.addresses?.[0];
-//     let gpsWarning = null;
-
-//     // Calculate distance
-//     if (
-//       clientAddr?.latitude &&
-//       clientAddr?.longitude &&
-//       latitude &&
-//       longitude
-//     ) {
-//       const distanceMeters = getDistance(
-//         { latitude, longitude },
-//         { latitude: clientAddr.latitude, longitude: clientAddr.longitude }
-//       );
-//       const miles = distanceMeters / 1609.34;
-//       if (miles > 0.25) {
-//         gpsWarning = `You are ${miles.toFixed(
-//           2
-//         )} miles away from client's home (${clientAddr.addressLine1}).`;
-//       }
-//     }
-
-//     // Check if service is valid
-//     const validService = client.services.some((s) => s.id === serviceID);
-//     const serviceWarning = validService
-//       ? null
-//       : "Selected service is not assigned to this client.";
-
-//     return res.json({
-//       success: true,
-//       warnings: { gpsWarning, serviceWarning },
-//       client: {
-//         name: client.name,
-//         clientID: client.clientID,
-//         address: clientAddr
-//           ? `${clientAddr.addressLine1}, ${clientAddr.city}, ${clientAddr.state}`
-//           : "N/A",
-//       },
-//     });
-//   } catch (err) {
-//     console.error("startVisit error:", err);
-//     res.status(500).json({ success: false, message: "Server error" });
-//   }
-// }
 
 /**
  * POST /api/mobile/visit/manual-entry
