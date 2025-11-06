@@ -180,11 +180,13 @@ model Visit {
   exceptions                    VisitException[]
   history                       VisitHistory[]
   visitTasks                    VisitTask[]
+  VisitMileage                  VisitMileage[]
 
   @@index([agencyID, scheduledTimeOut])
   @@index([agencyID, scheduledTimeIn])
   @@index([visitStatus])
   @@index([callIn, callOut])
+  @@index([employeeID, visitStatus, callOut])
 }
 
 model VisitTask {
@@ -605,6 +607,17 @@ model VisitRequest {
   createdAt  DateTime @default(now())
   agency     Agency   @relation(fields: [agencyID], references: [id])
   employee   Employee @relation(fields: [employeeID], references: [id])
+}
+
+model VisitMileage {
+  id         String   @id @default(cuid())
+  visitId    Int
+  latitude   Float
+  longitude  Float
+  recordedAt DateTime @default(now())
+  visit      Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@index([visitId, recordedAt])
 }
 
 model Task {
