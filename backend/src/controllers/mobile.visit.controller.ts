@@ -112,27 +112,7 @@ export async function startVisit(req: Request, res: Response) {
       proceedAnyway = false,
     } = req.body;
 
-    if (!clientID) {
-      return res
-        .status(400)
-        .json({ success: false, message: "clientID is required" });
-    }
-    // if (!employeeID) {
-    //   return res
-    //     .status(400)
-    //     .json({ success: false, message: "employeeID is required" });
-    // }
-    // if (!serviceID) {
-    //   return res
-    //     .status(400)
-    //     .json({ success: false, message: "serviceID is required" });
-    // }
-    // if (!agencyID) {
-    //   return res
-    //     .status(400)
-    //     .json({ success: false, message: "agencyID is required" });
-    // }
-    else if (!employeeID || !serviceID || !agencyID) {
+    if (!clientID || !employeeID || !serviceID || !agencyID) {
       return res
         .status(400)
         .json({ success: false, message: "Missing required fields" });

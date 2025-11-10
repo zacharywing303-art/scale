@@ -52,6 +52,7 @@ export async function loginMobileEmployee(
       role: "MOBILE_EMPLOYEE",
       employee: user.employee,
       employeeID: user.employeeID,
+      agencyID: user.agencyID,
     },
   };
 }
