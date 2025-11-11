@@ -607,7 +607,7 @@ export async function verifyClockOutVisit(req: Request, res: Response) {
     let gpsWarning: string | null = null;
     let shortVisitWarning: string | null = null;
 
-    const addr = client?.addresses?.[0];
+    const addr = client?.addresses?.[0] ?? null;
     if (addr?.latitude && addr?.longitude && latitude && longitude) {
       const miles =
         getDistance(
