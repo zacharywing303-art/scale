@@ -444,11 +444,20 @@ export async function clockOutVisit(req: Request, res: Response) {
     // Save tasks
     if (Array.isArray(tasksCompleted) && tasksCompleted.length > 0) {
       for (const t of tasksCompleted) {
-        await prisma.visitTask.upsert({
-          where: { visitId_name: { visitId: visit.id, name: t } },
-          create: { visitId: visit.id, name: t, completed: true },
-          update: { completed: true },
+        const existing = await prisma.visitTask.findFirst({
+          where: { visitId: visit.id, name: t },
         });
+
+        if (existing) {
+          await prisma.visitTask.update({
+            where: { id: existing.id },
+            data: { completed: true },
+          });
+        } else {
+          await prisma.visitTask.create({
+            data: { visitId: visit.id, name: t, completed: true },
+          });
+        }
       }
     }
 
@@ -580,22 +589,25 @@ export async function verifyClockOutVisit(req: Request, res: Response) {
     const { visitId, latitude, longitude } = req.body;
     const visit = await prisma.visit.findUnique({
       where: { id: Number(visitId) },
-      include: {
-        agency: true,
-        service: true,
-        client: { include: { addresses: true } },
-      },
+      include: { agency: true, service: true },
     });
     if (!visit)
       return res
         .status(404)
         .json({ success: false, message: "Visit not found" });
 
-    let gpsWarning = null;
-    let shortVisitWarning = null;
+    let client = null;
+    if (visit.clientID) {
+      client = await prisma.client.findUnique({
+        where: { clientID: visit.clientID },
+        include: { addresses: true },
+      });
+    }
 
-    // GPS Exception check
-    const addr = visit.client?.addresses?.[0];
+    let gpsWarning: string | null = null;
+    let shortVisitWarning: string | null = null;
+
+    const addr = client?.addresses?.[0];
     if (addr?.latitude && addr?.longitude && latitude && longitude) {
       const miles =
         getDistance(
@@ -608,7 +620,6 @@ export async function verifyClockOutVisit(req: Request, res: Response) {
         )} miles away from client's address.`;
     }
 
-    // Short Visit Exception (less than 15 minutes)
     if (visit.callIn) {
       const diffMinutes =
         (Date.now() - new Date(visit.callIn).getTime()) / 60000;
