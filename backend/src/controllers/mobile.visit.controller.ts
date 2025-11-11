@@ -333,14 +333,66 @@ export async function getActiveVisit(req: Request, res: Response) {
  * POST /api/mobile/visits/clock-out
  * body: { visitId, latitude, longitude }
  */
+// export async function clockOutVisit(req: Request, res: Response) {
+//   try {
+//     const { visitId, latitude, longitude } = req.body;
+//     if (!visitId)
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "visitId required" });
+
+//     const visit = await prisma.visit.findUnique({
+//       where: { id: Number(visitId) },
+//     });
+//     if (!visit)
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Visit not found" });
+
+//     // Save out time/coords + status + clear exceptions
+//     const updated = await visitService.updateVisit(Number(visit.id), {
+//       callOut: new Date(),
+//       latitudeOut: latitude ?? null,
+//       longitudeOut: longitude ?? null,
+//       visitStatus: "Verified",
+//       outCall: true,
+//       visitWithoutOutCallException: false,
+//       missingClockOutException: false,
+//     });
+
+//     // Aggregate mileage points to Visit.mileage
+//     const points = await prisma.visitMileage.findMany({
+//       where: { visitId: updated.id },
+//       orderBy: { recordedAt: "asc" },
+//       select: { latitude: true, longitude: true },
+//     });
+//     const miles = Number(sumMileageMiles(points).toFixed(2));
+
+//     await prisma.visit.update({
+//       where: { id: updated.id },
+//       data: { mileage: miles },
+//     });
+
+//     res.json({
+//       success: true,
+//       message: "Clocked out successfully",
+//       visit: { ...updated, mileage: miles },
+//     });
+//   } catch (err) {
+//     console.error("clockOutVisit error:", err);
+//     res.status(500).json({ success: false, message: "Server error" });
+//   }
+// }
 export async function clockOutVisit(req: Request, res: Response) {
   try {
-    const { visitId, latitude, longitude } = req.body;
-    if (!visitId)
-      return res
-        .status(400)
-        .json({ success: false, message: "visitId required" });
-
+    const {
+      visitId,
+      latitude,
+      longitude,
+      proceedAnyway,
+      tasksCompleted,
+      serviceNote,
+    } = req.body;
     const visit = await prisma.visit.findUnique({
       where: { id: Number(visitId) },
     });
@@ -349,8 +401,7 @@ export async function clockOutVisit(req: Request, res: Response) {
         .status(404)
         .json({ success: false, message: "Visit not found" });
 
-    // Save out time/coords + status + clear exceptions
-    const updated = await visitService.updateVisit(Number(visit.id), {
+    const updates: any = {
       callOut: new Date(),
       latitudeOut: latitude ?? null,
       longitudeOut: longitude ?? null,
@@ -358,16 +409,70 @@ export async function clockOutVisit(req: Request, res: Response) {
       outCall: true,
       visitWithoutOutCallException: false,
       missingClockOutException: false,
+      memo: serviceNote ?? null,
+    };
+
+    // 🔎 Exception logic
+    const exceptions: string[] = [];
+    const addr = await prisma.address.findFirst({
+      where: { clientID: visit.clientID! },
     });
 
-    // Aggregate mileage points to Visit.mileage
+    if (addr?.latitude && addr?.longitude && latitude && longitude) {
+      const miles =
+        getDistance(
+          { latitude, longitude },
+          { latitude: addr.latitude, longitude: addr.longitude }
+        ) / 1609.34;
+      if (miles > 0.25) {
+        updates.gpsOutMilesFromClient = miles;
+        if (!proceedAnyway) {
+          exceptions.push("GPS Exception (out of range)");
+          updates.missingLocationException = true;
+        }
+      }
+    }
+
+    if (visit.callIn) {
+      const minutes = (Date.now() - new Date(visit.callIn).getTime()) / 60000;
+      if (minutes < 15) {
+        exceptions.push("Short Visit (<15min)");
+        updates.shortVisitException = true;
+      }
+    }
+
+    // Save tasks
+    if (Array.isArray(tasksCompleted) && tasksCompleted.length > 0) {
+      for (const t of tasksCompleted) {
+        await prisma.visitTask.upsert({
+          where: { visitId_name: { visitId: visit.id, name: t } },
+          create: { visitId: visit.id, name: t, completed: true },
+          update: { completed: true },
+        });
+      }
+    }
+
+    // Update visit + record exceptions
+    const updated = await prisma.visit.update({
+      where: { id: visit.id },
+      data: updates,
+    });
+
+    if (exceptions.length > 0) {
+      for (const ex of exceptions) {
+        await prisma.visitException.create({
+          data: { visitId: updated.id, exceptionType: ex, date: new Date() },
+        });
+      }
+    }
+
+    // Mileage aggregation
     const points = await prisma.visitMileage.findMany({
       where: { visitId: updated.id },
       orderBy: { recordedAt: "asc" },
       select: { latitude: true, longitude: true },
     });
     const miles = Number(sumMileageMiles(points).toFixed(2));
-
     await prisma.visit.update({
       where: { id: updated.id },
       data: { mileage: miles },
@@ -376,13 +481,14 @@ export async function clockOutVisit(req: Request, res: Response) {
     res.json({
       success: true,
       message: "Clocked out successfully",
-      visit: { ...updated, mileage: miles },
+      visit: { ...updated, mileage: miles, exceptions },
     });
   } catch (err) {
     console.error("clockOutVisit error:", err);
     res.status(500).json({ success: false, message: "Server error" });
   }
 }
+
 /**
  * POST /api/mobile/visits/:id/mileage
  * record a single ping (called by background task every ~15 min)
@@ -462,6 +568,67 @@ export async function createManualEntry(req: Request, res: Response) {
     });
   } catch (err) {
     console.error("createManualEntry error:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+}
+/**
+ * POST /api/mobile/visits/clock-out-verify
+ * Pre-check exceptions before clock-out
+ */
+export async function verifyClockOutVisit(req: Request, res: Response) {
+  try {
+    const { visitId, latitude, longitude } = req.body;
+    const visit = await prisma.visit.findUnique({
+      where: { id: Number(visitId) },
+      include: {
+        agency: true,
+        service: true,
+        client: { include: { addresses: true } },
+      },
+    });
+    if (!visit)
+      return res
+        .status(404)
+        .json({ success: false, message: "Visit not found" });
+
+    let gpsWarning = null;
+    let shortVisitWarning = null;
+
+    // GPS Exception check
+    const addr = visit.client?.addresses?.[0];
+    if (addr?.latitude && addr?.longitude && latitude && longitude) {
+      const miles =
+        getDistance(
+          { latitude, longitude },
+          { latitude: addr.latitude, longitude: addr.longitude }
+        ) / 1609.34;
+      if (miles > 0.25)
+        gpsWarning = `You are ${miles.toFixed(
+          2
+        )} miles away from client's address.`;
+    }
+
+    // Short Visit Exception (less than 15 minutes)
+    if (visit.callIn) {
+      const diffMinutes =
+        (Date.now() - new Date(visit.callIn).getTime()) / 60000;
+      if (diffMinutes < 15)
+        shortVisitWarning = `Visit duration is only ${diffMinutes.toFixed(
+          1
+        )} minutes. Short visit exception may apply.`;
+    }
+
+    if (gpsWarning || shortVisitWarning) {
+      return res.json({
+        success: true,
+        confirmationRequired: true,
+        warnings: { gpsWarning, shortVisitWarning },
+      });
+    }
+
+    return res.json({ success: true, confirmationRequired: false });
+  } catch (e) {
+    console.error("verifyClockOutVisit error:", e);
     res.status(500).json({ success: false, message: "Server error" });
   }
 }
