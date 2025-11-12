@@ -1,6 +1,7 @@
 import prisma from "../lib/db";
 import { differenceInMinutes } from "date-fns";
 import { VisitStatus } from "@prisma/client";
+import { getDistance } from "geolib";
 
 /**
  * Compute visit exception flags based on visit data

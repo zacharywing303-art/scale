@@ -181,6 +181,8 @@ model Visit {
   history                       VisitHistory[]
   visitTasks                    VisitTask[]
   VisitMileage                  VisitMileage[]
+  GPSException                  GPSException[]
+  VisitStop                     VisitStop[]
 
   @@index([agencyID, scheduledTimeOut])
   @@index([agencyID, scheduledTimeIn])
@@ -205,6 +207,42 @@ model VisitException {
   date          DateTime
   createdAt     DateTime @default(now())
   visit         Visit    @relation(fields: [visitId], references: [id])
+}
+
+model GPSException {
+  id        String   @id @default(cuid())
+  visitId   Int
+  distance  Float
+  type      String // "IN" | "OUT"
+  reason    String? // "Too far from client" | "Missing coordinates"
+  createdAt DateTime @default(now())
+
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@index([visitId])
+}
+
+model VisitStop {
+  id              String    @id @default(cuid())
+  visitId         Int
+  // Stop window (derived from mileage pings)
+  startedAt       DateTime
+  endedAt         DateTime?
+  durationSeconds Int? // (endedAt - startedAt) in seconds
+
+  // Representative location for the stop (e.g., the first or centroid)
+  latitude  Float
+  longitude Float
+  accuracy  Float? // optional GPS accuracy if you have it
+  // Optional metadata
+  source    String? // "postprocess", "live-flag", etc.
+  note      String? // freeform; e.g., “idle > 15m within 10m radius”
+
+  createdAt DateTime @default(now())
+
+  visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  @@index([visitId, startedAt])
 }
 
 model VisitHistory {

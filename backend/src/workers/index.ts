@@ -2,7 +2,9 @@
 import "./auditWorker";
 import "./scheduleWorker";
 import "./visitStatus.worker";
-import "./autoClockOut";
+import { startAutoClockOutJob } from "./autoClockOut";
+
+startAutoClockOutJob();
 
 console.log(
   "🧠 Workers initialized: audit + schedule + visitStatus + autoClockOut"
