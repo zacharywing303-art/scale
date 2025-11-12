@@ -587,18 +587,23 @@ export async function createManualEntry(req: Request, res: Response) {
 export async function verifyClockOutVisit(req: Request, res: Response) {
   try {
     const { visitId, latitude, longitude } = req.body;
+
+    // 1️⃣ Fetch the visit (with agency + service)
     const visit = await prisma.visit.findUnique({
       where: { id: Number(visitId) },
       include: { agency: true, service: true },
     });
-    if (!visit)
+    if (!visit) {
       return res
         .status(404)
         .json({ success: false, message: "Visit not found" });
+    }
 
+    // 2️⃣ Manually fetch the client (using its primary key `id`, not clientID)
+    //    In your schema, `Client.id` is the @id field (cuid), so use that.
     let client = null;
     if (visit.clientID) {
-      client = await prisma.client.findUnique({
+      client = await prisma.client.findFirst({
         where: { clientID: visit.clientID },
         include: { addresses: true },
       });
@@ -607,28 +612,34 @@ export async function verifyClockOutVisit(req: Request, res: Response) {
     let gpsWarning: string | null = null;
     let shortVisitWarning: string | null = null;
 
-    const addr = client?.addresses?.[0] ?? null;
+    // 3️⃣ Client address check
+    const addr = client?.addresses?.[0];
     if (addr?.latitude && addr?.longitude && latitude && longitude) {
       const miles =
         getDistance(
           { latitude, longitude },
           { latitude: addr.latitude, longitude: addr.longitude }
         ) / 1609.34;
-      if (miles > 0.25)
+
+      if (miles > 0.25) {
         gpsWarning = `You are ${miles.toFixed(
           2
         )} miles away from client's address.`;
+      }
     }
 
+    // 4️⃣ Short visit warning
     if (visit.callIn) {
       const diffMinutes =
         (Date.now() - new Date(visit.callIn).getTime()) / 60000;
-      if (diffMinutes < 15)
+      if (diffMinutes < 15) {
         shortVisitWarning = `Visit duration is only ${diffMinutes.toFixed(
           1
         )} minutes. Short visit exception may apply.`;
+      }
     }
 
+    // 5️⃣ Respond with warnings or success
     if (gpsWarning || shortVisitWarning) {
       return res.json({
         success: true,
