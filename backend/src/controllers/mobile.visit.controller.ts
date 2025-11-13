@@ -313,7 +313,6 @@ export async function startVisit(req: Request, res: Response) {
     // Exception flags
     const exceptionUpdates: any = {
       visitWithoutOutCallException: true,
-      missingClockOutException: true,
     };
     if (flagMissingLocation) exceptionUpdates.missingLocationException = true;
     if (flagUnauthorizedService)
@@ -444,7 +443,6 @@ export async function clockOutVisit(req: Request, res: Response) {
       visitStatus: "Verified",
       outCall: true,
       visitWithoutOutCallException: false,
-      missingClockOutException: false,
       memo: serviceNote ?? null,
     };
 
