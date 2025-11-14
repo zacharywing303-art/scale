@@ -436,6 +436,20 @@ export async function clockOutVisit(req: Request, res: Response) {
         .status(404)
         .json({ success: false, message: "Visit not found" });
 
+    // Compute hours/units
+    let callHours = null;
+    let payHours = null;
+    let billHours = null;
+    let units = null;
+
+    if (visit.callIn) {
+      const minutes = (Date.now() - new Date(visit.callIn).getTime()) / 60000;
+      callHours = Number((minutes / 60).toFixed(2));
+      payHours = callHours;
+      billHours = callHours;
+      units = Math.floor(minutes / 15);
+    }
+
     const updates: any = {
       callOut: new Date(),
       latitudeOut: latitude ?? null,
@@ -444,6 +458,11 @@ export async function clockOutVisit(req: Request, res: Response) {
       outCall: true,
       visitWithoutOutCallException: false,
       memo: serviceNote ?? null,
+
+      callHours,
+      payHours,
+      billHours,
+      units,
     };
 
     const exceptions: string[] = [];
@@ -459,18 +478,21 @@ export async function clockOutVisit(req: Request, res: Response) {
         ) / 1609.34;
       if (miles > 0.25) {
         updates.gpsOutMilesFromClient = miles;
+
+        // Always log GPS exception
+        await prisma.gPSException.create({
+          data: {
+            visitId: visit.id,
+            distance: miles,
+            type: "OUT",
+            reason: `Clock-out ${miles.toFixed(2)} mi away from client`,
+          },
+        });
+
+        // Only update VisitException if user did NOT proceed anyway
         if (!proceedAnyway) {
           exceptions.push("GPS Exception (Out)");
           updates.missingLocationException = true;
-
-          await prisma.gPSException.create({
-            data: {
-              visitId: visit.id,
-              distance: miles,
-              type: "OUT",
-              reason: `Clock-out ${miles.toFixed(2)} mi away from client`,
-            },
-          });
         }
       }
     }
@@ -504,6 +526,24 @@ export async function clockOutVisit(req: Request, res: Response) {
     const updated = await prisma.visit.update({
       where: { id: visit.id },
       data: updates,
+    });
+
+    await prisma.visitException.deleteMany({
+      where: {
+        visitId: visit.id,
+        exceptionType: {
+          in: ["visitWithoutOutCallException", "VisitWithoutOutCallException"],
+        },
+      },
+    });
+
+    await prisma.visitException.deleteMany({
+      where: {
+        visitId: updated.id,
+        exceptionType: {
+          in: ["visitWithoutOutCallException", "VisitWithoutOutCallException"],
+        },
+      },
     });
 
     if (exceptions.length > 0) {
