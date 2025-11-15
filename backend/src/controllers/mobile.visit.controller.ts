@@ -466,72 +466,33 @@ export async function clockOutVisit(req: Request, res: Response) {
     };
 
     const exceptions: string[] = [];
-    // const addr = await prisma.address.findFirst({
-    //   where: { clientID: visit.clientID! },
-    // });
-
-    // if (addr?.latitude && addr?.longitude && latitude && longitude) {
-    //   const miles =
-    //     getDistance(
-    //       { latitude, longitude },
-    //       { latitude: addr.latitude, longitude: addr.longitude }
-    //     ) / 1609.34;
-    //   if (miles > 0.25) {
-    //     updates.gpsOutMilesFromClient = miles;
-
-    //     // Always log GPS exception
-    //     await prisma.gPSException.create({
-    //       data: {
-    //         visitId: visit.id,
-    //         distance: miles,
-    //         type: "OUT",
-    //         reason: `Clock-out ${miles.toFixed(2)} mi away from client`,
-    //       },
-    //     });
-
-    //     // Only update VisitException if user did NOT proceed anyway
-    //     if (!proceedAnyway) {
-    //       exceptions.push("GPS Exception (Out)");
-    //       updates.missingLocationException = true;
-    //     }
-    //   }
-    // }
-    // ----- GPS OUT CHECK ----- //
-    let gpsOutMiles: number | null = null;
-
-    const clientAddr = await prisma.address.findFirst({
+    const addr = await prisma.address.findFirst({
       where: { clientID: visit.clientID! },
     });
 
-    // CASE 1: Client has NO coordinates -> missing location
-    if (!clientAddr?.latitude || !clientAddr?.longitude) {
-      updates.missingLocationException = true;
-      exceptions.push("Missing Client Location");
-    } else if (latitude && longitude) {
-      // CASE 2: Client coords exist -> compute real GPS distance
-      gpsOutMiles =
+    if (addr?.latitude && addr?.longitude && latitude && longitude) {
+      const miles =
         getDistance(
           { latitude, longitude },
-          { latitude: clientAddr.latitude, longitude: clientAddr.longitude }
+          { latitude: addr.latitude, longitude: addr.longitude }
         ) / 1609.34;
+      if (miles > 0.25) {
+        updates.gpsOutMilesFromClient = miles;
 
-      updates.gpsOutMilesFromClient = gpsOutMiles;
-
-      // Always log GPSException record
-      if (gpsOutMiles > 0.25) {
+        // Always log GPS exception
         await prisma.gPSException.create({
           data: {
             visitId: visit.id,
-            distance: gpsOutMiles,
+            distance: miles,
             type: "OUT",
-            reason: `Clock-out ${gpsOutMiles.toFixed(2)} miles away`,
+            reason: `Clock-out ${miles.toFixed(2)} mi away from client`,
           },
         });
 
-        // Add VisitException ONLY if user didn't confirm override
+        // Only update VisitException if user did NOT proceed anyway
         if (!proceedAnyway) {
           exceptions.push("GPS Exception (Out)");
-          updates.missingLocationException = true; // out-of-range logically means "location mismatch"
+          updates.missingLocationException = true;
         }
       }
     }
