@@ -35,6 +35,4 @@ router.delete(
   clearClockOutException
 );
 
-// router.post("/mileage/:id", verifyMobileToken, recordMileage);
-
 export default router;
