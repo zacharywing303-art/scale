@@ -45,7 +45,7 @@ export default function DocumentReviewPage() {
             />
             <GPSExceptionsCard
               onClick={() =>
-                router.push("/document-review/GPSException-review")
+                router.push("/dashboard/hr/document-review/GPSException-review")
               }
             />
 
@@ -62,16 +62,6 @@ export default function DocumentReviewPage() {
             <BillingSummaryCard onClick={() => router.push("/billing")} />
           </div>
         </main>
-
-        {/* Mock Modal */}
-        {/* <Dialog open={!!openModal} onOpenChange={() => setOpenModal(null)}>
-          <DialogContent>
-            <ReviewModal
-              section={openModal}
-              onClose={() => setOpenModal(null)}
-            />
-          </DialogContent>
-        </Dialog> */}
         <Dialog open={!!openModal} onOpenChange={() => setOpenModal(null)}>
           <DialogContent className="max-w-md">
             {openModal === "audit" ? (

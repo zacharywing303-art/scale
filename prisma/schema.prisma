@@ -210,13 +210,15 @@ model VisitException {
 }
 
 model GPSException {
-  id        String   @id @default(cuid())
-  visitId   Int
-  distance  Float
-  type      String // "IN" | "OUT"
-  reason    String? // "Too far from client" | "Missing coordinates"
-  createdAt DateTime @default(now())
-  reviewed  Boolean  @default(false)
+  id         String    @id @default(cuid())
+  visitId    Int
+  distance   Float
+  type       String // "IN" | "OUT"
+  reason     String? // "Too far from client" | "Missing coordinates"
+  createdAt  DateTime  @default(now())
+  reviewed   Boolean   @default(false)
+  reviewedAt DateTime?
+  reviewedBy String?
 
   visit Visit @relation(fields: [visitId], references: [id], onDelete: Cascade)
 

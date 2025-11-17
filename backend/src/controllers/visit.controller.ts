@@ -1,6 +1,7 @@
 import * as visitService from "../services/visit.service";
 import { Request, Response } from "express";
 import prisma from "../lib/db";
+import { startOfDay, startOfWeek } from "date-fns";
 
 export const getVisitsByAgency = async (req: Request, res: Response) => {
   try {
@@ -96,53 +97,273 @@ export async function deleteVisitTask(req: Request, res: Response) {
   }
 }
 
+// export const getGpsExceptions = async (req: Request, res: Response) => {
+//   try {
+//     const { agencyId } = req.params;
+//     const { unreviewed, from, to } = req.query;
+
+//     const dateFilter =
+//       from && to
+//         ? {
+//             createdAt: {
+//               gte: new Date(from as string),
+//               lte: new Date(to as string),
+//             },
+//           }
+//         : {};
+
+//     const exceptions = await prisma.gPSException.findMany({
+//       where: {
+//         visit: { agencyID: agencyId },
+//         ...dateFilter,
+//       },
+//       include: {
+//         visit: {
+//           select: {
+//             id: true,
+//             callIn: true,
+//             callOut: true,
+//             clientName: true,
+//             employeeName: true,
+//             gpsInMilesFromClient: true,
+//             gpsOutMilesFromClient: true,
+//             clientID: true,
+//             employeeID: true,
+//             latitudeIn: true,
+//             longitudeIn: true,
+//             latitudeOut: true,
+//             longitudeOut: true,
+//             callInAddress: true,
+//             callOutAddress: true,
+//           },
+//         },
+//       },
+//       orderBy: { createdAt: "desc" },
+//     });
+
+//     return res.json(exceptions);
+//   } catch (err: any) {
+//     console.error("getGpsExceptions error:", err);
+//     res.status(500).json({ message: "Failed to fetch GPS exceptions" });
+//   }
+// };
 export const getGpsExceptions = async (req: Request, res: Response) => {
   try {
     const { agencyId } = req.params;
-    const { unreviewed, from, to } = req.query;
+    const {
+      unreviewed,
+      from,
+      to,
+      search,
+      page = "1",
+      pageSize = "20",
+    } = req.query;
 
-    const dateFilter =
-      from && to
-        ? {
-            createdAt: {
-              gte: new Date(from as string),
-              lte: new Date(to as string),
+    const pageNum = Math.max(1, parseInt(page as string) || 1);
+    const take = Math.min(100, parseInt(pageSize as string) || 20);
+    const skip = (pageNum - 1) * take;
+
+    const where: any = {
+      visit: { agencyID: agencyId },
+    };
+
+    if (unreviewed === "true") {
+      where.reviewed = false;
+    }
+
+    if (from && to) {
+      where.createdAt = {
+        gte: new Date(from as string),
+        lte: new Date(to as string),
+      };
+    }
+
+    if (search && typeof search === "string" && search.trim()) {
+      where.OR = [
+        { visit: { clientName: { contains: search, mode: "insensitive" } } },
+        { visit: { employeeName: { contains: search, mode: "insensitive" } } },
+      ];
+    }
+
+    const [items, total] = await prisma.$transaction([
+      prisma.gPSException.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { createdAt: "desc" },
+        include: {
+          visit: {
+            select: {
+              id: true,
+              callIn: true,
+              callOut: true,
+              clientName: true,
+              employeeName: true,
+              clientID: true,
+              latitudeIn: true,
+              longitudeIn: true,
+              latitudeOut: true,
+              longitudeOut: true,
             },
-          }
-        : {};
-
-    const exceptions = await prisma.gPSException.findMany({
-      where: {
-        visit: { agencyID: agencyId },
-        ...dateFilter,
-      },
-      include: {
-        visit: {
-          select: {
-            id: true,
-            callIn: true,
-            callOut: true,
-            clientName: true,
-            employeeName: true,
-            gpsInMilesFromClient: true,
-            gpsOutMilesFromClient: true,
-            clientID: true,
-            employeeID: true,
-            latitudeIn: true,
-            longitudeIn: true,
-            latitudeOut: true,
-            longitudeOut: true,
-            callInAddress: true,
-            callOutAddress: true,
           },
         },
-      },
-      orderBy: { createdAt: "desc" },
-    });
+      }),
+      prisma.gPSException.count({ where }),
+    ]);
 
-    return res.json(exceptions);
+    // Load client home coordinates in one shot
+    const clientIds = Array.from(
+      new Set(
+        items
+          .map((ex: { visit: { clientID: any } }) => ex.visit?.clientID)
+          .filter((cid: any): cid is string => !!cid)
+      )
+    );
+
+    const addresses = clientIds.length
+      ? await prisma.address.findMany({
+          where: { clientID: { in: clientIds } },
+        })
+      : [];
+
+    const addressByClientId = new Map(addresses.map((a) => [a.clientID, a]));
+
+    const result = items.map(
+      (ex: {
+        visit: { clientID: string | null };
+        id: any;
+        type: any;
+        distance: any;
+        reason: any;
+        createdAt: any;
+        reviewed: any;
+        reviewedAt: any;
+        reviewedBy: any;
+      }) => {
+        const addr = ex.visit.clientID
+          ? addressByClientId.get(ex.visit.clientID)
+          : null;
+
+        return {
+          id: ex.id,
+          type: ex.type,
+          distance: ex.distance,
+          reason: ex.reason,
+          createdAt: ex.createdAt,
+          reviewed: ex.reviewed,
+          reviewedAt: ex.reviewedAt,
+          reviewedBy: ex.reviewedBy,
+          visit: ex.visit,
+          clientHome: addr
+            ? {
+                latitude: addr.latitude,
+                longitude: addr.longitude,
+                address: `${addr.addressLine1}, ${addr.city ?? ""}, ${
+                  addr.state ?? ""
+                } ${addr.zipcode ?? ""}`.trim(),
+              }
+            : null,
+        };
+      }
+    );
+
+    return res.json({
+      items: result,
+      total,
+      page: pageNum,
+      pageSize: take,
+    });
   } catch (err: any) {
     console.error("getGpsExceptions error:", err);
     res.status(500).json({ message: "Failed to fetch GPS exceptions" });
+  }
+};
+
+export const getGpsExceptionSummary = async (req: Request, res: Response) => {
+  try {
+    const { agencyId } = req.params;
+
+    const now = new Date();
+    const todayStart = startOfDay(now);
+    const weekStart = startOfWeek(now, { weekStartsOn: 0 }); // Sunday
+
+    const baseWhere = { visit: { agencyID: agencyId } };
+
+    const [
+      total,
+      unresolved,
+      todayTotal,
+      todayUnresolved,
+      weekTotal,
+      weekUnresolved,
+    ] = await prisma.$transaction([
+      prisma.gPSException.count({ where: baseWhere }),
+      prisma.gPSException.count({
+        where: { ...baseWhere, reviewed: false },
+      }),
+      prisma.gPSException.count({
+        where: {
+          ...baseWhere,
+          createdAt: { gte: todayStart },
+        },
+      }),
+      prisma.gPSException.count({
+        where: {
+          ...baseWhere,
+          reviewed: false,
+          createdAt: { gte: todayStart },
+        },
+      }),
+      prisma.gPSException.count({
+        where: {
+          ...baseWhere,
+          createdAt: { gte: weekStart },
+        },
+      }),
+      prisma.gPSException.count({
+        where: {
+          ...baseWhere,
+          reviewed: false,
+          createdAt: { gte: weekStart },
+        },
+      }),
+    ]);
+
+    res.json({
+      total,
+      unresolved,
+      todayTotal,
+      todayUnresolved,
+      weekTotal,
+      weekUnresolved,
+    });
+  } catch (err: any) {
+    console.error("getGpsExceptionSummary error:", err);
+    res.status(500).json({ message: "Failed to fetch GPS exception summary" });
+  }
+};
+
+export const reviewGpsException = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { reviewed } = req.body;
+
+    // Pull from auth middleware if you have it
+    const reviewer =
+      (req as any).user?.email || (req as any).user?.name || "System";
+
+    const updated = await prisma.gPSException.update({
+      where: { id },
+      data: {
+        reviewed: !!reviewed,
+        reviewedAt: reviewed ? new Date() : null,
+        reviewedBy: reviewed ? reviewer : null,
+      },
+    });
+
+    res.json(updated);
+  } catch (err: any) {
+    console.error("reviewGpsException error:", err);
+    res.status(500).json({ message: "Failed to update GPS exception" });
   }
 };
