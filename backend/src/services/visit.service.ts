@@ -47,6 +47,84 @@ function computeExceptions(data: any) {
 }
 
 /**
+ * Add VisitExceptions by type + resync current exception count
+ */
+export async function addExceptionTypes(
+  visitId: number,
+  exceptionTypes: string[]
+) {
+  const types = Array.from(
+    new Set(exceptionTypes.filter((t) => typeof t === "string" && t.trim()))
+  );
+  if (!types.length) return;
+
+  await prisma.visitException.createMany({
+    data: types.map((type) => ({
+      visitId,
+      exceptionType: type,
+      date: new Date(),
+    })),
+  });
+
+  const currentCount = await prisma.visitException.count({
+    where: { visitId },
+  });
+
+  await prisma.visit.update({
+    where: { id: visitId },
+    data: { totalCurrentExceptions: currentCount },
+  });
+}
+
+/**
+ * Clear specific VisitException types + resync current exception count
+ */
+export async function clearExceptionTypes(
+  visitId: number,
+  exceptionTypes: string[]
+) {
+  if (!exceptionTypes.length) return;
+
+  await prisma.visitException.deleteMany({
+    where: {
+      visitId,
+      exceptionType: { in: exceptionTypes },
+    },
+  });
+
+  const currentCount = await prisma.visitException.count({
+    where: { visitId },
+  });
+
+  await prisma.visit.update({
+    where: { id: visitId },
+    data: { totalCurrentExceptions: currentCount },
+  });
+}
+
+/**
+ * Log a VisitHistory entry
+ */
+export async function logVisitHistory(
+  visitId: number,
+  title: string,
+  reasonCode: string,
+  reason: string,
+  updatedBy: string
+) {
+  return prisma.visitHistory.create({
+    data: {
+      visitId,
+      title,
+      reasonCode,
+      reason,
+      dateTime: new Date(),
+      updatedBy,
+    },
+  });
+}
+
+/**
  * Create a new Visit and automatically record exceptions and history
  */
 export async function createVisit(data: any) {
