@@ -12,6 +12,7 @@ import VisitExceptionsCard from "@/components/document-review/VisitExceptionsCar
 import ClientQuarterlyReviewsCard from "@/components/document-review/ClientQuarterlyReviewsCard";
 import EmployeeQuarterlyReviewsCard from "@/components/document-review/EmployeeQuarterlyReviewsCard";
 import BillingSummaryCard from "@/components/document-review/BillingSummaryCard";
+import GPSExceptionsCard from "@/components/document-review/GPSExceptionsCard";
 import ReviewModal from "@/components/document-review/ReviewModal";
 import GenerateAuditModal from "@/components/document-review/GenerateAuditModal";
 
@@ -42,16 +43,22 @@ export default function DocumentReviewPage() {
             <VisitExceptionsCard
               onClick={() => router.push("/visits/exceptions")}
             />
+            <GPSExceptionsCard
+              onClick={() =>
+                router.push("/document-review/GPSException-review")
+              }
+            />
+
             <ClientQuarterlyReviewsCard
               onClick={() => setOpenModal("clientQuarterly")}
-            />
-            <EmployeeQuarterlyReviewsCard
-              onClick={() => setOpenModal("employeeQuarterly")}
             />
           </div>
 
           {/* Bottom section: billing summary */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <EmployeeQuarterlyReviewsCard
+              onClick={() => setOpenModal("employeeQuarterly")}
+            />
             <BillingSummaryCard onClick={() => router.push("/billing")} />
           </div>
         </main>

@@ -11,5 +11,6 @@ router.delete("/:id", visitController.deleteVisit);
 router.post("/:id/tasks", visitController.addVisitTask);
 router.patch("/:id/tasks/:taskId", visitController.updateVisitTask);
 router.delete("/:id/tasks/:taskId", visitController.deleteVisitTask);
+router.get("/gps-exceptions/:agencyId", visitController.getGpsExceptions);
 
 export default router;

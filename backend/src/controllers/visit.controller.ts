@@ -1,5 +1,6 @@
 import * as visitService from "../services/visit.service";
 import { Request, Response } from "express";
+import prisma from "../lib/db";
 
 export const getVisitsByAgency = async (req: Request, res: Response) => {
   try {
@@ -94,3 +95,54 @@ export async function deleteVisitTask(req: Request, res: Response) {
     res.status(400).send(e.message || "Failed to delete task");
   }
 }
+
+export const getGpsExceptions = async (req: Request, res: Response) => {
+  try {
+    const { agencyId } = req.params;
+    const { unreviewed, from, to } = req.query;
+
+    const dateFilter =
+      from && to
+        ? {
+            createdAt: {
+              gte: new Date(from as string),
+              lte: new Date(to as string),
+            },
+          }
+        : {};
+
+    const exceptions = await prisma.gPSException.findMany({
+      where: {
+        visit: { agencyID: agencyId },
+        ...dateFilter,
+      },
+      include: {
+        visit: {
+          select: {
+            id: true,
+            callIn: true,
+            callOut: true,
+            clientName: true,
+            employeeName: true,
+            gpsInMilesFromClient: true,
+            gpsOutMilesFromClient: true,
+            clientID: true,
+            employeeID: true,
+            latitudeIn: true,
+            longitudeIn: true,
+            latitudeOut: true,
+            longitudeOut: true,
+            callInAddress: true,
+            callOutAddress: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return res.json(exceptions);
+  } catch (err: any) {
+    console.error("getGpsExceptions error:", err);
+    res.status(500).json({ message: "Failed to fetch GPS exceptions" });
+  }
+};
