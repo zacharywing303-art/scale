@@ -734,7 +734,7 @@ model PayrollSettings {
   id             String    @id @default(cuid())
   agencyId       String    @unique
   cycle          String // "WEEKLY" | "BIWEEKLY" | "MONTHLY" | "CUSTOM"
-  customDays     Int? // If custom cycle (ex: every 17 days)
+  customDays     Int?
   lastPeriodFrom DateTime?
   lastPeriodTo   DateTime?
   createdAt      DateTime  @default(now())
@@ -752,6 +752,11 @@ model PayrollHistory {
   runBy       String
   unityTaskId String?
   notes       String?
+
+  status      PayrollStatus @default(PENDING)
+  approvedBy  String?
+  approvedAt  DateTime?
+  totalAmount Float? // sum of all employee totals
 
   // Snapshot of all payroll values (manual + auto)
   employees Json // array of payroll rows per employee
@@ -801,4 +806,11 @@ enum VisitStatus {
 enum ScheduleFrequency {
   WEEKLY
   BIWEEKLY
+}
+
+enum PayrollStatus {
+  DRAFT
+  PENDING
+  APPROVED
+  REJECTED
 }
