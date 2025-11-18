@@ -5,7 +5,7 @@ import EmploymentInfoTab from "./EmploymentInfoTab";
 import ScheduleTab from "./ScheduleTab";
 import AnalyticsTab from "./AnalyticsTab";
 
-export default function EmployeeTabs({ employeeId }: { employeeId: string }) {
+export default function EmployeeTabs({ employee }: { employee: any }) {
   return (
     <Tabs defaultValue="general" className="w-full">
       <TabsList>
@@ -15,16 +15,16 @@ export default function EmployeeTabs({ employeeId }: { employeeId: string }) {
         <TabsTrigger value="analytics">Analytics</TabsTrigger>
       </TabsList>
       <TabsContent value="general">
-        <GeneralTab />
+        <GeneralTab employee={employee} />
       </TabsContent>
       <TabsContent value="employment_info">
-        <EmploymentInfoTab />
+        <EmploymentInfoTab employee={employee} />
       </TabsContent>
       <TabsContent value="schedule">
-        <ScheduleTab />
+        <ScheduleTab employee={employee} />
       </TabsContent>
       <TabsContent value="analytics">
-        <AnalyticsTab />
+        <AnalyticsTab employee={employee} />
       </TabsContent>
     </Tabs>
   );

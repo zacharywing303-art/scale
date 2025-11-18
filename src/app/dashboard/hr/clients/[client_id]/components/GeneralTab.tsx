@@ -340,16 +340,16 @@ export default function GeneralTab({ client }: { client: any }) {
         <div>
           <Label className="mb-1">Primary Phone Number</Label>
           <Input
-            value={form.primaryPhoneNumber || ""}
-            onChange={(e) => handleChange("primaryPhoneNumber", e.target.value)}
+            value={form.mainPhone || ""}
+            onChange={(e) => handleChange("mainPhone", e.target.value)}
           />
         </div>
 
         <div>
           <Label className="mb-1">Primary Email</Label>
           <Input
-            value={form.primaryEmail || ""}
-            onChange={(e) => handleChange("primaryEmail", e.target.value)}
+            value={form.email || ""}
+            onChange={(e) => handleChange("email", e.target.value)}
           />
         </div>
 

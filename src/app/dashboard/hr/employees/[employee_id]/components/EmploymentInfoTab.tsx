@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 
-export default function EmploymentInfoTab() {
+export default function EmploymentInfoTab({ employee }: { employee: any }) {
   const [showSensitive, setShowSensitive] = useState({
     license: false,
     insurance: false,

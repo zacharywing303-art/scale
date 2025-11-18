@@ -29,7 +29,7 @@ const mockSchedules = [
   },
 ];
 
-export default function ScheduleTab() {
+export default function ScheduleTab({ employee }: { employee: any }) {
   const [filters, setFilters] = useState({
     from: "",
     to: "",

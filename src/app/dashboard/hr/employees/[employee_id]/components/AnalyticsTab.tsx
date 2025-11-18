@@ -56,7 +56,7 @@ const workSplitData = [
   { name: "Visits", value: 40 },
 ];
 
-export default function AnalyticsTab() {
+export default function AnalyticsTab({ employee }: { employee: any }) {
   const [filter, setFilter] = useState("monthly");
 
   // Placeholder data — replace with real data logic

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -15,101 +15,342 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Checkbox } from "@/components/ui/checkbox";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import SaveChangesButton from "./SaveChangesButton";
+import CreateAddressModal from "../modals/CreateAddressModal";
+import CreateContactModal from "../modals/CreateContactModal";
+import { Eye, EyeOff } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { getLoggedInUser } from "@/lib/auth/authHelpers";
+import { is } from "date-fns/locale";
 
-export default function EmployeeGeneralTab() {
+const LANGUAGE_OPTIONS = [
+  "English",
+  "Spanish",
+  "Italian",
+  "German",
+  "French",
+  "Portuguese",
+  "Mandarin",
+  "Russian",
+  "Arabic",
+  "Hindi",
+  "Other",
+];
+
+export default function EmployeeGeneralTab({ employee }: { employee: any }) {
   const [showSSN, setShowSSN] = useState(false);
+  const [form, setForm] = useState(employee);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [languages, setLanguages] = useState<string[]>(
+    employee.languages || []
+  );
+  const currentUser = getLoggedInUser();
+  const [original, setOriginal] = useState(employee);
+  const [supervisors, setSupervisors] = useState<any[]>([]);
+
+  useEffect(() => {
+    setForm(employee || {});
+    setLanguages(employee.languages || []);
+    setOriginal(employee || {});
+  }, [employee]);
+
+  const hasChanges = useMemo(
+    () => JSON.stringify(form) !== JSON.stringify(original),
+    [form, original]
+  );
+
+  const handleChange = (key: string, value: string) =>
+    setForm((prev: any) => ({ ...prev, [key]: value }));
+
+  /** Primary Language = first element in array */
+  const primaryLanguage = languages[0] || "";
+
+  const handlePrimaryLanguageChange = (newLang: string) => {
+    setLanguages((prev) => {
+      const filtered = prev.filter((l) => l !== newLang);
+      return [newLang, ...filtered];
+    });
+  };
+
+  useEffect(() => {
+    const fetchSupervisors = async () => {
+      if (!currentUser?.agency?.id) return;
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/employees/agency/${currentUser.agency.id}`
+        );
+        const data = await res.json();
+        const supervisorsOnly = data.filter((emp: any) => emp.isSupervisor);
+        setSupervisors(supervisorsOnly);
+      } catch (err) {
+        console.error("Error loading supervisors:", err);
+      }
+    };
+    fetchSupervisors();
+  }, [currentUser]);
+
+  /** Handle adding/removing other languages */
+  const toggleOtherLanguage = (lang: string) => {
+    setLanguages((prev) => {
+      if (prev.includes(lang)) {
+        return prev.filter((l) => l !== lang);
+      } else {
+        return [...prev, lang];
+      }
+    });
+  };
+
+  const saveChanges = async () => {
+    if (
+      !hasChanges &&
+      JSON.stringify(languages) === JSON.stringify(original.languages)
+    ) {
+      toast.info("No changes detected.");
+      return;
+    }
+    setConfirmOpen(true);
+  };
+
+  const confirmSave = async () => {
+    try {
+      setSaving(true);
+      const payload = {
+        last5SSN: form.last5SSN,
+        name: form.name,
+        title: form.title,
+        middleName: form.middleName,
+        suffix: form.suffix,
+        gender: form.gender,
+        mainPhone: form.mainPhone,
+        email: form.email,
+        phone2: form.phone2,
+        phone3: form.phone3,
+        phone4: form.phone4,
+        dateOfBirth: form.dateOfBirth,
+        languages: languages,
+        updatedBy: currentUser?.name,
+        nationalProviderID: form.nationalProviderID,
+        alternativeProviderID: form.alternativeProviderID,
+        registryID: form.registryID,
+        position: form.position,
+        supervisorCode: form.supervisorCode,
+        supervisor: form.supervisor,
+        rehire: form.rehire,
+        isSupervisor: form.isSupervisor,
+        mobileUser: form.mobileUser,
+      };
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/employees/${employee.id}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to update employee.");
+
+      toast.success("Employee information updated successfully!");
+      setConfirmOpen(false);
+      window.location.reload();
+    } catch (err) {
+      console.error("Error updating employee:", err);
+      toast.error("Failed to update employee.");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <ScrollArea className="p-4 space-y-6">
+      {/* Confirm Update Dialog */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Confirm Update</DialogTitle>
+          </DialogHeader>
+          <p>Are you sure you want to update this Employee's information?</p>
+          <DialogFooter className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+              Keep Editing
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setForm(original);
+                setLanguages(original.languages || []);
+                setConfirmOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={confirmSave} disabled={saving}>
+              {saving ? "Saving..." : "Yes, Update"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Employee Personal Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Editable Fields */}
         <div>
           <Label className="mb-1">First Name</Label>
-          <Input placeholder="First Name" />
+          <Input
+            value={form.name?.split(" ")[0] || ""}
+            onChange={(e) =>
+              handleChange(
+                "name",
+                `${e.target.value} ${form.name?.split(" ")[1] || ""}`.trim()
+              )
+            }
+          />
         </div>
         <div>
           <Label className="mb-1">Last Name</Label>
-          <Input placeholder="Last Name" />
+          <Input
+            value={form.name?.split(" ")[1] || ""}
+            onChange={(e) =>
+              handleChange(
+                "name",
+                `${form.name?.split(" ")[0] || ""} ${e.target.value}`.trim()
+              )
+            }
+          />
         </div>
         <div>
           <Label className="mb-1">Title</Label>
-          <Input placeholder="Title" />
-        </div>
-        <div>
-          <Label className="mb-1">Middle Initial</Label>
-          <Input placeholder="M.I." />
-        </div>
-        <div>
-          <Label className="mb-1">Suffix</Label>
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Select suffix" />
+          <Select
+            value={form.title || ""}
+            onValueChange={(val) => handleChange("title", val)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Title" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Jr.">Jr.</SelectItem>
-              <SelectItem value="Sr.">Sr.</SelectItem>
-              <SelectItem value="II">II</SelectItem>
-              <SelectItem value="III">III</SelectItem>
+              {[
+                "Mr.",
+                "Mrs.",
+                "Ms.",
+                "Miss",
+                "Dr.",
+                "Prof.",
+                "Rev.",
+                "Mx.",
+                "Other",
+              ].map((t) => (
+                <SelectItem key={t} value={t}>
+                  {t}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
         <div>
+          <Label className="mb-1">Middle Name</Label>
+          <Input
+            value={form.middleName || ""}
+            onChange={(e) => handleChange("middleName", e.target.value)}
+          />
+        </div>
+        <div>
+          <Label className="mb-1">Suffix</Label>
+          <Input
+            value={form.suffix || ""}
+            onChange={(e) => handleChange("suffix", e.target.value)}
+          />
+        </div>
+        <div>
           <Label className="mb-1">Gender</Label>
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Select gender" />
+          <Select
+            value={form.gender || ""}
+            onValueChange={(val) => handleChange("gender", val)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Gender" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Female">Female</SelectItem>
-              <SelectItem value="Male">Male</SelectItem>
-              <SelectItem value="Other">Other</SelectItem>
+              <SelectItem value="male">Male</SelectItem>
+              <SelectItem value="female">Female</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div>
           <Label className="mb-1">Birth Date</Label>
-          <Input type="date" />
+          <Input
+            type="date"
+            value={form.dateOfBirth || ""}
+            onChange={(e) => handleChange("dateOfBirth", e.target.value)}
+          />
         </div>
         <div>
           <Label className="mb-1">Primary Language</Label>
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Select language" />
+          <Select
+            value={primaryLanguage}
+            onValueChange={handlePrimaryLanguageChange}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Select Language" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="English">English</SelectItem>
-              <SelectItem value="Spanish">Spanish</SelectItem>
-              <SelectItem value="Other">Other</SelectItem>
+              {LANGUAGE_OPTIONS.map((lang) => (
+                <SelectItem key={lang} value={lang}>
+                  {lang}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
-        {/* Read-only Fields */}
+        {/* Other Languages (multi-select checkboxes) */}
+        <div>
+          <Label className="mb-1">Other Languages</Label>
+          <div className="grid grid-cols-2 gap-2 mt-1">
+            {LANGUAGE_OPTIONS.map((lang) => {
+              if (lang === primaryLanguage) return null;
+              const selected = languages.includes(lang);
+              return (
+                <label
+                  key={lang}
+                  className="flex items-center gap-2 text-sm cursor-pointer"
+                >
+                  <Checkbox
+                    checked={selected}
+                    onCheckedChange={() => toggleOtherLanguage(lang)}
+                  />
+                  {lang}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
         <div>
           <Label className="mb-1">Employee ID</Label>
-          <Input value="EMP12345" disabled />
+          <Input value={form.employeeID || ""} disabled />
         </div>
         <div>
           <Label className="mb-1">Last 5 of SSN</Label>
-          <div className="relative">
+          <div className="flex gap-2">
             <Input
               type={showSSN ? "text" : "password"}
-              value="54321"
-              disabled
+              value={form.last5SSN || ""}
+              onChange={(e) => handleChange("last5SSN", e.target.value)}
             />
             <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="absolute right-1 top-1/2 -translate-y-1/2"
+              variant="outline"
               onClick={() => setShowSSN(!showSSN)}
+              aria-label={showSSN ? "Hide SSN" : "Show SSN"}
             >
-              {showSSN ? (
-                <EyeOffIcon className="w-4 h-4" />
-              ) : (
-                <EyeIcon className="w-4 h-4" />
-              )}
+              {showSSN ? <EyeOff size={16} /> : <Eye size={16} />}
             </Button>
           </div>
         </div>
@@ -117,108 +358,211 @@ export default function EmployeeGeneralTab() {
         {/* Contact Info */}
         <div>
           <Label className="mb-1">Primary Phone</Label>
-          <Input placeholder="(123) 456-7890" />
+          <Input
+            value={form.mainPhone || ""}
+            onChange={(e) => handleChange("mainPhone", e.target.value)}
+          />
         </div>
         <div>
           <Label className="mb-1">Primary Email</Label>
-          <Input placeholder="email@example.com" />
+          <Input
+            value={form.email || ""}
+            onChange={(e) => handleChange("email", e.target.value)}
+          />
+        </div>
+        <div>
+          <Label className="mb-1">National Provider ID</Label>
+          <Input
+            value={form.nationalProviderID || ""}
+            onChange={(e) => handleChange("nationalProviderID", e.target.value)}
+          />
+        </div>
+        <div>
+          <Label className="mb-1">Registry ID</Label>
+          <Input
+            value={form.registryID || ""}
+            onChange={(e) => handleChange("registryID", e.target.value)}
+          />
         </div>
         <div>
           <Label className="mb-1">Other ID</Label>
-          <Input placeholder="e.g. HR ID" />
+          <Input
+            value={form.alternativeProviderID || ""}
+            onChange={(e) =>
+              handleChange("alternativeProviderID", e.target.value)
+            }
+          />
         </div>
         <div>
-          <Label className="mb-1">Other Languages</Label>
-          <Input placeholder="Other Languages" />
+          <Label className="mb-1">Alternate Phone</Label>
+          <Input
+            value={form.phone2 || ""}
+            onChange={(e) => handleChange("phone2", e.target.value)}
+          />
         </div>
+
+        {form?.phone2 && (
+          <>
+            <div>
+              <Label className="mb-1">Alternate Phone 2</Label>
+              <Input
+                value={form.phone3 || ""}
+                onChange={(e) => handleChange("phone3", e.target.value)}
+              />
+            </div>
+            <div>
+              <Label className="mb-1">Alternate Phone 3</Label>
+              <Input
+                value={form.phone4 || ""}
+                onChange={(e) => handleChange("phone4", e.target.value)}
+              />
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Address Selection */}
-      <div className="space-y-2">
-        <Label className="mb-1">Address</Label>
-        <Select>
-          <SelectTrigger>
-            <SelectValue placeholder="Select unit type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Home">Home</SelectItem>
-            <SelectItem value="Apartment">Apartment</SelectItem>
-          </SelectContent>
-        </Select>
-        <Input placeholder="Address Line 1" />
-        <Input placeholder="Address Line 2" />
-        <Input placeholder="Address Line 3" />
-        <Input placeholder="City" />
-        <Input placeholder="State" />
-        <Input placeholder="Zip Code" />
+      {/* Address + Contact Modals */}
+      <div className="flex gap-3">
+        <CreateAddressModal
+          employeeId={employee.id}
+          onCreated={() => window.location.reload()}
+        />
+        <CreateContactModal
+          employeeId={employee.id}
+          onCreated={() => window.location.reload()}
+        />
+      </div>
+
+      {/* Addresses */}
+      <div>
+        <Label className="mb-1">Addresses</Label>
+        {employee?.addresses?.length ? (
+          employee.addresses.map((a: any) => (
+            <p key={a.id} className="text-sm">
+              {a.addressLine1}, {a.city}, {a.state}
+            </p>
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">No addresses found.</p>
+        )}
+      </div>
+
+      {/* Emergency Contacts */}
+      <div>
+        <Label className="mb-1">Emergency Contacts</Label>
+        {employee?.contacts?.length ? (
+          employee.contacts.map((c: any) => (
+            <p key={c.id} className="text-sm">
+              {c.firstName} {c.lastName} ({c.relation}) – {c.phone1}
+            </p>
+          ))
+        ) : (
+          <p className="text-sm text-muted-foreground">No contacts found.</p>
+        )}
       </div>
 
       {/* Agency Info */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label className="mb-1">Status</Label>
-          <Select>
+          <Label className="mb-1">Position</Label>
+          <Select
+            value={form.position || ""}
+            onValueChange={(val) => handleChange("position", val)}
+          >
             <SelectTrigger>
-              <SelectValue placeholder="Select status" />
+              <SelectValue placeholder="Select Position" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Active">Active</SelectItem>
-              <SelectItem value="Inactive">Inactive</SelectItem>
+              <SelectItem value="Office">Office</SelectItem>
+              <SelectItem value="Caregiver">Caregiver</SelectItem>
+              <SelectItem value="Registered_Nurse">Registered Nurse</SelectItem>
+              <SelectItem value="Licensed_Practical_Nurse">
+                Licensed Practical Nurse
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div>
-          <Label className="mb-1">Position</Label>
-          <Input placeholder="Position title" />
-        </div>
-        <div>
           <Label className="mb-1">Supervisor</Label>
-          <Select>
+          <Select
+            onValueChange={(v) => handleChange("supervisor", v)}
+            value={form.supervisor}
+          >
             <SelectTrigger>
-              <SelectValue placeholder="Select supervisor" />
+              <SelectValue placeholder="Select Supervisor" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1">John Smith</SelectItem>
-              <SelectItem value="2">Jane Doe</SelectItem>
+              {supervisors.map((s) => (
+                <SelectItem key={s.id} value={s.name}>
+                  {s.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
         <div>
           <Label className="mb-1">Hire Date</Label>
-          <Input type="date" />
+          <Input type="date" value={form.hireDate || ""} disabled />
         </div>
         <div>
           <Label className="mb-1">Effective Date</Label>
-          <Input
-            type="date"
-            disabled
-            value={new Date().toISOString().split("T")[0]}
-          />
-        </div>
-        <div>
-          <Label className="mb-1">National Provider ID</Label>
-          <Input placeholder="NPI #" />
+          <Input type="date" disabled value={form.effectiveDate || ""} />
         </div>
       </div>
 
       {/* Checkboxes */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
         <div className="flex items-center gap-2">
-          <Checkbox id="mobile-user" />
+          <Checkbox
+            id="mobile-user"
+            checked={!!form.mobileUser}
+            disabled={!!form.mobileUser}
+            onCheckedChange={(checked) => {
+              if (form.mobileUser) return;
+              setForm((prev: any) => ({
+                ...prev,
+                mobileUser: checked === true,
+              }));
+            }}
+          />
           <Label htmlFor="mobile-user">Mobile User</Label>
         </div>
         <div className="flex items-center gap-2">
-          <Checkbox id="supervisor" />
+          <Checkbox
+            id="supervisor"
+            checked={!!form.isSupervisor}
+            onCheckedChange={(checked) =>
+              setForm((prev: any) => ({
+                ...prev,
+                isSupervisor: checked === true,
+              }))
+            }
+          />
           <Label htmlFor="supervisor">Supervisor</Label>
         </div>
         <div className="flex items-center gap-2">
-          <Checkbox id="rehire" />
+          <Checkbox
+            id="rehire"
+            checked={!!form.rehire}
+            onCheckedChange={(checked) =>
+              setForm((prev: any) => ({
+                ...prev,
+                rehire: checked === true,
+              }))
+            }
+          />
           <Label htmlFor="rehire">Rehire</Label>
         </div>
       </div>
 
       {/* Save Changes Button */}
-      <SaveChangesButton />
+      <Button
+        onClick={saveChanges}
+        disabled={!hasChanges}
+        variant={hasChanges ? "default" : "outline"}
+      >
+        {hasChanges ? "Save Changes" : "No Changes"}
+      </Button>
     </ScrollArea>
   );
 }

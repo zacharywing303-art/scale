@@ -289,6 +289,7 @@ model Employee {
   agencyID              String
   firstName             String                @default("No")
   lastName              String                @default("Name")
+  title                 String?
   middleName            String?
   addresses             Address[]
   certifications        Certification[]
