@@ -44,6 +44,7 @@ model Agency {
   TimelyAudit      TimelyAudit[]
   MobileEmployee   MobileEmployee[]
   VisitRequest     VisitRequest[]
+  PayrollHistory   PayrollHistory[]
 }
 
 model User {
@@ -331,8 +332,8 @@ model MobileEmployee {
 }
 
 model EmploymentInfo {
-  id                       String   @id @default(cuid())
-  employeeID               String   @unique
+  id                       String    @id @default(cuid())
+  employeeID               String    @unique
   driversLicenseNumber     String?
   driversLicenseExpiration DateTime?
   insuranceStartDate       DateTime?
@@ -341,7 +342,7 @@ model EmploymentInfo {
   carModel                 String?
   carMake                  String?
   carYear                  Int?
-  carHandicapAccessible    Boolean  @default(false)
+  carHandicapAccessible    Boolean   @default(false)
   registrationStartDate    DateTime?
   registrationExpiration   DateTime?
   physicalExamDate         DateTime?
@@ -351,7 +352,7 @@ model EmploymentInfo {
   facilityPayRate          Float?
   visitPayRate             Float?
   mileagePayRate           Float?
-  employee                 Employee @relation(fields: [employeeID], references: [id])
+  employee                 Employee  @relation(fields: [employeeID], references: [id])
 }
 
 model EmployeeMedicalInfo {
@@ -726,6 +727,22 @@ model TimelyAudit {
   unityTask Task?  @relation(fields: [unityTaskId], references: [id])
 
   @@unique([agencyId, frequency, startDate, endDate])
+}
+
+model PayrollHistory {
+  id         String   @id @default(cuid())
+  agencyId   String
+  periodFrom DateTime
+  periodTo   DateTime
+  runAt      DateTime @default(now())
+  runBy      String // User ID of who ran payroll
+  notes      String?
+
+  unityTaskId String? // Optional: which Unity task triggered this run
+
+  agency Agency @relation(fields: [agencyId], references: [id])
+
+  @@index([agencyId, periodFrom, periodTo])
 }
 
 enum Frequency {

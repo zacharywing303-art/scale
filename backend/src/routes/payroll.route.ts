@@ -1,8 +1,12 @@
 import { Router } from "express";
-import { previewPayroll } from "../controllers/payroll.controller";
+import * as payrollController from "../controllers/payroll.controller";
 
 const router = Router();
 
-router.get("/preview", previewPayroll);
+// GET /api/payroll/preview?agencyId=...&periodFrom=...&periodTo=...&taskId=...
+router.get("/preview", payrollController.getPayrollPreview);
+
+// POST /api/payroll/run
+router.post("/run", payrollController.runPayroll);
 
 export default router;
