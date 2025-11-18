@@ -286,7 +286,7 @@ export default function EmploymentInfoTab({ employee }: { employee: any }) {
           <div>
             <Label className="mb-1">Car Type</Label>
             <Input
-              placeholder="e.g., Toyota Camry"
+              placeholder="e.g., 2008 Toyota Camry"
               value={
                 form.carMake || form.carModel
                   ? `${form.carMake} ${form.carModel}`.trim()
