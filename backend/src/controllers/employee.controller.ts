@@ -34,20 +34,6 @@ export const createEmployee = async (req: Request, res: Response) => {
   }
 };
 
-// export const createEmployee = async (req: Request, res: Response) => {
-//   try {
-//     if (!req.body.agencyID) {
-//       return res.status(400).json({ message: "Agency ID is required" });
-//     }
-
-//     const employee = await employeeService.createEmployee(req.body);
-//     res.status(201).json(employee);
-//   } catch (err: any) {
-//     console.error("Error creating employee:", err);
-//     res.status(500).json({ message: err.message });
-//   }
-// };
-
 export const updateEmployee = async (req: Request, res: Response) => {
   const employee = await employeeService.updateEmployee(
     req.params.id,
@@ -110,5 +96,31 @@ export const getEmployeeHistory = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Error fetching employee history:", error);
     res.status(500).json({ message: "Failed to fetch employee history" });
+  }
+};
+
+export const upsertEmploymentInfo = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    // Optional: validate the employee exists
+    const employee = await prisma.employee.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!employee) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    const info = await employeeService.upsertEmploymentInfo(id, req.body);
+    res.json({
+      message: "Employment info updated successfully",
+      employmentInfo: info,
+    });
+  } catch (err: any) {
+    console.error("Error updating employment info:", err);
+    res
+      .status(500)
+      .json({ message: err.message || "Failed to update employment info" });
   }
 };

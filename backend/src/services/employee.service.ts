@@ -144,3 +144,49 @@ export const updateEmployee = async (id: string, data: any) => {
 export const deleteEmployee = async (id: string) => {
   return prisma.employee.delete({ where: { id } });
 };
+
+export const upsertEmploymentInfo = async (employeeId: string, data: any) => {
+  // Convert date strings from the frontend into Date objects
+  const toDateOrNull = (value?: string | null) =>
+    value ? new Date(value) : null;
+
+  // Convert numeric strings to numbers or null
+  const toNumberOrNull = (value?: string | null) => {
+    if (value === undefined || value === null || value === "") return null;
+    const n = Number(value);
+    return Number.isNaN(n) ? null : n;
+  };
+
+  const payload = {
+    driversLicenseNumber: data.driversLicenseNumber ?? "",
+    driversLicenseExpiration: toDateOrNull(
+      data.driversLicenseExpiration ?? null
+    ),
+    insuranceStartDate: toDateOrNull(data.insuranceStartDate ?? null),
+    insuranceEndDate: toDateOrNull(data.insuranceEndDate ?? null),
+    insurancePolicyNumber: data.insurancePolicyNumber ?? "",
+    carModel: data.carModel ?? null,
+    carMake: data.carMake ?? null,
+    carYear: toNumberOrNull(data.carYear ?? null),
+    carHandicapAccessible: !!data.carHandicapAccessible,
+    registrationStartDate: toDateOrNull(data.registrationStartDate ?? null),
+    registrationExpiration: toDateOrNull(data.registrationExpiration ?? null),
+    physicalExamDate: toDateOrNull(data.physicalExamDate ?? null),
+    tbShotDate: toDateOrNull(data.tbShotDate ?? null),
+    cprCertificationDate: toDateOrNull(data.cprCertificationDate ?? null),
+    officePayRate: toNumberOrNull(data.officePayRate ?? null),
+    facilityPayRate: toNumberOrNull(data.facilityPayRate ?? null),
+    visitPayRate: toNumberOrNull(data.visitPayRate ?? null),
+    mileagePayRate: toNumberOrNull(data.mileagePayRate ?? null),
+  };
+
+  // Upsert ensures we create the record if it doesn't exist yet
+  return prisma.employmentInfo.upsert({
+    where: { employeeID: employeeId },
+    update: payload,
+    create: {
+      ...payload,
+      employeeID: employeeId,
+    },
+  });
+};
