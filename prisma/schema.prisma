@@ -45,6 +45,7 @@ model Agency {
   MobileEmployee   MobileEmployee[]
   VisitRequest     VisitRequest[]
   PayrollHistory   PayrollHistory[]
+  PayrollSettings  PayrollSettings?
 }
 
 model User {
@@ -729,16 +730,31 @@ model TimelyAudit {
   @@unique([agencyId, frequency, startDate, endDate])
 }
 
-model PayrollHistory {
-  id         String   @id @default(cuid())
-  agencyId   String
-  periodFrom DateTime
-  periodTo   DateTime
-  runAt      DateTime @default(now())
-  runBy      String // User ID of who ran payroll
-  notes      String?
+model PayrollSettings {
+  id             String    @id @default(cuid())
+  agencyId       String    @unique
+  cycle          String // "WEEKLY" | "BIWEEKLY" | "MONTHLY" | "CUSTOM"
+  customDays     Int? // If custom cycle (ex: every 17 days)
+  lastPeriodFrom DateTime?
+  lastPeriodTo   DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 
-  unityTaskId String? // Optional: which Unity task triggered this run
+  agency Agency @relation(fields: [agencyId], references: [id])
+}
+
+model PayrollHistory {
+  id          String   @id @default(cuid())
+  agencyId    String
+  periodFrom  DateTime
+  periodTo    DateTime
+  runAt       DateTime @default(now())
+  runBy       String
+  unityTaskId String?
+  notes       String?
+
+  // Snapshot of all payroll values (manual + auto)
+  employees Json // array of payroll rows per employee
 
   agency Agency @relation(fields: [agencyId], references: [id])
 
