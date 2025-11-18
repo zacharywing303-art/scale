@@ -333,20 +333,20 @@ model MobileEmployee {
 model EmploymentInfo {
   id                       String   @id @default(cuid())
   employeeID               String   @unique
-  driversLicenseNumber     String
-  driversLicenseExpiration DateTime
-  insuranceStartDate       DateTime
-  insuranceEndDate         DateTime
-  insurancePolicyNumber    String
+  driversLicenseNumber     String?
+  driversLicenseExpiration DateTime?
+  insuranceStartDate       DateTime?
+  insuranceEndDate         DateTime?
+  insurancePolicyNumber    String?
   carModel                 String?
   carMake                  String?
   carYear                  Int?
   carHandicapAccessible    Boolean  @default(false)
-  registrationStartDate    DateTime
-  registrationExpiration   DateTime
-  physicalExamDate         DateTime
-  tbShotDate               DateTime
-  cprCertificationDate     DateTime
+  registrationStartDate    DateTime?
+  registrationExpiration   DateTime?
+  physicalExamDate         DateTime?
+  tbShotDate               DateTime?
+  cprCertificationDate     DateTime?
   officePayRate            Float?
   facilityPayRate          Float?
   visitPayRate             Float?
@@ -357,7 +357,7 @@ model EmploymentInfo {
 model EmployeeMedicalInfo {
   id            String   @id @default(cuid())
   employeeID    String
-  clearanceName String
+  clearanceName String?
   effectiveDate DateTime
   employee      Employee @relation(fields: [employeeID], references: [id])
 }
@@ -365,7 +365,7 @@ model EmployeeMedicalInfo {
 model Certification {
   id              String   @id @default(cuid())
   employeeID      String
-  name            String
+  name            String?
   certificationID String?
   dateObtained    DateTime
   employee        Employee @relation(fields: [employeeID], references: [id])

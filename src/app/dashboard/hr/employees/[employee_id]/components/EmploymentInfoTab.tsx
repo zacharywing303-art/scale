@@ -1,12 +1,71 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import AddMedicalClearanceModal from "../modals/AddMedicalClearanceModal";
+import AddCertificationModal from "../modals/AddCertificationModal";
+
+type EmploymentInfoForm = {
+  driversLicenseNumber: string;
+  driversLicenseExpiration: string; // "YYYY-MM-DD"
+  insuranceStartDate: string;
+  insuranceEndDate: string;
+  insurancePolicyNumber: string;
+  carModel: string;
+  carMake: string;
+  carYear: string;
+  carHandicapAccessible: boolean;
+  registrationStartDate: string;
+  registrationExpiration: string;
+  physicalExamDate: string;
+  tbShotDate: string;
+  cprCertificationDate: string;
+  officePayRate: string;
+  facilityPayRate: string;
+  visitPayRate: string;
+  mileagePayRate: string;
+};
+
+const emptyForm: EmploymentInfoForm = {
+  driversLicenseNumber: "",
+  driversLicenseExpiration: "",
+  insuranceStartDate: "",
+  insuranceEndDate: "",
+  insurancePolicyNumber: "",
+  carModel: "",
+  carMake: "",
+  carYear: "",
+  carHandicapAccessible: false,
+  registrationStartDate: "",
+  registrationExpiration: "",
+  physicalExamDate: "",
+  tbShotDate: "",
+  cprCertificationDate: "",
+  officePayRate: "",
+  facilityPayRate: "",
+  visitPayRate: "",
+  mileagePayRate: "",
+};
+
+const toDateInput = (value?: string | Date | null) => {
+  if (!value) return "";
+  const d = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toISOString().slice(0, 10); // "YYYY-MM-DD"
+};
 
 export default function EmploymentInfoTab({ employee }: { employee: any }) {
   const [showSensitive, setShowSensitive] = useState({
@@ -16,27 +75,198 @@ export default function EmploymentInfoTab({ employee }: { employee: any }) {
     registration: false,
   });
 
+  const [form, setForm] = useState<EmploymentInfoForm>(emptyForm);
+  const [original, setOriginal] = useState<EmploymentInfoForm>(emptyForm);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Initialize from employee.employmentInfo when employee changes
+  useEffect(() => {
+    const info = employee?.employmentInfo || {};
+    const initial: EmploymentInfoForm = {
+      driversLicenseNumber: info.driversLicenseNumber || "",
+      driversLicenseExpiration: toDateInput(info.driversLicenseExpiration),
+      insuranceStartDate: toDateInput(info.insuranceStartDate),
+      insuranceEndDate: toDateInput(info.insuranceEndDate),
+      insurancePolicyNumber: info.insurancePolicyNumber || "",
+      carModel: info.carModel || "",
+      carMake: info.carMake || "",
+      carYear: typeof info.carYear === "number" ? String(info.carYear) : "",
+      carHandicapAccessible: !!info.carHandicapAccessible,
+      registrationStartDate: toDateInput(info.registrationStartDate),
+      registrationExpiration: toDateInput(info.registrationExpiration),
+      physicalExamDate: toDateInput(info.physicalExamDate),
+      tbShotDate: toDateInput(info.tbShotDate),
+      cprCertificationDate: toDateInput(info.cprCertificationDate),
+      officePayRate:
+        info.officePayRate != null ? String(info.officePayRate) : "",
+      facilityPayRate:
+        info.facilityPayRate != null ? String(info.facilityPayRate) : "",
+      visitPayRate: info.visitPayRate != null ? String(info.visitPayRate) : "",
+      mileagePayRate:
+        info.mileagePayRate != null ? String(info.mileagePayRate) : "",
+    };
+
+    setForm(initial);
+    setOriginal(initial);
+  }, [employee]);
+
+  const handleChange = <K extends keyof EmploymentInfoForm>(
+    key: K,
+    value: EmploymentInfoForm[K]
+  ) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const hasChanges = useMemo(
+    () => JSON.stringify(form) !== JSON.stringify(original),
+    [form, original]
+  );
+
   const toggleVisibility = (field: keyof typeof showSensitive) => {
     setShowSensitive((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
+  const saveChanges = () => {
+    if (!hasChanges) {
+      toast.info("No employment info changes detected.");
+      return;
+    }
+    setConfirmOpen(true);
+  };
+
+  const confirmSave = async () => {
+    try {
+      setSaving(true);
+
+      const payload = {
+        driversLicenseNumber: form.driversLicenseNumber || null,
+        driversLicenseExpiration: form.driversLicenseExpiration || null,
+        insuranceStartDate: form.insuranceStartDate || null,
+        insuranceEndDate: form.insuranceEndDate || null,
+        insurancePolicyNumber: form.insurancePolicyNumber || null,
+        carModel: form.carModel || null,
+        carMake: form.carMake || null,
+        carYear: form.carYear || null,
+        carHandicapAccessible: form.carHandicapAccessible,
+        registrationStartDate: form.registrationStartDate || null,
+        registrationExpiration: form.registrationExpiration || null,
+        physicalExamDate: form.physicalExamDate || null,
+        tbShotDate: form.tbShotDate || null,
+        cprCertificationDate: form.cprCertificationDate || null,
+        officePayRate: form.officePayRate || null,
+        facilityPayRate: form.facilityPayRate || null,
+        visitPayRate: form.visitPayRate || null,
+        mileagePayRate: form.mileagePayRate || null,
+      };
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/employees/${employee.id}/employment-info`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Failed to update employment info");
+      }
+
+      const data = await res.json();
+      const updated = data.employmentInfo;
+
+      const updatedForm: EmploymentInfoForm = {
+        driversLicenseNumber: updated.driversLicenseNumber || "",
+        driversLicenseExpiration: toDateInput(updated.driversLicenseExpiration),
+        insuranceStartDate: toDateInput(updated.insuranceStartDate),
+        insuranceEndDate: toDateInput(updated.insuranceEndDate),
+        insurancePolicyNumber: updated.insurancePolicyNumber || "",
+        carModel: updated.carModel || "",
+        carMake: updated.carMake || "",
+        carYear:
+          typeof updated.carYear === "number" ? String(updated.carYear) : "",
+        carHandicapAccessible: !!updated.carHandicapAccessible,
+        registrationStartDate: toDateInput(updated.registrationStartDate),
+        registrationExpiration: toDateInput(updated.registrationExpiration),
+        physicalExamDate: toDateInput(updated.physicalExamDate),
+        tbShotDate: toDateInput(updated.tbShotDate),
+        cprCertificationDate: toDateInput(updated.cprCertificationDate),
+        officePayRate:
+          updated.officePayRate != null ? String(updated.officePayRate) : "",
+        facilityPayRate:
+          updated.facilityPayRate != null
+            ? String(updated.facilityPayRate)
+            : "",
+        visitPayRate:
+          updated.visitPayRate != null ? String(updated.visitPayRate) : "",
+        mileagePayRate:
+          updated.mileagePayRate != null ? String(updated.mileagePayRate) : "",
+      };
+
+      setForm(updatedForm);
+      setOriginal(updatedForm);
+      toast.success("Employment information updated successfully!");
+      setConfirmOpen(false);
+    } catch (error) {
+      console.error("Error saving employment info:", error);
+      toast.error("Failed to update employment information.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <ScrollArea className="p-4 space-y-8">
+      {/* Confirm Update Dialog */}
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Confirm Employment Info Update</DialogTitle>
+          </DialogHeader>
+          <p>
+            Are you sure you want to update this employee&apos;s employment
+            information?
+          </p>
+          <DialogFooter className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+              Keep Editing
+            </Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setForm(original);
+                setConfirmOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={confirmSave} disabled={saving}>
+              {saving ? "Saving..." : "Yes, Update"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Vehicle Information */}
       <section>
         <h2 className="text-lg font-semibold mb-4">Vehicle Information</h2>
         <p className="text-sm text-unityred mb-4">
-          **Sensitive Information: Please keep documentation of this data we
-          will not store it electronically.**
+          **Sensitive Information: Please keep documentation of this data as
+          required.**
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Driver's License */}
           <div>
-            <Label className="mb-1">Driver's License</Label>
+            <Label className="mb-1">Driver&apos;s License</Label>
             <div className="flex items-center gap-2">
               <Input
                 type={showSensitive.license ? "text" : "password"}
                 placeholder="D1234567"
+                value={form.driversLicenseNumber}
+                onChange={(e) =>
+                  handleChange("driversLicenseNumber", e.target.value)
+                }
               />
               <Button
                 size="icon"
@@ -52,20 +282,47 @@ export default function EmploymentInfoTab({ employee }: { employee: any }) {
             </div>
           </div>
 
-          {/* Car Type */}
+          {/* Car Type (map to Make + Model text) */}
           <div>
             <Label className="mb-1">Car Type</Label>
-            <Input placeholder="Toyota Camry" />
+            <Input
+              placeholder="e.g., Toyota Camry"
+              value={
+                form.carMake || form.carModel
+                  ? `${form.carMake} ${form.carModel}`.trim()
+                  : ""
+              }
+              onChange={(e) => {
+                // Simple approach: store entire string in carModel
+                handleChange("carModel", e.target.value);
+              }}
+            />
           </div>
 
           {/* Insurance Dates */}
           <div>
             <Label className="mb-1">Insurance Start Date</Label>
-            <Input type="date" />
+            <Input
+              type="date"
+              value={form.insuranceStartDate}
+              onChange={(e) =>
+                handleChange("insuranceStartDate", e.target.value)
+              }
+              placeholder={
+                form.insuranceStartDate ? form.insuranceStartDate : "MM/DD/YYYY"
+              }
+            />
           </div>
           <div>
             <Label className="mb-1">Insurance Expiration Date</Label>
-            <Input type="date" />
+            <Input
+              type="date"
+              value={form.insuranceEndDate}
+              onChange={(e) => handleChange("insuranceEndDate", e.target.value)}
+              placeholder={
+                form.insuranceEndDate ? form.insuranceEndDate : "MM/DD/YYYY"
+              }
+            />
           </div>
 
           {/* Policy Number */}
@@ -75,6 +332,10 @@ export default function EmploymentInfoTab({ employee }: { employee: any }) {
               <Input
                 type={showSensitive.policy ? "text" : "password"}
                 placeholder="POL-999123"
+                value={form.insurancePolicyNumber}
+                onChange={(e) =>
+                  handleChange("insurancePolicyNumber", e.target.value)
+                }
               />
               <Button
                 size="icon"
@@ -93,16 +354,44 @@ export default function EmploymentInfoTab({ employee }: { employee: any }) {
           {/* Registration Dates */}
           <div>
             <Label className="mb-1">Registration Start Date</Label>
-            <Input type="date" />
+            <Input
+              type="date"
+              value={form.registrationStartDate}
+              onChange={(e) =>
+                handleChange("registrationStartDate", e.target.value)
+              }
+              placeholder={
+                form.registrationStartDate
+                  ? form.registrationStartDate
+                  : "MM/DD/YYYY"
+              }
+            />
           </div>
           <div>
             <Label className="mb-1">Registration Expiration Date</Label>
-            <Input type="date" />
+            <Input
+              type="date"
+              value={form.registrationExpiration}
+              onChange={(e) =>
+                handleChange("registrationExpiration", e.target.value)
+              }
+              placeholder={
+                form.registrationExpiration
+                  ? form.registrationExpiration
+                  : "MM/DD/YYYY"
+              }
+            />
           </div>
 
           {/* Handicap Accessible */}
           <div className="flex items-center space-x-2 mt-2">
-            <Checkbox id="handicap" />
+            <Checkbox
+              id="handicap"
+              checked={form.carHandicapAccessible}
+              onCheckedChange={(checked) =>
+                handleChange("carHandicapAccessible", checked === true)
+              }
+            />
             <Label htmlFor="handicap">Handicap Accessible</Label>
           </div>
         </div>
@@ -114,53 +403,141 @@ export default function EmploymentInfoTab({ employee }: { employee: any }) {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label className="mb-1">Physical Exam Date</Label>
-            <Input type="date" />
+            <Input
+              type="date"
+              value={form.physicalExamDate}
+              onChange={(e) => handleChange("physicalExamDate", e.target.value)}
+            />
           </div>
           <div>
             <Label className="mb-1">TB Shot Date</Label>
-            <Input type="date" />
+            <Input
+              type="date"
+              value={form.tbShotDate}
+              onChange={(e) => handleChange("tbShotDate", e.target.value)}
+            />
           </div>
           <div>
             <Label className="mb-1">CPR Certification Date</Label>
-            <Input type="date" />
-          </div>
-          <div>
-            <Label className="mb-1">Other Medical Clearance</Label>
-            <Input placeholder="e.g., Hep B, etc." />
+            <Input
+              type="date"
+              value={form.cprCertificationDate}
+              onChange={(e) =>
+                handleChange("cprCertificationDate", e.target.value)
+              }
+            />
           </div>
         </div>
       </section>
 
-      {/* Background Checks */}
+      {/* Medical Clearances */}
       <section>
-        <h2 className="text-lg font-semibold mb-4">Background Checks</h2>
+        <div className="flex justify-between mb-2">
+          <h2 className="text-lg font-semibold">Medical Clearances</h2>
+          <AddMedicalClearanceModal
+            employeeId={employee.id}
+            onCreated={() => window.location.reload()}
+          />
+        </div>
+
+        {employee.medicalInfos.length === 0 ? (
+          <p className="text-muted-foreground">No medical clearances.</p>
+        ) : (
+          <div className="border rounded-md p-4">
+            {employee.medicalInfos.map((m: any) => (
+              <div key={m.id} className="flex justify-between py-2">
+                <span>
+                  {m.clearanceName} -{" "}
+                  {new Date(m.effectiveDate).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Pay Rates */}
+      <section>
+        <h2 className="text-lg font-semibold mb-4">Pay Rates</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label className="mb-1">FBI Background Check Date</Label>
-            <Input type="date" />
+            <Label className="mb-1">Office Pay Rate ($/hr)</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={form.officePayRate}
+              onChange={(e) => handleChange("officePayRate", e.target.value)}
+              placeholder="e.g., 18.50"
+            />
           </div>
           <div>
-            <Label className="mb-1">State Background Check Date</Label>
-            <Input type="date" />
+            <Label className="mb-1">Facility Pay Rate ($/hr)</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={form.facilityPayRate}
+              onChange={(e) => handleChange("facilityPayRate", e.target.value)}
+              placeholder="e.g., 20.00"
+            />
           </div>
           <div>
-            <Label className="mb-1">Child Abuse Clearance Date</Label>
-            <Input type="date" />
+            <Label className="mb-1">Visit Pay Rate ($/visit or hr)</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={form.visitPayRate}
+              onChange={(e) => handleChange("visitPayRate", e.target.value)}
+              placeholder="e.g., 15.00"
+            />
+          </div>
+          <div>
+            <Label className="mb-1">Mileage Pay Rate ($/mile)</Label>
+            <Input
+              type="number"
+              step="0.01"
+              value={form.mileagePayRate}
+              onChange={(e) => handleChange("mileagePayRate", e.target.value)}
+              placeholder="e.g., 0.65"
+            />
           </div>
         </div>
       </section>
 
       {/* Certifications */}
       <section>
-        <div className="flex justify-between items-center mb-4">
+        <div className="flex justify-between mb-2">
           <h2 className="text-lg font-semibold">Certifications</h2>
-          <Button variant="outline">Add Certification</Button>
+          <AddCertificationModal
+            employeeId={employee.id}
+            onCreated={() => window.location.reload()}
+          />
         </div>
-        {/* Placeholder for Certification Table */}
-        <div className="border rounded-md p-4 text-sm text-muted-foreground">
-          No certifications added yet.
-        </div>
+
+        {employee.certifications.length === 0 ? (
+          <p className="text-muted-foreground">No certifications added.</p>
+        ) : (
+          <div className="border rounded-md p-4">
+            {employee.certifications.map((c: any) => (
+              <div key={c.id} className="flex justify-between py-2">
+                <span>
+                  {c.name} — {new Date(c.dateObtained).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
+
+      {/* Save Button */}
+      <div className="pt-4">
+        <Button
+          onClick={saveChanges}
+          disabled={!hasChanges}
+          variant={hasChanges ? "default" : "outline"}
+        >
+          {hasChanges ? "Save Employment Info" : "No Changes"}
+        </Button>
+      </div>
     </ScrollArea>
   );
 }

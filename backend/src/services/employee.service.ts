@@ -190,3 +190,64 @@ export const upsertEmploymentInfo = async (employeeId: string, data: any) => {
     },
   });
 };
+
+export const addCertification = async (employeeId: string, data: any) => {
+  return prisma.certification.create({
+    data: {
+      employeeID: employeeId,
+      name: data.name,
+      certificationID: data.certificationID || null,
+      dateObtained: new Date(data.dateObtained),
+    },
+  });
+};
+
+export const updateCertification = async (
+  employeeId: string,
+  certId: string,
+  data: any
+) => {
+  return prisma.certification.update({
+    where: { id: certId },
+    data: {
+      name: data.name,
+      certificationID: data.certificationID,
+      dateObtained: new Date(data.dateObtained),
+    },
+  });
+};
+
+export const deleteCertification = async (certId: string) => {
+  return prisma.certification.delete({
+    where: { id: certId },
+  });
+};
+
+export const addMedicalClearance = async (employeeId: string, data: any) => {
+  return prisma.employeeMedicalInfo.create({
+    data: {
+      employeeID: employeeId,
+      clearanceName: data.clearanceName,
+      effectiveDate: new Date(data.effectiveDate),
+    },
+  });
+};
+
+export const updateMedicalClearance = async (
+  clearanceId: string,
+  data: any
+) => {
+  return prisma.employeeMedicalInfo.update({
+    where: { id: clearanceId },
+    data: {
+      clearanceName: data.clearanceName,
+      effectiveDate: new Date(data.effectiveDate),
+    },
+  });
+};
+
+export const deleteMedicalClearance = async (clearanceId: string) => {
+  return prisma.employeeMedicalInfo.delete({
+    where: { id: clearanceId },
+  });
+};

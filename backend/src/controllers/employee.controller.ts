@@ -124,3 +124,71 @@ export const upsertEmploymentInfo = async (req: Request, res: Response) => {
       .json({ message: err.message || "Failed to update employment info" });
   }
 };
+
+export const createCertification = async (req: Request, res: Response) => {
+  try {
+    const cert = await employeeService.addCertification(
+      req.params.id,
+      req.body
+    );
+    res.json(cert);
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const updateCertification = async (req: Request, res: Response) => {
+  try {
+    const cert = await employeeService.updateCertification(
+      req.params.id,
+      req.params.certId,
+      req.body
+    );
+    res.json(cert);
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const deleteCertification = async (req: Request, res: Response) => {
+  try {
+    await employeeService.deleteCertification(req.params.certId);
+    res.json({ message: "Certification deleted" });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// Medical Clearances
+export const createMedicalClearance = async (req: Request, res: Response) => {
+  try {
+    const clearance = await employeeService.addMedicalClearance(
+      req.params.id,
+      req.body
+    );
+    res.json(clearance);
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const updateMedicalClearance = async (req: Request, res: Response) => {
+  try {
+    const clearance = await employeeService.updateMedicalClearance(
+      req.params.clearanceId,
+      req.body
+    );
+    res.json(clearance);
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+export const deleteMedicalClearance = async (req: Request, res: Response) => {
+  try {
+    await employeeService.deleteMedicalClearance(req.params.clearanceId);
+    res.json({ message: "Medical clearance deleted" });
+  } catch (err: any) {
+    res.status(500).json({ message: err.message });
+  }
+};

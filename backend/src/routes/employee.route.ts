@@ -11,5 +11,26 @@ router.get("/:id/history", employeeController.getEmployeeHistory);
 router.post("/", employeeController.createEmployee); // protected
 router.patch("/:id", employeeController.updateEmployee);
 router.delete("/:id", employeeController.deleteEmployee);
+// Certifications
+router.post("/:id/certifications", employeeController.createCertification);
+router.patch(
+  "/:id/certifications/:certId",
+  employeeController.updateCertification
+);
+router.delete(
+  "/:id/certifications/:certId",
+  employeeController.deleteCertification
+);
+
+// Medical Clearances
+router.post("/:id/medical", employeeController.createMedicalClearance);
+router.patch(
+  "/:id/medical/:clearanceId",
+  employeeController.updateMedicalClearance
+);
+router.delete(
+  "/:id/medical/:clearanceId",
+  employeeController.deleteMedicalClearance
+);
 
 export default router;
