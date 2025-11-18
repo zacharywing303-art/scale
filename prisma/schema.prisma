@@ -301,6 +301,19 @@ model Employee {
   officeStaff           Boolean               @default(false)
   facilityStaff         Boolean               @default(false)
   VisitRequest          VisitRequest[]
+  EmployeeHistory       EmployeeHistory[]
+}
+
+model EmployeeHistory {
+  id         String   @id @default(cuid())
+  employeeId String
+  title      String
+  reason     String?
+  changedBy  String // user who made the change
+  changedAt  DateTime @default(now())
+  changes    Json?
+
+  employee Employee @relation(fields: [employeeId], references: [id])
 }
 
 model MobileEmployee {

@@ -98,3 +98,17 @@ export async function getEmployeesByAgency(req: Request, res: Response) {
     res.status(500).json({ message: "Failed to load employees" });
   }
 }
+
+export const getEmployeeHistory = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const history = await prisma.employeeHistory.findMany({
+      where: { employeeId: id },
+      orderBy: { changedAt: "desc" },
+    });
+    res.json(history);
+  } catch (error: any) {
+    console.error("Error fetching employee history:", error);
+    res.status(500).json({ message: "Failed to fetch employee history" });
+  }
+};

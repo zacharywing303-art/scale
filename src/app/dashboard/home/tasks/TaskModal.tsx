@@ -230,6 +230,62 @@ export default function TaskModal({
       );
       return;
     }
+
+    if (task.name === "Review GPS Exceptions") {
+      const due = new Date(task.dueDate ?? new Date());
+      let dateFrom: string;
+      let dateTo: string;
+
+      switch (task.frequency) {
+        case "WEEKLY":
+          dateFrom = startOfWeek(subWeeks(due, 1), { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfWeek(subWeeks(due, 1), { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          break;
+        case "MONTHLY":
+          dateFrom = startOfMonth(subMonths(due, 1))
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfMonth(subMonths(due, 1)).toISOString().split("T")[0];
+          break;
+        case "QUARTERLY":
+          dateFrom = startOfQuarter(subQuarters(due, 1))
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfQuarter(subQuarters(due, 1))
+            .toISOString()
+            .split("T")[0];
+          break;
+        case "YEARLY":
+          dateFrom = startOfYear(subYears(due, 1)).toISOString().split("T")[0];
+          dateTo = endOfYear(subYears(due, 1)).toISOString().split("T")[0];
+          break;
+        case "CUSTOM":
+          dateTo = due.toISOString().split("T")[0];
+          const customStart = subWeeks(due, 1);
+          dateFrom = startOfWeek(customStart, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          break;
+        default:
+          dateFrom = startOfWeek(subWeeks(due, 1), { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfWeek(subWeeks(due, 1), { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+      }
+
+      // ⚠️ Adjust this path to match where your GPSExceptionReviewPage actually lives
+      router.push(
+        `/dashboard/hr/document-review/GPSException-review?from=${dateFrom}&to=${dateTo}&taskId=${task.id}`
+      );
+      return;
+    }
+
     if (task.name === "Conduct/Review Timely Audits") {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/timely-audits/for-task/${task.id}`

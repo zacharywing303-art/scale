@@ -8,7 +8,7 @@ import { EditButton } from "./EditButton";
 export const employeeColumns: ColumnDef<any>[] = [
   {
     accessorKey: "edit",
-    header: "",
+    header: "Edit",
     cell: ({ row }) => <EditButton employeeId={row.original.id} />,
     enableSorting: false,
   },
