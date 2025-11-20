@@ -202,12 +202,12 @@ export default function CreateEmployeeModal() {
                 let digits = e.target.value.replace(/\D/g, "");
                 // Limit to 10 digits
                 digits = digits.slice(0, 10);
-                // Format as (XXX)XXX-XXXX
+                // Format as (XXX) XXX-XXXX
                 let formatted = digits;
                 if (digits.length > 0) {
                   formatted = `(${digits.slice(0, 3)}`;
                   if (digits.length >= 4) {
-                    formatted += `)${digits.slice(3, 6)}`;
+                    formatted += `) ${digits.slice(3, 6)}`;
                   }
                   if (digits.length >= 7) {
                     formatted += `-${digits.slice(6, 10)}`;

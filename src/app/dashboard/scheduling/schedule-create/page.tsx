@@ -249,12 +249,19 @@ export default function CreateSchedulePage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
+            agencyId: user?.agency?.id,
             employeeIds: selectedEmployeeIDs,
-            start: proposedStart.toISOString(),
-            end: proposedEnd.toISOString(),
-            scheduleType: type,
-            clientId: type === "visit" ? client : null,
+            date: first.toISOString().split("T")[0], // "2025-11-20"
+            startTime: startTime, // "09:00"
+            endTime: endTime, // "11:00"
           }),
+          // body: JSON.stringify({
+          //   employeeIds: selectedEmployeeIDs,
+          //   start: proposedStart.toISOString(),
+          //   end: proposedEnd.toISOString(),
+          //   scheduleType: type,
+          //   clientId: type === "visit" ? client : null,
+          // }),
         }
       );
 
@@ -264,8 +271,34 @@ export default function CreateSchedulePage() {
         return;
       }
 
-      const data = (await res.json()) as ScheduleConstraintCheck;
-      setConstraintSummary(data);
+      const raw = await res.json();
+
+      // Normalize into ScheduleConstraintCheck shape
+      const normalized: ScheduleConstraintCheck = {
+        canSchedule:
+          typeof raw.canSchedule === "boolean"
+            ? raw.canSchedule
+            : Array.isArray(raw.unavailable)
+            ? raw.unavailable.length === 0
+            : true,
+        hardBlocks: Array.isArray(raw.hardBlocks)
+          ? raw.hardBlocks
+          : Array.isArray(raw.unavailable)
+          ? raw.unavailable.map((c: any) => {
+              if (c.reason === "TimeOff" || c.reason === "Sick") {
+                const [from, to] = c.details?.range || [];
+                return `Employee ${c.employeeId} has approved ${c.reason} from ${from} to ${to}.`;
+              }
+              if (c.reason === "Availability") {
+                return `Employee ${c.employeeId} is not available for the requested window.`;
+              }
+              return `Employee ${c.employeeId} has a scheduling conflict.`;
+            })
+          : [],
+        softWarnings: Array.isArray(raw.softWarnings) ? raw.softWarnings : [],
+      };
+
+      setConstraintSummary(normalized);
     } catch (err) {
       console.error("Constraint check error:", err);
     } finally {
@@ -307,13 +340,12 @@ export default function CreateSchedulePage() {
 
       if (
         constraintSummary &&
-        constraintSummary.hardBlocks.length > 0 &&
+        (constraintSummary.hardBlocks?.length ?? 0) > 0 &&
         !constraintSummary.canSchedule
       ) {
         toast.error("Schedule has blocking conflicts. Please review.");
         return;
       }
-
       const baseSchedule: any = {
         scheduleType: type,
         clientID: type === "visit" ? client || null : null,
@@ -796,7 +828,7 @@ export default function CreateSchedulePage() {
             {/* Constraint summary */}
             {constraintSummary && (
               <div className="mb-3 space-y-1 text-xs">
-                {constraintSummary.hardBlocks.length > 0 && (
+                {constraintSummary?.hardBlocks?.length > 0 && (
                   <div className="text-rose-600">
                     <div className="font-semibold">Blocking Issues</div>
                     <ul className="list-disc ml-4">
@@ -806,7 +838,8 @@ export default function CreateSchedulePage() {
                     </ul>
                   </div>
                 )}
-                {constraintSummary.softWarnings.length > 0 && (
+
+                {constraintSummary?.softWarnings?.length > 0 && (
                   <div className="text-amber-600">
                     <div className="font-semibold">Warnings</div>
                     <ul className="list-disc ml-4">
@@ -816,8 +849,9 @@ export default function CreateSchedulePage() {
                     </ul>
                   </div>
                 )}
-                {constraintSummary.hardBlocks.length === 0 &&
-                  constraintSummary.softWarnings.length === 0 && (
+
+                {(constraintSummary?.hardBlocks?.length ?? 0) === 0 &&
+                  (constraintSummary?.softWarnings?.length ?? 0) === 0 && (
                     <div className="text-emerald-600 font-medium">
                       No conflicts detected for the selected window.
                     </div>
@@ -897,7 +931,7 @@ export default function CreateSchedulePage() {
                   disabled={
                     loading ||
                     (!!constraintSummary &&
-                      constraintSummary.hardBlocks.length > 0 &&
+                      (constraintSummary.hardBlocks?.length ?? 0) > 0 &&
                       !constraintSummary.canSchedule)
                   }
                   className="w-full mt-2"
