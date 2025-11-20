@@ -28,7 +28,6 @@ export async function getSchedulingConflicts({
   const requests = await prisma.employeeRequest.findMany({
     where: {
       employeeId: { in: employeeIds },
-      agencyId,
       status: "Approved", // only approved requests block scheduling
 
       OR: [
