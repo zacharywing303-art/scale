@@ -384,9 +384,11 @@ model EmployeeTimeOff {
   startDate  DateTime
   endDate    DateTime
   type       TimeOffType // PTO | Sick | Vacation
-  status     RequestStatus // Pending | Approved | Declined
   reason     String?
   createdAt  DateTime      @default(now())
+  status     RequestStatus @default(Approved)
+
+  createdById String?
 }
 
 model EmployeeRequest {
