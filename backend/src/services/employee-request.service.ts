@@ -103,6 +103,9 @@ export async function approveRequest(requestId: string, adminUserId: string) {
       break;
 
     case "StatusChange":
+      if (req.newStatus == null) {
+        throw new Error("Status change request missing new status");
+      }
       await prisma.employee.update({
         where: { id: req.employeeId },
         data: { status: req.newStatus },
