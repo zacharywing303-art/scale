@@ -293,6 +293,7 @@ model Employee {
   lastName              String                 @default("Name")
   title                 String?
   middleName            String?
+  ptoDaysAllowed        Int                    @default(14)
   addresses             Address[]
   certifications        Certification[]
   contacts              Contact[]

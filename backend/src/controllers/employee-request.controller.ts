@@ -1,9 +1,15 @@
 import { Request, Response } from "express";
 import * as service from "../services/employee-request.service";
+import {
+  TimeOffRequestDTO,
+  AvailabilityChangeDTO,
+  StatusChangeDTO,
+} from "../services/employee-request.service";
 
 export const submitTimeOff = async (req: Request, res: Response) => {
   try {
-    const result = await service.createTimeOffRequest(req.body);
+    const body = req.body as TimeOffRequestDTO;
+    const result = await service.createTimeOffRequest(body);
     res.json({ success: true, request: result });
   } catch (e: any) {
     res.status(400).json({ error: e.message });
@@ -12,7 +18,8 @@ export const submitTimeOff = async (req: Request, res: Response) => {
 
 export const submitAvailabilityChange = async (req: Request, res: Response) => {
   try {
-    const result = await service.createAvailabilityChangeRequest(req.body);
+    const body = req.body as AvailabilityChangeDTO;
+    const result = await service.createAvailabilityChangeRequest(body);
     res.json({ success: true, request: result });
   } catch (e: any) {
     res.status(400).json({ error: e.message });
@@ -21,7 +28,8 @@ export const submitAvailabilityChange = async (req: Request, res: Response) => {
 
 export const submitStatusChange = async (req: Request, res: Response) => {
   try {
-    const result = await service.createStatusChangeRequest(req.body);
+    const body = req.body as StatusChangeDTO;
+    const result = await service.createStatusChangeRequest(body);
     res.json({ success: true, request: result });
   } catch (e: any) {
     res.status(400).json({ error: e.message });
@@ -53,6 +61,16 @@ export const decline = async (req: Request, res: Response) => {
   try {
     const result = await service.declineRequest(req.params.id);
     res.json({ success: true, request: result });
+  } catch (e: any) {
+    res.status(400).json({ error: e.message });
+  }
+};
+
+export const getPtoUsage = async (req: Request, res: Response) => {
+  try {
+    const { employeeId } = req.params;
+    const summary = await service.getPtoUsage(employeeId);
+    res.json({ success: true, ...summary });
   } catch (e: any) {
     res.status(400).json({ error: e.message });
   }

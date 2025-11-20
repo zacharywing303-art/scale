@@ -1,12 +1,41 @@
 import prisma from "../lib/db";
 
-export async function createTimeOffRequest(data: {
+export type TimeOffType = "PTO" | "Sick" | "Vacation" | "Personal" | "Unpaid";
+
+export interface TimeOffRequestDTO {
   employeeId: string;
-  startDate: string;
-  endDate: string;
+  startDate: string; // ISO
+  endDate: string; // ISO
   reason?: string;
-  timeOffType: "PTO" | "Sick" | "Vacation" | "Personal" | "Unpaid";
-}) {
+  timeOffType: TimeOffType;
+}
+
+export interface AvailabilityChangeWindowDTO {
+  weekday: number; // 0–6 (Sun–Sat)
+  start: string; // "HH:MM"
+  end: string; // "HH:MM"
+}
+
+export interface AvailabilityChangeDTO {
+  employeeId: string;
+  availabilityChanges: AvailabilityChangeWindowDTO[];
+  reason?: string;
+}
+
+export interface StatusChangeDTO {
+  employeeId: string;
+  newStatus: string; // e.g. "Vacation", "Sick"
+  reason?: string;
+}
+
+export interface PtoUsageSummary {
+  employeeId: string;
+  approvedDays: number;
+  usedDays: number;
+  remainingDays: number;
+}
+
+export async function createTimeOffRequest(data: TimeOffRequestDTO) {
   return prisma.employeeRequest.create({
     data: {
       type: "TimeOff",
@@ -19,11 +48,9 @@ export async function createTimeOffRequest(data: {
   });
 }
 
-export async function createAvailabilityChangeRequest(data: {
-  employeeId: string;
-  availabilityChanges: any; // [{weekday,start,end}]
-  reason?: string;
-}) {
+export async function createAvailabilityChangeRequest(
+  data: AvailabilityChangeDTO
+) {
   return prisma.employeeRequest.create({
     data: {
       type: "AvailabilityChange",
@@ -34,11 +61,7 @@ export async function createAvailabilityChangeRequest(data: {
   });
 }
 
-export async function createStatusChangeRequest(data: {
-  employeeId: string;
-  newStatus: string; // e.g. "Vacation"
-  reason?: string;
-}) {
+export async function createStatusChangeRequest(data: StatusChangeDTO) {
   return prisma.employeeRequest.create({
     data: {
       type: "StatusChange",
@@ -83,22 +106,24 @@ export async function approveRequest(requestId: string, adminUserId: string) {
       break;
 
     case "AvailabilityChange":
-      // wipe existing windows for involved weekdays
+      // wipe existing windows
       await prisma.employeeAvailability.deleteMany({
         where: { employeeId: req.employeeId },
       });
 
-      // recreate new windows
-      const list = req.availabilityChanges as any[];
-      for (const a of list) {
-        await prisma.employeeAvailability.create({
-          data: {
-            employeeId: req.employeeId,
-            weekday: a.weekday,
-            startTime: a.start,
-            endTime: a.end,
-          },
-        });
+      // recreate new windows from JSON
+      {
+        const list = (req.availabilityChanges as any[]) || [];
+        for (const a of list) {
+          await prisma.employeeAvailability.create({
+            data: {
+              employeeId: req.employeeId,
+              weekday: a.weekday,
+              startTime: a.start,
+              endTime: a.end,
+            },
+          });
+        }
       }
       break;
 
@@ -124,4 +149,48 @@ export async function declineRequest(requestId: string) {
     where: { id: requestId },
     data: { status: "Declined" },
   });
+}
+
+/**
+ * PTO usage summary for a given employee.
+ * Requires Employee.ptoDaysAllowed Int @default(14) in schema.
+ */
+export async function getPtoUsage(
+  employeeId: string
+): Promise<PtoUsageSummary> {
+  const employee = await prisma.employee.findUnique({
+    where: { id: employeeId },
+  });
+
+  if (!employee) {
+    throw new Error("Employee not found");
+  }
+
+  // @ts-ignore – ptoDaysAllowed should be added to Employee model
+  const approvedDays: number = (employee as any).ptoDaysAllowed ?? 14;
+
+  const ptoRecords = await prisma.employeeTimeOff.findMany({
+    where: {
+      employeeId,
+      type: "PTO",
+      status: "Approved",
+    },
+  });
+
+  const usedDays = ptoRecords.reduce((sum: any, rec: any) => {
+    const start = rec.startDate;
+    const end = rec.endDate;
+    const diffMs = end.getTime() - start.getTime();
+    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
+    return sum + Math.max(days, 0);
+  }, 0);
+
+  const remainingDays = Math.max(approvedDays - usedDays, 0);
+
+  return {
+    employeeId,
+    approvedDays,
+    usedDays,
+    remainingDays,
+  };
 }

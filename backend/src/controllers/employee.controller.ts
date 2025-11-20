@@ -26,7 +26,7 @@ export const createEmployee = async (req: Request, res: Response) => {
     res.status(201).json({
       message: "Employee created successfully",
       employee,
-      password: rawPassword || null, // ✅ show password
+      password: rawPassword || null,
     });
   } catch (err: any) {
     console.error("Error creating employee:", err);
@@ -103,7 +103,6 @@ export const upsertEmploymentInfo = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Optional: validate the employee exists
     const employee = await prisma.employee.findUnique({
       where: { id },
       select: { id: true },
@@ -207,7 +206,6 @@ export const getEmployeeSchedulingConstraints = async (
     const fromDate = new Date(from as string);
     const toDate = new Date(to as string);
 
-    // 1. Fetch availability changes (latest approved AvailabilityChange request)
     const availabilityRequest = await prisma.employeeRequest.findFirst({
       where: {
         employeeId: id,
@@ -219,13 +217,11 @@ export const getEmployeeSchedulingConstraints = async (
 
     const availability = availabilityRequest?.availabilityChanges ?? [];
 
-    // 2. Fetch time-off within the window
     const timeOff = await prisma.employeeRequest.findMany({
       where: {
         employeeId: id,
         status: "Approved",
         OR: [{ type: "TimeOff" }, { type: "Sick" }],
-        // overlaps with [from, to]
         NOT: [
           {
             endDate: { lt: fromDate },
@@ -246,7 +242,6 @@ export const getEmployeeSchedulingConstraints = async (
       },
     });
 
-    // 3. Build canSchedule logic
     const hardBlocks: string[] = [];
     const softWarnings: string[] = [];
 
@@ -266,5 +261,61 @@ export const getEmployeeSchedulingConstraints = async (
   } catch (error) {
     console.error("Scheduling constraints error:", error);
     res.status(500).json({ error: "Server error" });
+  }
+};
+
+/**
+ * Simple availability view for employee (for mobile RequestsOff screen).
+ */
+export const getEmployeeAvailability = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const availability = await prisma.employeeAvailability.findMany({
+      where: { employeeId: id },
+      orderBy: [{ weekday: "asc" }, { startTime: "asc" }],
+    });
+
+    res.json({ success: true, availability });
+  } catch (error: any) {
+    console.error("Error fetching employee availability:", error);
+    res.status(500).json({ message: "Failed to fetch availability" });
+  }
+};
+
+/**
+ * Full schedule for a mobile employee (visits + office + facility).
+ */
+export const getEmployeeSchedule = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const schedules = await prisma.schedule.findMany({
+      where: { employeeID: id },
+      include: {
+        client: { select: { id: true, name: true, medicaidID: true } },
+        service: { select: { id: true, name: true } },
+      },
+      orderBy: { eventDate: "asc" },
+    });
+
+    const result = schedules.map((s) => ({
+      id: s.id,
+      scheduleType: s.scheduleType,
+      eventDate: s.eventDate,
+      startTime: s.startTime,
+      endTime: s.endTime,
+      eventStatus: s.eventStatus,
+      officeReason: s.officeReason,
+      comments: s.comments,
+      client: s.client,
+      service: s.service,
+      agencyID: s.agencyID,
+    }));
+
+    res.json({ success: true, schedules: result });
+  } catch (error: any) {
+    console.error("Error fetching employee schedule:", error);
+    res.status(500).json({ message: "Failed to fetch employee schedule" });
   }
 };
