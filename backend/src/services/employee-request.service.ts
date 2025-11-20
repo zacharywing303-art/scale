@@ -1,4 +1,5 @@
 import prisma from "../lib/db";
+import { Prisma } from "@prisma/client";
 
 export type TimeOffType = "PTO" | "Sick" | "Vacation" | "Personal" | "Unpaid";
 
@@ -55,7 +56,8 @@ export async function createAvailabilityChangeRequest(
     data: {
       type: "AvailabilityChange",
       employeeId: data.employeeId,
-      availabilityChanges: data.availabilityChanges,
+      availabilityChanges:
+        data.availabilityChanges as unknown as Prisma.JsonArray,
       reason: data.reason ?? null,
     },
   });
