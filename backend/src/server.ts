@@ -30,6 +30,7 @@ import addressRoutes from "./routes/address.route";
 import contactRoutes from "./routes/contact.route";
 import verifyAddressRoute from "./routes/verifyAddress.route";
 import payrollRoutes from "./routes/payroll.route";
+import employeeRequestRoutes from "./routes/employee-request.route";
 import "./workers";
 
 // Load env variables
@@ -75,6 +76,7 @@ app.use("/api/addresses", addressRoutes);
 app.use("/api/contacts", contactRoutes);
 app.use("/api/verify-address", verifyAddressRoute);
 app.use("/api/payroll", payrollRoutes);
+app.use("/api/requests", employeeRequestRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {

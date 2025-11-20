@@ -10,6 +10,7 @@ import {
   getSchedulesByGroup,
   updateScheduleGroup,
   deleteScheduleSafe,
+  checkEmployeeAvailability,
 } from "../services/schedule.service";
 
 export const getSchedulesController = async (req: Request, res: Response) => {
@@ -174,5 +175,52 @@ export const deleteScheduleSafeController = async (
     res
       .status(400)
       .json({ error: error.message || "Failed to delete schedule" });
+  }
+};
+
+export const checkAvailabilityController = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const {
+      employeeIDs,
+      startTime,
+      endTime,
+    }: {
+      employeeIDs?: string[];
+      startTime?: string;
+      endTime?: string;
+    } = req.body;
+
+    if (!employeeIDs || !employeeIDs.length || !startTime || !endTime) {
+      return res.status(400).json({
+        error: "employeeIDs, startTime, and endTime are required",
+      });
+    }
+
+    const start = new Date(startTime);
+    const end = new Date(endTime);
+
+    const employees = [];
+    for (const id of employeeIDs) {
+      const issues = await checkEmployeeAvailability(id, start, end);
+      employees.push({
+        employeeId: id,
+        available: issues.length === 0,
+        issues,
+      });
+    }
+
+    return res.json({
+      success: true,
+      allAvailable: employees.every((e) => e.available),
+      employees,
+    });
+  } catch (error: any) {
+    console.error("❌ Error checking availability:", error);
+    return res.status(500).json({
+      error: error.message || "Failed to check availability",
+    });
   }
 };

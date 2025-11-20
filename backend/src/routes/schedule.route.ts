@@ -10,12 +10,14 @@ import {
   getScheduleGroupController,
   updateScheduleGroupController,
   deleteScheduleSafeController,
+  checkAvailabilityController,
 } from "../controllers/schedule.controller";
 
 const router = Router();
 
 router.get("/", getSchedulesController);
 router.get("/agency/:agencyId/grouped", getGroupedSchedulesController);
+router.post("/availability/check", checkAvailabilityController);
 router.post("/", createScheduleController);
 router.put("/:id", updateScheduleController);
 router.get("/:id", getScheduleByIdController);

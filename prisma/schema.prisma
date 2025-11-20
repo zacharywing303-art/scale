@@ -262,21 +262,21 @@ model VisitHistory {
 }
 
 model Employee {
-  id                    String                @id @default(cuid())
+  id                    String                 @id @default(cuid())
   last5SSN              String
   status                String
-  effectiveDate         DateTime              @updatedAt
+  effectiveDate         DateTime               @updatedAt
   employeeID            String
   position              String
-  hireDate              DateTime              @default(now())
+  hireDate              DateTime               @default(now())
   supervisor            String?
   supervisorCode        String?
   nationalProviderID    String?
   alternativeProviderID String?
   registryID            String?
-  isSupervisor          Boolean               @default(false)
+  isSupervisor          Boolean                @default(false)
   name                  String
-  dateOfBirth           DateTime              @default(now())
+  dateOfBirth           DateTime               @default(now())
   gender                String
   languages             String[]
   mainPhone             String
@@ -284,13 +284,13 @@ model Employee {
   phone3                String?
   phone4                String?
   email                 String
-  mobileUser            Boolean               @default(false)
-  rehire                Boolean               @default(false)
-  createdAt             DateTime              @default(now())
-  updatedAt             DateTime              @updatedAt
+  mobileUser            Boolean                @default(false)
+  rehire                Boolean                @default(false)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
   agencyID              String
-  firstName             String                @default("No")
-  lastName              String                @default("Name")
+  firstName             String                 @default("No")
+  lastName              String                 @default("Name")
   title                 String?
   middleName            String?
   addresses             Address[]
@@ -300,11 +300,14 @@ model Employee {
   employmentInfo        EmploymentInfo?
   mobileInfo            MobileEmployee?
   schedules             Schedule[]
-  assignedClients       Client[]              @relation("EmployeeClients")
-  officeStaff           Boolean               @default(false)
-  facilityStaff         Boolean               @default(false)
+  assignedClients       Client[]               @relation("EmployeeClients")
+  officeStaff           Boolean                @default(false)
+  facilityStaff         Boolean                @default(false)
   VisitRequest          VisitRequest[]
   EmployeeHistory       EmployeeHistory[]
+  EmployeeAvailability  EmployeeAvailability[]
+  EmployeeTimeOff       EmployeeTimeOff[]
+  EmployeeRequest       EmployeeRequest[]
 }
 
 model EmployeeHistory {
@@ -362,6 +365,52 @@ model EmployeeMedicalInfo {
   clearanceName String?
   effectiveDate DateTime
   employee      Employee @relation(fields: [employeeID], references: [id])
+}
+
+model EmployeeAvailability {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+  weekday    Int // 0–6 (Sun–Sat)
+  startTime  String // "08:00"
+  endTime    String // "17:00"
+  createdAt  DateTime @default(now())
+}
+
+model EmployeeTimeOff {
+  id         String        @id @default(cuid())
+  employeeId String
+  employee   Employee      @relation(fields: [employeeId], references: [id])
+  startDate  DateTime
+  endDate    DateTime
+  type       TimeOffType // PTO | Sick | Vacation
+  status     RequestStatus // Pending | Approved | Declined
+  reason     String?
+  createdAt  DateTime      @default(now())
+}
+
+model EmployeeRequest {
+  id         String   @id @default(cuid())
+  employeeId String
+  employee   Employee @relation(fields: [employeeId], references: [id])
+
+  type   RequestType
+  status RequestStatus @default(Pending)
+  reason String?
+
+  // TIME_OFF
+  startDate   DateTime?
+  endDate     DateTime?
+  timeOffType TimeOffType? // Vacation, Sick, PTO
+
+  // AVAILABILITY_CHANGE
+  availabilityChanges Json? // e.g. [{weekday:1,start:'09:00',end:'17:00'}]
+
+  // STATUS_CHANGE (vacation mode)
+  newStatus String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Certification {
@@ -813,4 +862,27 @@ enum PayrollStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum TimeOffType {
+  PTO
+  Sick
+  Vacation
+  Personal
+  Unpaid
+}
+
+enum RequestType {
+  TimeOff
+  AvailabilityChange
+  StatusChange
+  Sick
+  ClockAdjust
+  ClientAcceptance
+}
+
+enum RequestStatus {
+  Pending
+  Approved
+  Declined
 }

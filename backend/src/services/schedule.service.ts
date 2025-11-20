@@ -3,6 +3,150 @@ import { addMinutes } from "date-fns";
 import { addDays } from "date-fns";
 import { createVisit } from "./visit.service";
 
+type AvailabilityIssueType = "RANGE" | "NOT_FOUND" | "TIME_OFF" | "UNAVAILABLE";
+
+type AvailabilityIssue = {
+  type: AvailabilityIssueType;
+  message: string;
+  details?: any;
+};
+
+/**
+ * Core engine: check a single employee for time-off & availability conflicts
+ */
+export async function checkEmployeeAvailability(
+  employeeId: string,
+  startTime: Date,
+  endTime: Date
+): Promise<AvailabilityIssue[]> {
+  const issues: AvailabilityIssue[] = [];
+
+  if (!employeeId) {
+    issues.push({
+      type: "NOT_FOUND",
+      message: "Employee ID is required.",
+    });
+    return issues;
+  }
+
+  if (isNaN(startTime.getTime()) || isNaN(endTime.getTime())) {
+    issues.push({
+      type: "RANGE",
+      message: "Invalid start or end time.",
+    });
+    return issues;
+  }
+
+  if (endTime <= startTime) {
+    issues.push({
+      type: "RANGE",
+      message: "End time must be after start time.",
+    });
+    return issues;
+  }
+
+  const employee = await prisma.employee.findUnique({
+    where: { id: employeeId },
+  });
+
+  if (!employee) {
+    issues.push({
+      type: "NOT_FOUND",
+      message: "Employee not found.",
+    });
+    return issues;
+  }
+
+  // --- 1) Approved Time-Off conflicts ---
+  const conflictingTimeOff = await prisma.employeeTimeOff.findFirst({
+    where: {
+      employeeId,
+      status: "Approved", // RequestStatus.Approved
+      startDate: { lt: endTime }, // overlap
+      endDate: { gt: startTime },
+    },
+  });
+
+  if (conflictingTimeOff) {
+    issues.push({
+      type: "TIME_OFF",
+      message: `Employee has approved ${
+        conflictingTimeOff.type
+      } from ${conflictingTimeOff.startDate.toISOString()} to ${conflictingTimeOff.endDate.toISOString()}.`,
+      details: {
+        type: conflictingTimeOff.type,
+        startDate: conflictingTimeOff.startDate,
+        endDate: conflictingTimeOff.endDate,
+      },
+    });
+  }
+
+  // --- 2) Availability window enforcement ---
+  const weekday = startTime.getDay(); // 0–6 (Sun–Sat)
+  const availabilities = await prisma.employeeAvailability.findMany({
+    where: {
+      employeeId,
+      weekday,
+    },
+  });
+
+  // If no availability rows for that weekday, we treat as "no restriction"
+  if (availabilities.length) {
+    const toMinutes = (d: Date) => d.getHours() * 60 + d.getMinutes();
+    const startMin = toMinutes(startTime);
+    const endMin = toMinutes(endTime);
+
+    const fitsWithinAny = availabilities.some((a) => {
+      const [sh, sm] = a.startTime.split(":").map(Number);
+      const [eh, em] = a.endTime.split(":").map(Number);
+      const avStart = sh * 60 + sm;
+      const avEnd = eh * 60 + em;
+      return startMin >= avStart && endMin <= avEnd;
+    });
+
+    if (!fitsWithinAny) {
+      issues.push({
+        type: "UNAVAILABLE",
+        message: `Employee is not available from ${startTime.toISOString()} to ${endTime.toISOString()} based on their availability settings.`,
+        details: {
+          weekday,
+          requestedStartMinutes: startMin,
+          requestedEndMinutes: endMin,
+          availabilityWindows: availabilities.map((a) => ({
+            startTime: a.startTime,
+            endTime: a.endTime,
+          })),
+        },
+      });
+    }
+  }
+
+  return issues;
+}
+
+/**
+ * Enforce availability: throw when the employee is not available.
+ * Used by createScheduleAndVisit to hard-block conflicts.
+ */
+export async function ensureEmployeeAvailableOrThrow(
+  employeeId: string,
+  startTime: Date,
+  endTime: Date
+) {
+  const issues = await checkEmployeeAvailability(
+    employeeId,
+    startTime,
+    endTime
+  );
+  if (issues.length) {
+    const msg = issues.map((i) => i.message).join(" ");
+    const err: any = new Error(msg);
+    err.code = "EMPLOYEE_UNAVAILABLE";
+    err.issues = issues;
+    throw err;
+  }
+}
+
 type CreateScheduleInput = {
   scheduleType: "office" | "visit" | "facility";
   clientID?: string;
@@ -259,6 +403,32 @@ export async function createScheduleAndVisit(
   return await prisma.$transaction(async (tx) => {
     if (input.endTime <= input.startTime)
       throw new Error("End time must be after start time");
+
+    // --- AVAILABILITY ENFORCEMENT ---
+    // build a list of employeeIds that this schedule will actually assign
+    const employeesToCheck: string[] = [];
+
+    if (input.scheduleType !== "visit" && input.employeeIDs?.length) {
+      // office/facility multi-employee
+      employeesToCheck.push(...input.employeeIDs);
+    } else if (input.scheduleType === "visit") {
+      if (input.groupVisit && input.employeeIDs?.length) {
+        // group visit → multiple employees
+        employeesToCheck.push(...input.employeeIDs);
+      } else if (input.employeeID) {
+        // single-employee visit
+        employeesToCheck.push(input.employeeID);
+      }
+    }
+
+    for (const empId of employeesToCheck) {
+      await ensureEmployeeAvailableOrThrow(
+        empId,
+        input.startTime,
+        input.endTime
+      );
+    }
+    // --- END AVAILABILITY ENFORCEMENT ---
 
     const createdScheduleID =
       input.createdScheduleID ||
