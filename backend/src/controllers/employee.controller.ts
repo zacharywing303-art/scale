@@ -192,3 +192,79 @@ export const deleteMedicalClearance = async (req: Request, res: Response) => {
     res.status(500).json({ message: err.message });
   }
 };
+
+export const getEmployeeSchedulingConstraints = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    const { id } = req.params;
+    const { from, to } = req.query;
+
+    if (!from || !to)
+      return res.status(400).json({ error: "Missing from/to query params" });
+
+    const fromDate = new Date(from as string);
+    const toDate = new Date(to as string);
+
+    // 1. Fetch availability changes (latest approved AvailabilityChange request)
+    const availabilityRequest = await prisma.employeeRequest.findFirst({
+      where: {
+        employeeId: id,
+        type: "AvailabilityChange",
+        status: "Approved",
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    const availability = availabilityRequest?.availabilityChanges ?? [];
+
+    // 2. Fetch time-off within the window
+    const timeOff = await prisma.employeeRequest.findMany({
+      where: {
+        employeeId: id,
+        status: "Approved",
+        OR: [{ type: "TimeOff" }, { type: "Sick" }],
+        // overlaps with [from, to]
+        NOT: [
+          {
+            endDate: { lt: fromDate },
+          },
+        ],
+        AND: [
+          {
+            startDate: { lte: toDate },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        startDate: true,
+        endDate: true,
+        timeOffType: true,
+        type: true,
+      },
+    });
+
+    // 3. Build canSchedule logic
+    const hardBlocks: string[] = [];
+    const softWarnings: string[] = [];
+
+    if (timeOff.length > 0) {
+      hardBlocks.push("Employee has approved time off during this period.");
+    }
+
+    const canSchedule = hardBlocks.length === 0;
+
+    res.json({
+      availability,
+      timeOff,
+      canSchedule,
+      hardBlocks,
+      softWarnings,
+    });
+  } catch (error) {
+    console.error("Scheduling constraints error:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+};

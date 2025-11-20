@@ -32,5 +32,9 @@ router.delete(
   "/:id/medical/:clearanceId",
   employeeController.deleteMedicalClearance
 );
+router.get(
+  "/:id/scheduling/constraints",
+  employeeController.getEmployeeSchedulingConstraints
+);
 
 export default router;

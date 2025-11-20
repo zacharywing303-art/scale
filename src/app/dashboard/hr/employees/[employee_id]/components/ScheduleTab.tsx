@@ -17,7 +17,7 @@ type TimeOff = {
   id: string;
   startDate: string;
   endDate: string;
-  type: string;
+  type: string; // e.g., "PTO", "Sick", "Vacation"
 };
 
 type SchedulingConstraintsResponse = {
@@ -30,11 +30,7 @@ type SchedulingConstraintsResponse = {
 
 const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function EmployeeScheduleSummary({
-  employee,
-}: {
-  employee: any;
-}) {
+export default function ScheduleTab({ employee }: { employee: any }) {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<SchedulingConstraintsResponse | null>(null);
 
@@ -47,9 +43,9 @@ export default function EmployeeScheduleSummary({
         to.setMonth(to.getMonth() + 1);
 
         const res = await fetch(
-          `/api/employees/${
+          `${process.env.NEXT_PUBLIC_API_URL}/api/employees/${
             employee.id
-          }/scheduling-constraints?from=${from.toISOString()}&to=${to.toISOString()}`
+          }/scheduling/constraints?from=${from.toISOString()}&to=${to.toISOString()}`
         );
         if (!res.ok) throw new Error("Failed to load constraints");
         const json = await res.json();

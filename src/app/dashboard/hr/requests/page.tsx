@@ -16,50 +16,22 @@ import { getLoggedInUser } from "@/lib/auth/authHelpers";
 import { format } from "date-fns";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import {
+  EmployeeRequest,
+  RequestType,
+  RequestStatus,
+  TimeOffType,
+} from "@/app/types/requests";
 
-type RequestType =
-  | "TimeOff"
-  | "AvailabilityChange"
-  | "StatusChange"
-  | "Sick"
-  | "ClockAdjust"
-  | "ClientAcceptance";
-
-type RequestStatus = "Pending" | "Approved" | "Declined";
-
-type EmployeeRequest = {
-  id: string;
-  type: RequestType;
-  status: RequestStatus;
-  reason?: string | null;
-
-  // Time off–style fields
-  startDate?: string | null;
-  endDate?: string | null;
-  timeOffType?: "PTO" | "Sick" | "Vacation" | "Personal" | "Unpaid" | null;
-
-  // Availability change
-  availabilityChanges?: any | null;
-
-  // Status change
-  newStatus?: string | null;
-
-  createdAt: string;
-  employee: {
-    id: string;
-    name: string;
-    status: string;
-  };
-};
-
-type TypeFilter = "all" | RequestType;
-type StatusFilter = "all" | RequestStatus;
+const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export default function RequestsPage() {
   const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState<EmployeeRequest[]>([]);
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [typeFilter, setTypeFilter] = useState<"all" | RequestType>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | RequestStatus>(
+    "all"
+  );
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -77,8 +49,7 @@ export default function RequestsPage() {
         );
         if (!res.ok) throw new Error("Failed to load requests");
         const data = await res.json();
-
-        setRequests(data.requests || []);
+        setRequests((data.requests || []) as EmployeeRequest[]);
       } catch (err: any) {
         console.error("Error fetching requests:", err);
         toast.error(err.message || "Failed to fetch requests");
@@ -135,43 +106,61 @@ export default function RequestsPage() {
     }
   };
 
-  // UI label mapping for types
-  const typeLabel = (type: RequestType): string => {
+  const renderTypeLabel = (type: RequestType) => {
     switch (type) {
       case "TimeOff":
-        return "Time Off Request";
+        return "Time Off";
       case "AvailabilityChange":
-        return "Availability Change Request";
+        return "Availability Change";
       case "StatusChange":
-        return "Status Change Request";
+        return "Status Change";
       case "Sick":
-        return "Sick Day Request";
+        return "Sick Time";
       case "ClockAdjust":
-        return "Clock Adjustment Request";
+        return "Clock Adjust";
       case "ClientAcceptance":
-        return "Client Acceptance Request";
+        return "Client Acceptance";
       default:
         return type;
     }
   };
 
-  const renderTypeBadge = (type: RequestType) => {
-    const label = typeLabel(type);
+  const renderTimeOffTypeLabel = (t?: TimeOffType | null) => {
+    if (!t) return "Time Off";
+    switch (t) {
+      case "PTO":
+        return "PTO";
+      case "Sick":
+        return "Sick";
+      case "Vacation":
+        return "Vacation";
+      case "Personal":
+        return "Personal";
+      case "Unpaid":
+        return "Unpaid";
+      default:
+        return t;
+    }
+  };
 
+  const renderTypeBadge = (type: RequestType) => {
     switch (type) {
       case "TimeOff":
-      case "Sick":
-        return <Badge variant="secondary">{label}</Badge>;
+        return <Badge variant="secondary">{renderTypeLabel(type)}</Badge>;
       case "AvailabilityChange":
-        return <Badge>{label}</Badge>;
+        return <Badge>{renderTypeLabel(type)}</Badge>;
       case "StatusChange":
-        return <Badge variant="outline">{label}</Badge>;
+        return <Badge variant="outline">{renderTypeLabel(type)}</Badge>;
+      case "Sick":
+        return <Badge className="bg-rose-600 text-white">Sick Time</Badge>;
       case "ClockAdjust":
-        return <Badge className="bg-sky-600 hover:bg-sky-700">{label}</Badge>;
+        return <Badge className="bg-sky-600 text-white">Clock Adjust</Badge>;
       case "ClientAcceptance":
         return (
-          <Badge className="bg-purple-600 hover:bg-purple-700">{label}</Badge>
+          <Badge className="bg-purple-600 text-white">Client Acceptance</Badge>
         );
+      default:
+        return <Badge>{type}</Badge>;
     }
   };
 
@@ -183,48 +172,36 @@ export default function RequestsPage() {
     return <Badge className="bg-rose-600">Declined</Badge>;
   };
 
-  const renderTimeOffSummary = (
-    req: EmployeeRequest,
-    labelOverride?: string
-  ) => {
-    const label =
-      labelOverride ??
-      (req.timeOffType ? `${req.timeOffType} Time` : "Time Off");
-
-    return (
-      <div className="text-sm text-muted-foreground">
-        {req.startDate && req.endDate && (
-          <div>
-            {format(new Date(req.startDate), "MM/dd/yyyy")} →{" "}
-            {format(new Date(req.endDate), "MM/dd/yyyy")} ({label})
-          </div>
-        )}
-        {req.reason && <div>Reason: {req.reason}</div>}
-      </div>
-    );
-  };
-
   const renderDetails = (req: EmployeeRequest) => {
-    // Time off request (generic)
-    if (req.type === "TimeOff") {
-      return renderTimeOffSummary(req);
-    }
-
-    // Explicit Sick request (separate from TimeOffType.Sick)
-    if (req.type === "Sick") {
-      return renderTimeOffSummary(req, "Sick Day");
+    if (req.type === "TimeOff" || req.type === "Sick") {
+      return (
+        <div className="text-sm text-muted-foreground">
+          {req.startDate && req.endDate && (
+            <div>
+              {format(new Date(req.startDate), "MM/dd/yyyy")} →{" "}
+              {format(new Date(req.endDate), "MM/dd/yyyy")} (
+              {renderTimeOffTypeLabel(req.timeOffType)})
+            </div>
+          )}
+          {req.reason && <div>Reason: {req.reason}</div>}
+        </div>
+      );
     }
 
     if (req.type === "AvailabilityChange") {
-      const changes = (req.availabilityChanges as any[]) || [];
+      const changes = (req.availabilityChanges || []) as {
+        weekday: number;
+        start: string;
+        end: string;
+      }[];
+
       return (
         <div className="text-sm text-muted-foreground">
           <div>Requested availability:</div>
           <ul className="ml-4 list-disc">
             {changes.map((c, idx) => (
               <li key={idx}>
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][c.weekday]}{" "}
-                {c.start}–{c.end}
+                {weekdayNames[c.weekday]} {c.start}–{c.end}
               </li>
             ))}
           </ul>
@@ -236,10 +213,7 @@ export default function RequestsPage() {
     if (req.type === "StatusChange") {
       return (
         <div className="text-sm text-muted-foreground">
-          <div>
-            New status:{" "}
-            <span className="font-medium">{req.newStatus ?? "—"}</span>
-          </div>
+          New status: <span className="font-medium">{req.newStatus}</span>
           {req.reason && <div>Reason: {req.reason}</div>}
         </div>
       );
@@ -248,10 +222,7 @@ export default function RequestsPage() {
     if (req.type === "ClockAdjust") {
       return (
         <div className="text-sm text-muted-foreground">
-          <div>Requested clock adjustment.</div>
-          {req.startDate && (
-            <div>For date: {format(new Date(req.startDate), "MM/dd/yyyy")}</div>
-          )}
+          Clock adjustment requested.
           {req.reason && <div>Reason: {req.reason}</div>}
         </div>
       );
@@ -260,8 +231,8 @@ export default function RequestsPage() {
     if (req.type === "ClientAcceptance") {
       return (
         <div className="text-sm text-muted-foreground">
-          <div>Client acceptance review requested.</div>
-          {req.reason && <div>Details: {req.reason}</div>}
+          Client acceptance review.
+          {req.reason && <div>Notes: {req.reason}</div>}
         </div>
       );
     }
@@ -271,44 +242,34 @@ export default function RequestsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Header + Filters */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold">Employee Requests</h1>
-          <p className="text-sm text-muted-foreground">
-            Review and manage employee time-off, availability, status, and other
-            HR-related requests.
-          </p>
-        </div>
-
-        <div className="flex gap-2 items-center flex-wrap">
-          {/* Type filter */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold">Employee Requests</h1>
+        <div className="flex gap-2 items-center">
           <Select
             value={typeFilter}
-            onValueChange={(v) => setTypeFilter(v as TypeFilter)}
+            onValueChange={(v) => setTypeFilter(v as any)}
           >
-            <SelectTrigger className="w-[210px]">
-              <SelectValue placeholder="Filter by type" />
+            <SelectTrigger className="w-[190px]">
+              <SelectValue placeholder="Filter type" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All types</SelectItem>
               <SelectItem value="TimeOff">Time Off</SelectItem>
-              <SelectItem value="Sick">Sick Day</SelectItem>
+              <SelectItem value="Sick">Sick</SelectItem>
               <SelectItem value="AvailabilityChange">
                 Availability Change
               </SelectItem>
               <SelectItem value="StatusChange">Status Change</SelectItem>
-              <SelectItem value="ClockAdjust">Clock Adjustment</SelectItem>
+              <SelectItem value="ClockAdjust">Clock Adjust</SelectItem>
               <SelectItem value="ClientAcceptance">
                 Client Acceptance
               </SelectItem>
             </SelectContent>
           </Select>
 
-          {/* Status filter */}
           <Select
             value={statusFilter}
-            onValueChange={(v) => setStatusFilter(v as StatusFilter)}
+            onValueChange={(v) => setStatusFilter(v as any)}
           >
             <SelectTrigger className="w-[150px]">
               <SelectValue placeholder="Filter status" />
@@ -323,7 +284,6 @@ export default function RequestsPage() {
         </div>
       </div>
 
-      {/* Requests List */}
       <Card className="p-0">
         {loading ? (
           <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
@@ -391,6 +351,7 @@ export default function RequestsPage() {
     </div>
   );
 }
+
 // "use client";
 
 // import React from "react";
