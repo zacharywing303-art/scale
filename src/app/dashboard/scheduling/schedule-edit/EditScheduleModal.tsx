@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   DialogContent,
   DialogHeader,
@@ -25,6 +25,12 @@ type EditScheduleModalProps = {
   onClose: () => void;
 };
 
+type ScheduleConstraintCheck = {
+  canSchedule: boolean;
+  hardBlocks: string[];
+  softWarnings: string[];
+};
+
 export default function EditScheduleModal({
   schedule,
   onClose,
@@ -47,6 +53,10 @@ export default function EditScheduleModal({
   });
 
   const now = new Date();
+
+  const [constraintSummary, setConstraintSummary] =
+    useState<ScheduleConstraintCheck | null>(null);
+  const [constraintLoading, setConstraintLoading] = useState(false);
 
   useEffect(() => {
     async function loadData() {
@@ -73,7 +83,9 @@ export default function EditScheduleModal({
 
         const base = group[0];
         setFormData({
-          employeeIDs: group.map((s: any) => s.employee?.id).filter(Boolean),
+          employeeIDs: group
+            .map((s: any) => s.employee?.id)
+            .filter((id: string | undefined) => !!id),
           serviceId: base?.service?.id || "",
           officeReason: base?.officeReason || "",
           startTime: new Date(base.startTime).toISOString().slice(11, 16),
@@ -92,6 +104,91 @@ export default function EditScheduleModal({
     loadData();
   }, [schedule.createdScheduleID]);
 
+  const base = groupSchedules[0];
+  const isPast = useMemo(
+    () => !!base && new Date(base.eventDate) < now,
+    [base, now]
+  );
+
+  const runConstraintCheck = async () => {
+    if (!base) return;
+    if (!formData.startTime || !formData.endTime) return;
+    if (!formData.employeeIDs.length) return;
+
+    try {
+      setConstraintLoading(true);
+      setConstraintSummary(null);
+
+      const parseHHMM = (time: string) => {
+        const [h, m] = time.split(":").map(Number);
+        return { h, m };
+      };
+
+      const eventDates = groupSchedules.map((s) => new Date(s.eventDate));
+      if (!eventDates.length) {
+        setConstraintLoading(false);
+        return;
+      }
+
+      const sorted = eventDates.sort((a, b) => a.getTime() - b.getTime());
+      const firstDate = sorted[0];
+      const lastDate = sorted[sorted.length - 1];
+
+      const { h: sh, m: sm } = parseHHMM(formData.startTime);
+      const { h: eh, m: em } = parseHHMM(formData.endTime);
+
+      const start = new Date(firstDate);
+      start.setHours(sh, sm, 0, 0);
+      const end = new Date(lastDate);
+      end.setHours(eh, em, 0, 0);
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/schedule/constraints`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            employeeIds: formData.employeeIDs,
+            start: start.toISOString(),
+            end: end.toISOString(),
+            scheduleType: base.scheduleType,
+            clientId: base.client?.id ?? null,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        console.error("Constraint check failed:", await res.text());
+        setConstraintLoading(false);
+        return;
+      }
+
+      const data = (await res.json()) as ScheduleConstraintCheck;
+      setConstraintSummary(data);
+    } catch (err) {
+      console.error("Constraint check error:", err);
+    } finally {
+      setConstraintLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!base) return;
+    if (isPast) {
+      setConstraintSummary(null);
+      return;
+    }
+    // Run whenever employees or times change
+    runConstraintCheck();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    base,
+    isPast,
+    formData.startTime,
+    formData.endTime,
+    formData.employeeIDs.join(","),
+  ]);
+
   const handleSave = async () => {
     try {
       const [sh, sm] = formData.startTime.split(":").map(Number);
@@ -103,6 +200,15 @@ export default function EditScheduleModal({
 
       if (end <= start) {
         toast.error("End time must be after start time");
+        return;
+      }
+
+      if (
+        constraintSummary &&
+        constraintSummary.hardBlocks.length > 0 &&
+        !constraintSummary.canSchedule
+      ) {
+        toast.error("Schedule has blocking conflicts. Please review.");
         return;
       }
 
@@ -176,15 +282,44 @@ export default function EditScheduleModal({
       </DialogContent>
     );
 
-  const base = groupSchedules[0];
-  const isPast = base && new Date(base.eventDate) < now;
-
   return (
     <DialogContent className="max-w-3xl h-[85vh] flex flex-col overflow-hidden p-0">
       <div className="flex-1 overflow-y-auto p-6 space-y-4">
         <DialogHeader>
           <h2 className="text-lg font-semibold">Edit Schedule</h2>
         </DialogHeader>
+
+        {/* Constraint summary */}
+        {constraintSummary && !isPast && (
+          <div className="space-y-1 text-xs mb-2">
+            {constraintSummary.hardBlocks.length > 0 && (
+              <div className="text-rose-600">
+                <div className="font-semibold">Blocking Issues</div>
+                <ul className="list-disc ml-4">
+                  {constraintSummary.hardBlocks.map((m, i) => (
+                    <li key={i}>{m}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {constraintSummary.softWarnings.length > 0 && (
+              <div className="text-amber-600">
+                <div className="font-semibold">Warnings</div>
+                <ul className="list-disc ml-4">
+                  {constraintSummary.softWarnings.map((m, i) => (
+                    <li key={i}>{m}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {constraintSummary.hardBlocks.length === 0 &&
+              constraintSummary.softWarnings.length === 0 && (
+                <div className="text-emerald-600 font-medium">
+                  No conflicts detected for the new time window.
+                </div>
+              )}
+          </div>
+        )}
 
         {/* Employees */}
         <div>
@@ -295,7 +430,7 @@ export default function EditScheduleModal({
           )}
         </div>
 
-        {/* Delete buttons for each schedule */}
+        {/* Delete buttons */}
         {!isPast && (
           <div className="pt-2 border-t">
             <Label className="block mb-1">Delete Schedules</Label>
@@ -325,12 +460,23 @@ export default function EditScheduleModal({
         )}
       </div>
 
-      {/* Footer fixed at bottom */}
-      <DialogFooter className="border-t bg-white sticky bottom-0 p-4 flex justify-end">
+      <DialogFooter className="border-t bg-white sticky bottom-0 p-4 flex justify-end gap-2">
         <DialogClose asChild>
           <Button variant="outline">Cancel</Button>
         </DialogClose>
-        {!isPast && <Button onClick={handleSave}>Save Changes</Button>}
+        {!isPast && (
+          <Button
+            onClick={handleSave}
+            disabled={
+              loading ||
+              (!!constraintSummary &&
+                constraintSummary.hardBlocks.length > 0 &&
+                !constraintSummary.canSchedule)
+            }
+          >
+            {constraintLoading ? "Checking..." : "Save Changes"}
+          </Button>
+        )}
         {isPast && (
           <p className="text-sm text-gray-500 italic ml-auto">
             Past schedules can only toggle recurring.
@@ -436,7 +582,6 @@ export default function EditScheduleModal({
 
 //   const handleSave = async () => {
 //     try {
-//       // Validate
 //       const [sh, sm] = formData.startTime.split(":").map(Number);
 //       const [eh, em] = formData.endTime.split(":").map(Number);
 //       const start = new Date();
@@ -523,16 +668,16 @@ export default function EditScheduleModal({
 //   const isPast = base && new Date(base.eventDate) < now;
 
 //   return (
-//     <DialogContent className="max-w-2xl">
-//       <DialogHeader>
-//         <h2 className="text-lg font-semibold">Edit Schedule</h2>
-//       </DialogHeader>
+//     <DialogContent className="max-w-3xl h-[85vh] flex flex-col overflow-hidden p-0">
+//       <div className="flex-1 overflow-y-auto p-6 space-y-4">
+//         <DialogHeader>
+//           <h2 className="text-lg font-semibold">Edit Schedule</h2>
+//         </DialogHeader>
 
-//       <div className="space-y-4">
 //         {/* Employees */}
 //         <div>
 //           <Label>Employees</Label>
-//           <div className="border p-2 rounded max-h-40 overflow-auto">
+//           <div className="border p-2 rounded max-h-40 overflow-y-auto bg-gray-50">
 //             {employees.map((emp) => (
 //               <label key={emp.id} className="flex items-center space-x-2">
 //                 <input
@@ -668,13 +813,14 @@ export default function EditScheduleModal({
 //         )}
 //       </div>
 
-//       <DialogFooter className="pt-4">
+//       {/* Footer fixed at bottom */}
+//       <DialogFooter className="border-t bg-white sticky bottom-0 p-4 flex justify-end">
 //         <DialogClose asChild>
 //           <Button variant="outline">Cancel</Button>
 //         </DialogClose>
 //         {!isPast && <Button onClick={handleSave}>Save Changes</Button>}
 //         {isPast && (
-//           <p className="text-sm text-gray-500 italic">
+//           <p className="text-sm text-gray-500 italic ml-auto">
 //             Past schedules can only toggle recurring.
 //           </p>
 //         )}

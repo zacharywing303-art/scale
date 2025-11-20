@@ -86,6 +86,7 @@ export const createEmployee = async (data: any) => {
 
   const employeeID = `EMP-${Math.floor(10000 + Math.random() * 90000)}`;
 
+  // 1. Create employee base record
   const employee = await prisma.employee.create({
     data: {
       firstName: data.firstName,
@@ -108,10 +109,59 @@ export const createEmployee = async (data: any) => {
     },
   });
 
+  // 2. Create default 24/7 availability (Sun–Sat, 00:00 → 23:59)
+  await prisma.employeeAvailability.createMany({
+    data: Array.from({ length: 7 }).map((_, weekday) => ({
+      employeeId: employee.id,
+      weekday, // 0 = Sun ... 6 = Sat
+      startTime: "00:00",
+      endTime: "23:59",
+    })),
+  });
+
+  // 3. Create blank employmentInfo row
+  await prisma.employmentInfo.create({
+    data: {
+      employeeID: employee.id,
+      driversLicenseNumber: "",
+      driversLicenseExpiration: null,
+      insuranceStartDate: null,
+      insuranceEndDate: null,
+      insurancePolicyNumber: "",
+      carModel: null,
+      carMake: null,
+      carYear: null,
+      carHandicapAccessible: false,
+      registrationStartDate: null,
+      registrationExpiration: null,
+      physicalExamDate: null,
+      tbShotDate: null,
+      cprCertificationDate: null,
+      officePayRate: null,
+      facilityPayRate: null,
+      visitPayRate: null,
+      mileagePayRate: null,
+    },
+  });
+
+  // 4. History log
+  await prisma.employeeHistory.create({
+    data: {
+      employeeId: employee.id,
+      title: "Employee Created",
+      changedBy: "system", // frontend can override if needed
+      reason: null,
+      changes: {
+        createdFrom: "CreateEmployeeModal",
+        initialAvailability: "24/7 default",
+      },
+    },
+  });
+
+  // 5. If mobile user, create login
   let rawPassword: string | null = null;
 
   if (data.mobileUser) {
-    // ✅ Fetch agency code from agency table
     const agency = await prisma.agency.findUnique({
       where: { id: data.agencyID },
       select: { code: true },
@@ -133,9 +183,65 @@ export const createEmployee = async (data: any) => {
     });
   }
 
-  // ✅ Return both employee and password for display
   return { employee, rawPassword };
 };
+// export const createEmployee = async (data: any) => {
+//   if (!data.agencyID) {
+//     throw new Error("Missing agencyID from session");
+//   }
+
+//   const employeeID = `EMP-${Math.floor(10000 + Math.random() * 90000)}`;
+
+//   const employee = await prisma.employee.create({
+//     data: {
+//       firstName: data.firstName,
+//       lastName: data.lastName,
+//       name: `${data.firstName} ${data.lastName}`,
+//       last5SSN: data.last5SSN,
+//       agencyID: data.agencyID,
+//       position: data.position,
+//       nationalProviderID: data.nationalProviderId || null,
+//       email: data.email,
+//       isSupervisor: data.supervisor ? true : false,
+//       supervisor: data.supervisor ? `${data.firstName} ${data.lastName}` : null,
+//       mobileUser: data.mobileUser,
+//       status: "Active",
+//       employeeID,
+//       dateOfBirth: data.dateOfBirth ? new Date(data.dateOfBirth) : undefined,
+//       mainPhone: data.phone,
+//       gender: data.gender,
+//       languages: data.language ? [data.language] : [],
+//     },
+//   });
+
+//   let rawPassword: string | null = null;
+
+//   if (data.mobileUser) {
+//     // ✅ Fetch agency code from agency table
+//     const agency = await prisma.agency.findUnique({
+//       where: { id: data.agencyID },
+//       select: { code: true },
+//     });
+//     if (!agency) throw new Error("Invalid agencyID");
+
+//     const password = data.password || generateRandomPassword(16);
+//     rawPassword = password;
+//     const passwordHash = await bcrypt.hash(password, 10);
+
+//     await prisma.mobileEmployee.create({
+//       data: {
+//         employeeID: employee.id,
+//         email: employee.email,
+//         agencyID: data.agencyID,
+//         agencyCode: agency.code,
+//         passwordHash,
+//       },
+//     });
+//   }
+
+//   // ✅ Return both employee and password for display
+//   return { employee, rawPassword };
+// };
 
 export const updateEmployee = async (id: string, data: any) => {
   return prisma.employee.update({ where: { id }, data });
