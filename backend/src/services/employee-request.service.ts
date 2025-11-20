@@ -5,11 +5,11 @@ export async function createTimeOffRequest(data: {
   startDate: string;
   endDate: string;
   reason?: string;
-  timeOffType: "VACATION" | "SICK" | "PERSONAL" | "UNPAID";
+  timeOffType: "PTO" | "Sick" | "Vacation" | "Personal" | "Unpaid";
 }) {
   return prisma.employeeRequest.create({
     data: {
-      type: "TIME_OFF",
+      type: "TimeOff",
       employeeId: data.employeeId,
       startDate: new Date(data.startDate),
       endDate: new Date(data.endDate),
@@ -26,7 +26,7 @@ export async function createAvailabilityChangeRequest(data: {
 }) {
   return prisma.employeeRequest.create({
     data: {
-      type: "AVAILABILITY_CHANGE",
+      type: "AvailabilityChange",
       employeeId: data.employeeId,
       availabilityChanges: data.availabilityChanges,
       reason: data.reason ?? null,
@@ -41,7 +41,7 @@ export async function createStatusChangeRequest(data: {
 }) {
   return prisma.employeeRequest.create({
     data: {
-      type: "STATUS_CHANGE",
+      type: "StatusChange",
       employeeId: data.employeeId,
       newStatus: data.newStatus,
       reason: data.reason,
@@ -53,7 +53,7 @@ export async function getPendingRequests(agencyId: string) {
   return prisma.employeeRequest.findMany({
     where: {
       employee: { agencyID: agencyId },
-      status: "PENDING",
+      status: "Pending",
     },
     include: {
       employee: true,
@@ -70,7 +70,7 @@ export async function approveRequest(requestId: string, adminUserId: string) {
   if (!req) throw new Error("Request not found");
 
   switch (req.type) {
-    case "TIME_OFF":
+    case "TimeOff":
       await prisma.employeeTimeOff.create({
         data: {
           employeeId: req.employeeId,
@@ -82,7 +82,7 @@ export async function approveRequest(requestId: string, adminUserId: string) {
       });
       break;
 
-    case "AVAILABILITY_CHANGE":
+    case "AvailabilityChange":
       // wipe existing windows for involved weekdays
       await prisma.employeeAvailability.deleteMany({
         where: { employeeId: req.employeeId },
@@ -102,7 +102,7 @@ export async function approveRequest(requestId: string, adminUserId: string) {
       }
       break;
 
-    case "STATUS_CHANGE":
+    case "StatusChange":
       await prisma.employee.update({
         where: { id: req.employeeId },
         data: { status: req.newStatus },
@@ -112,13 +112,13 @@ export async function approveRequest(requestId: string, adminUserId: string) {
 
   return prisma.employeeRequest.update({
     where: { id: requestId },
-    data: { status: "APPROVED" },
+    data: { status: "Approved" },
   });
 }
 
 export async function declineRequest(requestId: string) {
   return prisma.employeeRequest.update({
     where: { id: requestId },
-    data: { status: "DECLINED" },
+    data: { status: "Declined" },
   });
 }
