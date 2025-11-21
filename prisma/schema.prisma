@@ -35,6 +35,7 @@ model Agency {
   numVisits        Int              @default(0)
   paymentStatus    String           @default("Not Required")
   agencyAdminId    String?          @unique
+  ptoDefaultDays   Int              @default(14)
   agencyAdmin      User?            @relation("AgencyAdminRelation", fields: [agencyAdminId], references: [id])
   invoices         Invoice[]
   RoleType         RoleType[]

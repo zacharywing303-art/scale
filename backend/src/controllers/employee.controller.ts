@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import * as employeeService from "../services/employee.service";
+import * as ptoService from "../services/employee-pto.service";
 import prisma from "../lib/db";
 
 export const getEmployees = async (_req: Request, res: Response) => {
@@ -317,5 +318,26 @@ export const getEmployeeSchedule = async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error("Error fetching employee schedule:", error);
     res.status(500).json({ message: "Failed to fetch employee schedule" });
+  }
+};
+
+export const updatePtoDefaults = async (req: Request, res: Response) => {
+  try {
+    const { agencyId, newDefault, applyTo, employeeIds } = req.body;
+
+    if (!agencyId || !newDefault)
+      return res.status(400).json({ error: "Missing params" });
+
+    const result = await ptoService.updateAgencyPtoDefault(
+      agencyId,
+      Number(newDefault),
+      applyTo,
+      employeeIds
+    );
+
+    res.json(result);
+  } catch (error: any) {
+    console.error("updatePtoDefaults error:", error);
+    res.status(500).json({ error: "Failed to update PTO defaults" });
   }
 };

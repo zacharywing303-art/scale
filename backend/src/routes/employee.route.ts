@@ -46,4 +46,6 @@ router.get(
   employeeController.getEmployeeSchedulingConstraints
 );
 
+router.post("/pto/update-defaults", employeeController.updatePtoDefaults);
+
 export default router;
