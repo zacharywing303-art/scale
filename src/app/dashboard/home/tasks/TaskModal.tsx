@@ -416,6 +416,154 @@ export default function TaskModal({
       return;
     }
 
+    // ⭐ CONDUCT EMPLOYEE REVIEW
+    if (task.name === "Conduct Employee Review") {
+      const due = new Date(task.dueDate ?? new Date());
+      const assigned = new Date(task.assignedDate ?? due);
+
+      let dateFrom: string;
+      let dateTo: string;
+
+      switch (task.frequency) {
+        case "DAILY": {
+          const end = new Date(due);
+          end.setDate(end.getDate() - 1);
+          dateFrom = assigned.toISOString().split("T")[0];
+          dateTo = end.toISOString().split("T")[0];
+          break;
+        }
+
+        case "WEEKLY": {
+          const prevWeek = subWeeks(due, 1);
+          dateFrom = startOfWeek(prevWeek, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfWeek(prevWeek, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          break;
+        }
+
+        case "MONTHLY": {
+          const prevMonth = subMonths(due, 1);
+          dateFrom = startOfMonth(prevMonth).toISOString().split("T")[0];
+          dateTo = endOfMonth(prevMonth).toISOString().split("T")[0];
+          break;
+        }
+
+        case "QUARTERLY": {
+          const prevQuarter = subQuarters(due, 1);
+          dateFrom = startOfQuarter(prevQuarter).toISOString().split("T")[0];
+          dateTo = endOfQuarter(prevQuarter).toISOString().split("T")[0];
+          break;
+        }
+
+        case "YEARLY": {
+          const prevYear = subYears(due, 1);
+          dateFrom = startOfYear(prevYear).toISOString().split("T")[0];
+          dateTo = endOfYear(prevYear).toISOString().split("T")[0];
+          break;
+        }
+
+        case "SPECIFIC_DATE": {
+          const end = new Date(due);
+          end.setDate(end.getDate() - 1);
+          dateFrom = assigned.toISOString().split("T")[0];
+          dateTo = end.toISOString().split("T")[0];
+          break;
+        }
+
+        default: {
+          const prevWeek = subWeeks(due, 1);
+          dateFrom = startOfWeek(prevWeek, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfWeek(prevWeek, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+        }
+      }
+
+      router.push(
+        `/dashboard/hr/document-review/employee-review?from=${dateFrom}&to=${dateTo}&frequency=${task.frequency}&taskId=${task.id}`
+      );
+      return;
+    }
+
+    // ⭐ CONDUCT CLIENT REVIEW
+    if (task.name === "Conduct Client Review") {
+      const due = new Date(task.dueDate ?? new Date());
+      const assigned = new Date(task.assignedDate ?? due);
+
+      let dateFrom: string;
+      let dateTo: string;
+
+      switch (task.frequency) {
+        case "DAILY": {
+          const end = new Date(due);
+          end.setDate(end.getDate() - 1);
+          dateFrom = assigned.toISOString().split("T")[0];
+          dateTo = end.toISOString().split("T")[0];
+          break;
+        }
+
+        case "WEEKLY": {
+          const prevWeek = subWeeks(due, 1);
+          dateFrom = startOfWeek(prevWeek, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfWeek(prevWeek, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          break;
+        }
+
+        case "MONTHLY": {
+          const prevMonth = subMonths(due, 1);
+          dateFrom = startOfMonth(prevMonth).toISOString().split("T")[0];
+          dateTo = endOfMonth(prevMonth).toISOString().split("T")[0];
+          break;
+        }
+
+        case "QUARTERLY": {
+          const prevQuarter = subQuarters(due, 1);
+          dateFrom = startOfQuarter(prevQuarter).toISOString().split("T")[0];
+          dateTo = endOfQuarter(prevQuarter).toISOString().split("T")[0];
+          break;
+        }
+
+        case "YEARLY": {
+          const prevYear = subYears(due, 1);
+          dateFrom = startOfYear(prevYear).toISOString().split("T")[0];
+          dateTo = endOfYear(prevYear).toISOString().split("T")[0];
+          break;
+        }
+
+        case "SPECIFIC_DATE": {
+          const end = new Date(due);
+          end.setDate(end.getDate() - 1);
+          dateFrom = assigned.toISOString().split("T")[0];
+          dateTo = end.toISOString().split("T")[0];
+          break;
+        }
+
+        default: {
+          const prevWeek = subWeeks(due, 1);
+          dateFrom = startOfWeek(prevWeek, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfWeek(prevWeek, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+        }
+      }
+
+      router.push(
+        `/dashboard/hr/document-review/client-review?from=${dateFrom}&to=${dateTo}&frequency=${task.frequency}&taskId=${task.id}`
+      );
+      return;
+    }
+
     if (task.name === "Conduct/Review Timely Audits") {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/timely-audits/for-task/${task.id}`

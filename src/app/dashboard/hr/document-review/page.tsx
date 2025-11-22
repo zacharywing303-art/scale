@@ -9,8 +9,8 @@ import TimelyAuditCard from "@/components/document-review/TimelyAuditCard";
 import EmployeeMileageCard from "@/components/document-review/EmployeeMileageCard";
 import HoursWorkedCard from "@/components/document-review/HoursWorkedCard";
 import VisitExceptionsCard from "@/components/document-review/VisitExceptionsCard";
-import ClientQuarterlyReviewsCard from "@/components/document-review/ClientQuarterlyReviewsCard";
-import EmployeeQuarterlyReviewsCard from "@/components/document-review/EmployeeQuarterlyReviewsCard";
+import ClientReviewsCard from "@/components/document-review/ClientReviewsCard";
+import EmployeeReviewsCard from "@/components/document-review/EmployeeReviewsCard";
 import BillingSummaryCard from "@/components/document-review/BillingSummaryCard";
 import GPSExceptionsCard from "@/components/document-review/GPSExceptionsCard";
 import ReviewModal from "@/components/document-review/ReviewModal";
@@ -49,15 +49,19 @@ export default function DocumentReviewPage() {
               }
             />
 
-            <ClientQuarterlyReviewsCard
-              onClick={() => setOpenModal("clientQuarterly")}
+            <ClientReviewsCard
+              onClick={() =>
+                router.push("/dashboard/hr/document-review/client-review")
+              }
             />
           </div>
 
           {/* Bottom section: billing summary */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            <EmployeeQuarterlyReviewsCard
-              onClick={() => setOpenModal("employeeQuarterly")}
+            <EmployeeReviewsCard
+              onClick={() =>
+                router.push("/dashboard/hr/document-review/employee-review")
+              }
             />
             <BillingSummaryCard onClick={() => router.push("/billing")} />
           </div>
