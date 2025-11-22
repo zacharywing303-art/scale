@@ -16,6 +16,35 @@ export default function EmployeeReviewResultPage() {
   const [review, setReview] = useState<any>(null);
   const [index, setIndex] = useState(0);
 
+  const [marking, setMarking] = useState(false);
+
+  async function handleToggleComplete() {
+    if (!review?.unityTaskId) return;
+
+    setMarking(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${review.unityTaskId}/complete`,
+        { method: "PATCH" }
+      );
+      if (!res.ok) throw new Error("Failed to toggle task complete");
+      const updated = await res.json();
+
+      setReview((prev: any) => ({
+        ...prev,
+        unityTask: updated, // update task completion state
+      }));
+
+      toast.success(
+        updated.completed ? "Task marked complete" : "Task marked incomplete"
+      );
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setMarking(false);
+    }
+  }
+
   useEffect(() => {
     if (!reviewId) return;
     (async () => {
@@ -95,6 +124,49 @@ export default function EmployeeReviewResultPage() {
   return (
     <ProtectedRoute allowedRoles={["AGENCY_ADMIN"]}>
       <div className="p-6 space-y-6">
+        {/* ⭐ UNITY TASK HEADER (if triggered by task) */}
+        {review?.unityTaskId && (
+          <div className="border p-4 rounded-md bg-white shadow-sm mb-4">
+            <div className="flex justify-between items-start flex-wrap gap-3">
+              <div>
+                <h2 className="text-xl font-semibold">
+                  Assigned Task: Conduct Employee Review
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Assigned:{" "}
+                  {review.unityTask?.assignedDate
+                    ? new Date(
+                        review.unityTask.assignedDate
+                      ).toLocaleDateString()
+                    : "N/A"}{" "}
+                  | Due:{" "}
+                  {review.unityTask?.dueDate
+                    ? new Date(review.unityTask.dueDate).toLocaleDateString()
+                    : "N/A"}
+                </p>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  disabled={marking}
+                  onClick={handleToggleComplete}
+                  className={`${
+                    review.unityTask?.completed
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-blue-600 hover:bg-blue-700"
+                  } text-white`}
+                >
+                  {marking
+                    ? "Processing..."
+                    : review.unityTask?.completed
+                    ? "✅ Mark Incomplete"
+                    : "Mark Complete"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
         <h1 className="text-2xl font-bold">Employee Review Results</h1>
 
         <div className="flex items-center justify-between">

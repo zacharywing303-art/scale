@@ -430,6 +430,8 @@ model EmployeeReviewHistory {
   frequency   String // WEEKLY | MONTHLY | QUARTERLY | YEARLY | CUSTOM | ALL_TIME
   createdById String
   createdAt   DateTime @default(now())
+  unityTaskId String?
+  unityTask   Task?    @relation(fields: [unityTaskId], references: [id])
 
   agency    Agency @relation(fields: [agencyId], references: [id])
   createdBy User   @relation(fields: [createdById], references: [id])
@@ -555,6 +557,8 @@ model ClientReviewHistory {
   frequency   String
   createdById String
   createdAt   DateTime @default(now())
+  unityTaskId String?
+  unityTask   Task?    @relation(fields: [unityTaskId], references: [id])
 
   agency    Agency @relation(fields: [agencyId], references: [id])
   createdBy User   @relation(fields: [createdById], references: [id])
@@ -774,22 +778,24 @@ model VisitMileage {
 }
 
 model Task {
-  id            String        @id @default(uuid())
-  name          String
-  description   String?
-  agencyId      String
-  createdAt     DateTime      @default(now())
-  assignedDate  DateTime?     @default(now())
-  dueDate       DateTime
-  isDone        Boolean       @default(false)
-  isActive      Boolean       @default(true)
-  recurring     Boolean       @default(false)
-  frequency     Frequency?
-  unityTask     Boolean       @default(false)
-  completedAt   DateTime?
-  agency        Agency        @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  assignedRoles TaskRole[]
-  TimelyAudit   TimelyAudit[]
+  id                    String                  @id @default(uuid())
+  name                  String
+  description           String?
+  agencyId              String
+  createdAt             DateTime                @default(now())
+  assignedDate          DateTime?               @default(now())
+  dueDate               DateTime
+  isDone                Boolean                 @default(false)
+  isActive              Boolean                 @default(true)
+  recurring             Boolean                 @default(false)
+  frequency             Frequency?
+  unityTask             Boolean                 @default(false)
+  completedAt           DateTime?
+  agency                Agency                  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  assignedRoles         TaskRole[]
+  TimelyAudit           TimelyAudit[]
+  EmployeeReviewHistory EmployeeReviewHistory[]
+  ClientReviewHistory   ClientReviewHistory[]
 }
 
 model TaskRole {

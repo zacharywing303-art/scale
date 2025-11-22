@@ -103,7 +103,6 @@ export async function getEmployeeReviewData(opts: {
     include: {
       GPSException: true,
       service: true,
-      client: true,
     } as any,
   });
 
@@ -219,6 +218,7 @@ export async function generateEmployeeReview(opts: {
   periodEnd?: string;
   frequency: string;
   createdById: string;
+  unityTaskId?: string;
 }) {
   const periodStart = opts.periodStart
     ? new Date(opts.periodStart)
@@ -233,6 +233,7 @@ export async function generateEmployeeReview(opts: {
       periodEnd,
       frequency: opts.frequency,
       createdById: opts.createdById,
+      unityTaskId: opts.unityTaskId ?? null,
     },
   });
 
@@ -313,7 +314,6 @@ export async function getClientReviewData(opts: {
     include: {
       GPSException: true,
       service: true,
-      employee: true,
     } as any,
   });
 
@@ -420,6 +420,7 @@ export async function generateClientReview(opts: {
   periodEnd?: string;
   frequency: string;
   createdById: string;
+  unityTaskId?: string;
 }) {
   const periodStart = opts.periodStart
     ? new Date(opts.periodStart)
@@ -434,6 +435,7 @@ export async function generateClientReview(opts: {
       periodEnd,
       frequency: opts.frequency,
       createdById: opts.createdById,
+      unityTaskId: opts.unityTaskId ?? null,
     },
   });
 
