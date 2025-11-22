@@ -24,6 +24,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import ExportButton from "@/components/ExportButton";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import TaskHeader from "@/components/tasks/TaskHeader";
 
 // Default display columns
 const defaultDisplayColumns = [
@@ -398,43 +399,7 @@ export default function VisitsPage() {
 
   return (
     <ProtectedRoute allowedRoles={["AGENCY_ADMIN"]} permission="View Visits">
-      {taskInfo && (
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-blue-50 border border-blue-200 p-4 rounded-md mb-4">
-          <div>
-            <h2 className="text-lg font-semibold text-blue-700">
-              Fix Visit Exceptions Task
-            </h2>
-            <p className="text-sm text-gray-600">
-              Assigned:{" "}
-              {taskInfo.assignedDate
-                ? format(new Date(taskInfo.assignedDate), "PPP")
-                : "N/A"}{" "}
-              | Due:{" "}
-              {taskInfo.dueDate
-                ? format(new Date(taskInfo.dueDate), "PPP")
-                : "N/A"}
-            </p>
-          </div>
-          <div className="flex gap-2 mt-3 md:mt-0">
-            <ExportButton
-              filteredVisits={filteredVisits}
-              displayColumns={displayColumns}
-            />
-            {taskInfo.isDone ? (
-              <Button disabled variant="secondary">
-                ✅ Completed
-              </Button>
-            ) : (
-              <Button
-                onClick={handleMarkComplete}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                Mark Complete
-              </Button>
-            )}
-          </div>
-        </div>
-      )}
+      <TaskHeader taskId={taskId} />
 
       <div className="p-6 space-y-6">
         {/* Header */}

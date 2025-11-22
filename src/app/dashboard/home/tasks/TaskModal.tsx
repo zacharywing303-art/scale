@@ -333,6 +333,89 @@ export default function TaskModal({
       return;
     }
 
+    // ⭐ NEW — Generate Schedules
+    if (task.name === "Generate Schedules") {
+      router.push(`/dashboard/scheduling/schedule-create?taskId=${task.id}`);
+      return;
+    }
+
+    // ⭐ REVIEW VISITS
+    if (task.name === "Review Visits") {
+      const due = new Date(task.dueDate ?? new Date());
+      let dateFrom: string;
+      let dateTo: string;
+
+      switch (task.frequency) {
+        case "DAILY": {
+          // daily → assignedDate → day before due date
+          const assigned = new Date(task.assignedDate ?? due);
+          const end = new Date(due);
+          end.setDate(end.getDate() - 1);
+          dateFrom = assigned.toISOString().split("T")[0];
+          dateTo = end.toISOString().split("T")[0];
+          break;
+        }
+
+        case "WEEKLY": {
+          const prevWeek = subWeeks(due, 1);
+          dateFrom = startOfWeek(prevWeek, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfWeek(prevWeek, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          break;
+        }
+
+        case "MONTHLY": {
+          const prevMonth = subMonths(due, 1);
+          dateFrom = startOfMonth(prevMonth).toISOString().split("T")[0];
+          dateTo = endOfMonth(prevMonth).toISOString().split("T")[0];
+          break;
+        }
+
+        case "QUARTERLY": {
+          const prevQuarter = subQuarters(due, 1);
+          dateFrom = startOfQuarter(prevQuarter).toISOString().split("T")[0];
+          dateTo = endOfQuarter(prevQuarter).toISOString().split("T")[0];
+          break;
+        }
+
+        case "YEARLY": {
+          const prevYear = subYears(due, 1);
+          dateFrom = startOfYear(prevYear).toISOString().split("T")[0];
+          dateTo = endOfYear(prevYear).toISOString().split("T")[0];
+          break;
+        }
+
+        case "SPECIFIC_DATE": {
+          // Specific date → treat like daily
+          const assigned = new Date(task.assignedDate ?? due);
+          const end = new Date(due);
+          end.setDate(end.getDate() - 1);
+          dateFrom = assigned.toISOString().split("T")[0];
+          dateTo = end.toISOString().split("T")[0];
+          break;
+        }
+
+        default: {
+          // fallback: previous full week
+          const prevWeek = subWeeks(due, 1);
+          dateFrom = startOfWeek(prevWeek, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfWeek(prevWeek, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+        }
+      }
+
+      router.push(
+        `/dashboard/visits?from=${dateFrom}&to=${dateTo}&taskId=${task.id}`
+      );
+      return;
+    }
+
     if (task.name === "Conduct/Review Timely Audits") {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/timely-audits/for-task/${task.id}`

@@ -9,63 +9,67 @@ datasource db {
 }
 
 model Agency {
-  id               String           @id @default(cuid())
-  name             String
-  code             String           @unique
-  state            String
-  allowEvv         Boolean          @default(false)
-  status           String           @default("Active")
-  subscriptionPlan String?
-  paymentMethod    String?
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-  email            String?
-  numEmployees     Int              @default(0)
-  phone            String?
-  santraxID        String?
-  addressLine1     String           @default("N/A")
-  addressLine2     String?
-  addressLine3     String?
-  addressState     String           @default("N/A")
-  city             String           @default("N/A")
-  zipCode          String           @default("N/A")
-  billingEmail     String?
-  billingPhone     String?
-  numClients       Int              @default(0)
-  numVisits        Int              @default(0)
-  paymentStatus    String           @default("Not Required")
-  agencyAdminId    String?          @unique
-  ptoDefaultDays   Int              @default(14)
-  agencyAdmin      User?            @relation("AgencyAdminRelation", fields: [agencyAdminId], references: [id])
-  invoices         Invoice[]
-  RoleType         RoleType[]
-  Task             Task[]
-  users            User[]
-  Visit            Visit[]
-  TimelyAudit      TimelyAudit[]
-  MobileEmployee   MobileEmployee[]
-  VisitRequest     VisitRequest[]
-  PayrollHistory   PayrollHistory[]
-  PayrollSettings  PayrollSettings?
+  id                    String                  @id @default(cuid())
+  name                  String
+  code                  String                  @unique
+  state                 String
+  allowEvv              Boolean                 @default(false)
+  status                String                  @default("Active")
+  subscriptionPlan      String?
+  paymentMethod         String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  email                 String?
+  numEmployees          Int                     @default(0)
+  phone                 String?
+  santraxID             String?
+  addressLine1          String                  @default("N/A")
+  addressLine2          String?
+  addressLine3          String?
+  addressState          String                  @default("N/A")
+  city                  String                  @default("N/A")
+  zipCode               String                  @default("N/A")
+  billingEmail          String?
+  billingPhone          String?
+  numClients            Int                     @default(0)
+  numVisits             Int                     @default(0)
+  paymentStatus         String                  @default("Not Required")
+  agencyAdminId         String?                 @unique
+  ptoDefaultDays        Int                     @default(14)
+  agencyAdmin           User?                   @relation("AgencyAdminRelation", fields: [agencyAdminId], references: [id])
+  invoices              Invoice[]
+  RoleType              RoleType[]
+  Task                  Task[]
+  users                 User[]
+  Visit                 Visit[]
+  TimelyAudit           TimelyAudit[]
+  MobileEmployee        MobileEmployee[]
+  VisitRequest          VisitRequest[]
+  PayrollHistory        PayrollHistory[]
+  PayrollSettings       PayrollSettings?
+  EmployeeReviewHistory EmployeeReviewHistory[]
+  ClientReviewHistory   ClientReviewHistory[]
 }
 
 model User {
-  id              String    @id @default(cuid())
-  name            String
-  email           String    @unique
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  agencyId        String?
-  lastLogin       DateTime?
-  passwordHash    String
-  role            Role      @default(AGENCY_USER)
-  isActive        Boolean   @default(true)
-  phone           String?
-  systemAdminUser Boolean   @default(false)
-  roleTypeId      String?
-  adminOfAgency   Agency?   @relation("AgencyAdminRelation")
-  agency          Agency?   @relation(fields: [agencyId], references: [id])
-  roleType        RoleType? @relation(fields: [roleTypeId], references: [id])
+  id                    String                  @id @default(cuid())
+  name                  String
+  email                 String                  @unique
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  agencyId              String?
+  lastLogin             DateTime?
+  passwordHash          String
+  role                  Role                    @default(AGENCY_USER)
+  isActive              Boolean                 @default(true)
+  phone                 String?
+  systemAdminUser       Boolean                 @default(false)
+  roleTypeId            String?
+  adminOfAgency         Agency?                 @relation("AgencyAdminRelation")
+  agency                Agency?                 @relation(fields: [agencyId], references: [id])
+  roleType              RoleType?               @relation(fields: [roleTypeId], references: [id])
+  EmployeeReviewHistory EmployeeReviewHistory[]
+  ClientReviewHistory   ClientReviewHistory[]
 }
 
 model RoleType {
@@ -417,6 +421,22 @@ model EmployeeRequest {
   updatedAt DateTime @updatedAt
 }
 
+model EmployeeReviewHistory {
+  id          String   @id @default(cuid())
+  agencyId    String
+  employeeIds String[]
+  periodStart DateTime
+  periodEnd   DateTime
+  frequency   String // WEEKLY | MONTHLY | QUARTERLY | YEARLY | CUSTOM | ALL_TIME
+  createdById String
+  createdAt   DateTime @default(now())
+
+  agency    Agency @relation(fields: [agencyId], references: [id])
+  createdBy User   @relation(fields: [createdById], references: [id])
+
+  @@index([agencyId, createdAt])
+}
+
 model Certification {
   id              String   @id @default(cuid())
   employeeID      String
@@ -526,6 +546,22 @@ model ClientHistory {
   client Client @relation(fields: [clientId], references: [id])
 }
 
+model ClientReviewHistory {
+  id          String   @id @default(cuid())
+  agencyId    String
+  clientIds   String[]
+  periodStart DateTime
+  periodEnd   DateTime
+  frequency   String
+  createdById String
+  createdAt   DateTime @default(now())
+
+  agency    Agency @relation(fields: [agencyId], references: [id])
+  createdBy User   @relation(fields: [createdById], references: [id])
+
+  @@index([agencyId, createdAt])
+}
+
 model Service {
   id             String          @id @default(cuid())
   name           String
@@ -581,25 +617,28 @@ model Invoice {
 }
 
 model Authorization {
-  id                  String       @id @default(cuid())
-  payerID             String?
-  serviceID           String?
-  eventCode           String
-  authorizationNumber String
-  modifier1           String?
-  modifier2           String?
-  modifier3           String?
-  modifier4           String?
-  format              String
-  voided              Boolean      @default(false)
-  startDate           DateTime
-  endDate             DateTime
-  comments            String?
-  visitsAllowed       String
-  payer               Payer?       @relation(fields: [payerID], references: [id])
-  service             Service?     @relation(fields: [serviceID], references: [id])
-  limitations         Limitation[]
-  assignedClients     Client[]     @relation("AuthorizationToClient")
+  id                   String       @id @default(cuid())
+  payerID              String?
+  serviceID            String?
+  eventCode            String
+  authorizationNumber  String
+  modifier1            String?
+  modifier2            String?
+  modifier3            String?
+  modifier4            String?
+  format               String
+  voided               Boolean      @default(false)
+  startDate            DateTime
+  endDate              DateTime
+  comments             String?
+  visitsAllowed        String
+  totalAuthorizedHours Float?
+  totalAuthorizedUnits Int?
+  totalBillableAmount  Float?
+  payer                Payer?       @relation(fields: [payerID], references: [id])
+  service              Service?     @relation(fields: [serviceID], references: [id])
+  limitations          Limitation[]
+  assignedClients      Client[]     @relation("AuthorizationToClient")
 }
 
 model Limitation {

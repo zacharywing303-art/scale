@@ -32,6 +32,7 @@ import verifyAddressRoute from "./routes/verifyAddress.route";
 import payrollRoutes from "./routes/payroll.route";
 import employeeRequestRoutes from "./routes/employee-request.route";
 import scheduleConstraintsRoutes from "./routes/schedule-constraints.route";
+import reviewRoutes from "./routes/review.route";
 import "./workers";
 
 // Load env variables
@@ -79,6 +80,7 @@ app.use("/api/verify-address", verifyAddressRoute);
 app.use("/api/payroll", payrollRoutes);
 app.use("/api/requests", employeeRequestRoutes);
 app.use("/api/schedule/constraints", scheduleConstraintsRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {

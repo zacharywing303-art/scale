@@ -22,8 +22,16 @@ import {
   RequestStatus,
   TimeOffType,
 } from "@/app/types/requests";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+type ApplyMode = "all" | "selected";
+
+type EmployeeOption = {
+  id: string;
+  name: string;
+};
 
 export default function RequestsPage() {
   const [loading, setLoading] = useState(true);
@@ -34,16 +42,38 @@ export default function RequestsPage() {
   );
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
 
+  // PTO state
+  const [agencyPto, setAgencyPto] = useState<number>(14);
+  const [applyMode, setApplyMode] = useState<ApplyMode>("all");
+  const [employeeList, setEmployeeList] = useState<EmployeeOption[]>([]);
+  const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+
   useEffect(() => {
     const fetchRequests = async () => {
       try {
         const user = await getLoggedInUser();
+
         if (!user?.agency?.id) {
           toast.error("Missing agency. Please re-login.");
           setLoading(false);
           return;
         }
 
+        // Employees for PTO panel
+        const empRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/employees/agency/${user.agency.id}`
+        );
+        const empData = await empRes.json();
+        setEmployeeList(empData as EmployeeOption[]);
+
+        // Load agency default PTO
+        const agencyRes = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/agencies/${user.agency.id}`
+        );
+        const agencyData = await agencyRes.json();
+        setAgencyPto(agencyData.ptoDefaultDays ?? 14);
+
+        // Employee requests
         const res = await fetch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/requests/pending/${user.agency.id}`
         );
@@ -104,6 +134,44 @@ export default function RequestsPage() {
     } finally {
       setActionLoadingId(null);
     }
+  };
+
+  const handlePtoUpdate = async () => {
+    try {
+      const user = await getLoggedInUser();
+
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/employees/pto/update-defaults`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            agencyId: user?.agency?.id,
+            newDefault: agencyPto,
+            applyTo: applyMode,
+            employeeIds: applyMode === "selected" ? selectedEmployees : [],
+          }),
+        }
+      );
+
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error);
+
+      toast.success("PTO settings updated successfully!");
+    } catch (err: any) {
+      console.error("handlePtoUpdate error:", err);
+      toast.error(err.message || "Failed to update PTO");
+    }
+  };
+
+  const toggleEmployeeSelection = (
+    id: string,
+    checked: boolean | "indeterminate"
+  ) => {
+    const isChecked = checked === true;
+    setSelectedEmployees((prev) =>
+      isChecked ? [...prev, id] : prev.filter((eid) => eid !== id)
+    );
   };
 
   const renderTypeLabel = (type: RequestType) => {
@@ -242,8 +310,10 @@ export default function RequestsPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      {/* Header row */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h1 className="text-2xl font-semibold">Employee Requests</h1>
+
         <div className="flex gap-2 items-center">
           <Select
             value={typeFilter}
@@ -284,6 +354,79 @@ export default function RequestsPage() {
         </div>
       </div>
 
+      {/* PTO Defaults Admin Panel */}
+      <Card className="p-4">
+        <h2 className="text-lg font-semibold mb-3">PTO Settings</h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Current Default */}
+          <div className="flex flex-col">
+            <label className="text-sm font-medium mb-1">
+              Agency Default PTO Days
+            </label>
+            <input
+              type="number"
+              value={agencyPto}
+              onChange={(e) => setAgencyPto(Number(e.target.value))}
+              className="border rounded p-2"
+            />
+          </div>
+
+          {/* Apply Mode */}
+          <div className="flex flex-col">
+            <label className="text-sm font-medium mb-1">Apply Default To</label>
+            <Select
+              value={applyMode}
+              onValueChange={(v) => setApplyMode(v as ApplyMode)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Choose option" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Employees</SelectItem>
+                <SelectItem value="selected">Selected Employees</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* If apply to selected, show checkbox list */}
+          {applyMode === "selected" && (
+            <div className="flex flex-col">
+              <label className="text-sm font-medium mb-1">
+                Select Employees
+              </label>
+              <div className="border rounded p-2 max-h-40 overflow-y-auto space-y-1">
+                {employeeList.length === 0 ? (
+                  <span className="text-xs text-muted-foreground">
+                    No employees found for this agency.
+                  </span>
+                ) : (
+                  employeeList.map((emp) => (
+                    <label
+                      key={emp.id}
+                      className="flex items-center gap-2 text-sm"
+                    >
+                      <Checkbox
+                        checked={selectedEmployees.includes(emp.id)}
+                        onCheckedChange={(checked) =>
+                          toggleEmployeeSelection(emp.id, checked)
+                        }
+                      />
+                      <span>{emp.name}</span>
+                    </label>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <Button className="mt-4" onClick={handlePtoUpdate}>
+          Save PTO Settings
+        </Button>
+      </Card>
+
+      {/* Requests list */}
       <Card className="p-0">
         {loading ? (
           <div className="flex items-center justify-center py-16 gap-2 text-muted-foreground">
@@ -351,36 +494,3 @@ export default function RequestsPage() {
     </div>
   );
 }
-
-// "use client";
-
-// import React from "react";
-// import ProtectedRoute from "@/components/auth/ProtectedRoute";
-// import TimeOffRequests from "@/components/employee-requests/TimeOffRequests";
-// import ShiftRequests from "@/components/employee-requests/ShiftRequests";
-// import ClientAcceptanceRequests from "@/components/employee-requests/ClientAcceptanceRequests";
-// import ClockAdjustRequests from "@/components/employee-requests/ClockAdjustRequests";
-
-// export default function RequestsPage() {
-//   return (
-//     <ProtectedRoute allowedRoles={["AGENCY_ADMIN", "AGENCY_USER"]}>
-//       <div className="min-h-screen flex bg-gray-50">
-//         <main className="flex-1 p-6 space-y-8">
-//           <h2 className="text-2xl font-bold text-gray-800 dark:text-white">
-//             Requests
-//           </h2>
-//           <p className="mt-2 text-gray-600 dark:text-gray-300">
-//             Review and manage pending staff and client requests.
-//           </p>
-
-//           <div className="space-y-8">
-//             <TimeOffRequests />
-//             <ShiftRequests />
-//             <ClientAcceptanceRequests />
-//             <ClockAdjustRequests />
-//           </div>
-//         </main>
-//       </div>
-//     </ProtectedRoute>
-//   );
-// }

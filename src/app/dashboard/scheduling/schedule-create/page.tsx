@@ -33,6 +33,8 @@ import {
 import { TimePicker } from "@/components/TimePicker";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { useSearchParams, useRouter } from "next/navigation";
+import TaskHeader from "@/components/tasks/TaskHeader";
 
 type ScheduleConstraintCheck = {
   canSchedule: boolean;
@@ -79,6 +81,10 @@ export default function CreateSchedulePage() {
   const [groupVisitCode, setGroupVisitCode] = useState<string | null>(null);
   const [officeStaffOnly, setOfficeStaffOnly] = useState(false);
   const [facilityStaffOnly, setFacilityStaffOnly] = useState(false);
+  const searchParams = useSearchParams();
+  const taskId = searchParams.get("taskId");
+  const [taskInfo, setTaskInfo] = useState<any>(null);
+  const router = useRouter();
 
   const user = getLoggedInUser();
   const tomorrow = useMemo(() => {
@@ -138,6 +144,30 @@ export default function CreateSchedulePage() {
     }
     fetchData();
   }, [user]);
+
+  // Load task info when taskId is present
+  useEffect(() => {
+    async function fetchTaskInfo() {
+      if (!taskId) return;
+
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${taskId}`
+        );
+        if (!res.ok) {
+          if (res.status === 404) return; // no task found
+          throw new Error("Failed to fetch task info");
+        }
+        const data = await res.json();
+        setTaskInfo(data);
+      } catch (err: any) {
+        console.error(err);
+        toast.error(err.message);
+      }
+    }
+
+    fetchTaskInfo();
+  }, [taskId]);
 
   const handleCheckboxChange = (
     value: string,
@@ -255,13 +285,6 @@ export default function CreateSchedulePage() {
             startTime: startTime, // "09:00"
             endTime: endTime, // "11:00"
           }),
-          // body: JSON.stringify({
-          //   employeeIds: selectedEmployeeIDs,
-          //   start: proposedStart.toISOString(),
-          //   end: proposedEnd.toISOString(),
-          //   scheduleType: type,
-          //   clientId: type === "visit" ? client : null,
-          // }),
         }
       );
 
@@ -417,12 +440,33 @@ export default function CreateSchedulePage() {
     }
   };
 
+  const handleMarkComplete = async () => {
+    if (!taskId) return;
+
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/tasks/${taskId}/complete`,
+        { method: "PATCH" }
+      );
+      if (!res.ok) throw new Error("Failed to mark task complete");
+
+      toast.success("Task marked complete!");
+      setTaskInfo((prev: any) => ({ ...prev, isDone: true }));
+    } catch (err: any) {
+      toast.error(err.message);
+    }
+  };
+
   return (
     <ProtectedRoute
       allowedRoles={["AGENCY_ADMIN"]}
       permission="Create/Edit Schedule"
     >
       <div className="p-6 space-y-6">
+        <TaskHeader
+          taskId={taskId}
+          warning="⚠ Review recurring schedules in the Edit Schedule page before generating new schedules."
+        />
         <h1 className="text-2xl font-bold">Create Schedule</h1>
 
         {/* Schedule Type */}
