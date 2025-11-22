@@ -261,7 +261,7 @@ export async function getEmployeeReviewHistory(agencyId: string, limit = 10) {
     where: { agencyId },
     orderBy: { createdAt: "desc" },
     take: limit,
-    include: { createdBy: true },
+    include: { createdBy: true, unityTask: true },
   });
 }
 
@@ -461,7 +461,7 @@ export async function getClientReviewHistory(agencyId: string, limit = 10) {
     where: { agencyId },
     orderBy: { createdAt: "desc" },
     take: limit,
-    include: { createdBy: true },
+    include: { createdBy: true, unityTask: true },
   });
 }
 
