@@ -261,13 +261,14 @@ export async function getEmployeeReviewHistory(agencyId: string, limit = 10) {
     where: { agencyId },
     orderBy: { createdAt: "desc" },
     take: limit,
-    include: { createdBy: true, unityTask: true },
+    include: { createdBy: true },
   });
 }
 
 export async function getEmployeeReviewById(reviewId: string) {
   const review = await prisma.employeeReviewHistory.findUnique({
     where: { id: reviewId },
+    include: { createdBy: true, unityTask: true },
   });
   if (!review) return null;
 
@@ -461,13 +462,14 @@ export async function getClientReviewHistory(agencyId: string, limit = 10) {
     where: { agencyId },
     orderBy: { createdAt: "desc" },
     take: limit,
-    include: { createdBy: true, unityTask: true },
+    include: { createdBy: true },
   });
 }
 
 export async function getClientReviewById(reviewId: string) {
   const review = await prisma.clientReviewHistory.findUnique({
     where: { id: reviewId },
+    include: { createdBy: true, unityTask: true },
   });
   if (!review) return null;
 
