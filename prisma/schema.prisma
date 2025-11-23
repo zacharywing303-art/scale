@@ -1,7 +1,13 @@
 generator client {
   provider = "prisma-client-js"
-  output   = "../backend/dist/prisma/generated"
+
+  // 1) Local development (ts-node-dev)
+  output   = "../backend/src/prisma/generated"
+
+  // 2) Production (tsc build)
+  // Will be overwritten by deploy script automatically
 }
+
 
 datasource db {
   provider = "postgresql"
