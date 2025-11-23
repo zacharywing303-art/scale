@@ -68,15 +68,21 @@ export async function reviewBilling(opts: ReviewBillingOpts) {
       agencyID: opts.agencyId,
       serviceId: opts.serviceId,
       doNotBill: false,
-      // visit time range uses callIn if present; scheduledTimeIn also ok for scheduled billing review
-      OR: [
-        { callIn: { gte: from, lte: to } },
-        { scheduledTimeIn: { gte: from, lte: to } },
-      ],
-      // match denormalized client fields
-      OR: [{ clientID: client.clientID }, { clientName: client.name }],
       ...(program?.name ? { program: program.name } : {}),
       ...(payer?.payerName ? { payer: payer.payerName } : {}),
+      AND: [
+        // visit time range uses callIn if present; scheduledTimeIn also ok for scheduled billing review
+        {
+          OR: [
+            { callIn: { gte: from, lte: to } },
+            { scheduledTimeIn: { gte: from, lte: to } },
+          ],
+        },
+        // match denormalized client fields
+        {
+          OR: [{ clientID: client.clientID }, { clientName: client.name }],
+        },
+      ],
     },
     include: {
       service: true, // safe to include; Visit→Service relation exists
