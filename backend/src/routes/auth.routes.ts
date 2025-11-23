@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { PrismaClient } from "@prisma/client";
+// import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "../prisma/generated";
 import bcrypt from "bcrypt";
 import {
   loginController,
