@@ -19,6 +19,16 @@ function clamp7DaysOrThrow(from: Date, to: Date) {
   }
 }
 
+function parseServiceName(input?: string) {
+  if (!input) return { code: "Unknown", name: "Unknown Service" };
+
+  const [code, ...rest] = input.split(" - ");
+  return {
+    code: code?.trim() ?? "Unknown",
+    name: rest.join(" - ").trim() || "Unknown Service",
+  };
+}
+
 export async function reviewBilling(opts: ReviewBillingOpts) {
   const from = startOfDay(new Date(opts.dateFrom));
   const to = endOfDay(new Date(opts.dateTo));
@@ -45,7 +55,6 @@ export async function reviewBilling(opts: ReviewBillingOpts) {
       doNotBill: false,
     },
     include: {
-      client: true,
       service: true,
     },
     orderBy: { callIn: "asc" },
@@ -87,19 +96,29 @@ export async function reviewBilling(opts: ReviewBillingOpts) {
     const units = v.units ?? 0;
     const auth = findAuthForVisit(v);
     const ratePerUnit = auth?.ratePerUnit ?? null;
+    const parsed = parseServiceName(v.serviceName);
 
     const baseRow = {
       visitId: v.id,
       date: v.callIn ?? v.scheduledTimeIn,
       clientId: v.clientID,
-      clientName: v.clientName ?? v.client?.name ?? "Unknown Client",
-      medicaidId: v.clientMedicaidID ?? v.client?.medicaidID ?? null,
+      clientName: v.clientName ?? "Unknown Client",
+      medicaidId: v.clientMedicaidID ?? null,
       program: v.program ?? program?.name ?? null,
       payer: v.payer ?? auth?.payer?.payerName ?? payer?.payerName ?? null,
       serviceId: v.serviceId,
-      serviceCode: v.service?.code ?? v.serviceName ?? "Unknown Service",
-      serviceName: v.service?.name ?? v.serviceName ?? "Unknown Service",
-      units,
+      serviceCode: parsed.code ?? "Unknown Service",
+      serviceName: parsed.name ?? "Unknown Service",
+
+      // If relation was loaded, override parsed version
+      ...(v.service && {
+        serviceCode: v.service.code,
+        serviceName: v.service.name,
+      }),
+
+      units: v.units ?? 0,
+      rate: null, // you’ll compute based on authorization next
+      amount: 0, // units * rate
     };
 
     if (auth) {
