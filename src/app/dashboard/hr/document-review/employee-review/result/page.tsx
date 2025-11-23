@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, Download } from "lucide-react";
 import jsPDF from "jspdf";
 import { toast } from "sonner";
+import GoBackButton from "@/components/custom/GoBackButton";
 
 export default function EmployeeReviewResultPage() {
   const searchParams = useSearchParams();
@@ -168,6 +169,7 @@ export default function EmployeeReviewResultPage() {
         )}
 
         <h1 className="text-2xl font-bold">Employee Review Results</h1>
+        <GoBackButton />
 
         <div className="flex items-center justify-between">
           <Button

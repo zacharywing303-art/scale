@@ -22,8 +22,7 @@ import mobileAuthRoutes from "./routes/mobile.auth.route";
 import roleRoutes from "./routes/role.route";
 import taskRoutes from "./routes/task.route";
 import visitRoutes from "./routes/visit.route";
-import programRoutes from "./routes/program.route";
-import payerRoutes from "./routes/payer.route";
+import payerRoutes from "./routes/payers.route";
 import timelyAuditRoutes from "./routes/timely-audit.route";
 import mobileVisitRoutes from "./routes/mobile.visit.route";
 import addressRoutes from "./routes/address.route";
@@ -33,6 +32,10 @@ import payrollRoutes from "./routes/payroll.route";
 import employeeRequestRoutes from "./routes/employee-request.route";
 import scheduleConstraintsRoutes from "./routes/schedule-constraints.route";
 import reviewRoutes from "./routes/review.route";
+import billingRoutes from "./routes/billing.route";
+import programRoutes from "./routes/programs.route";
+import authorizationRoutes from "./routes/authorizations.route";
+import clientLinksRoutes from "./routes/client-links.route";
 import "./workers";
 
 // Load env variables
@@ -81,6 +84,9 @@ app.use("/api/payroll", payrollRoutes);
 app.use("/api/requests", employeeRequestRoutes);
 app.use("/api/schedule/constraints", scheduleConstraintsRoutes);
 app.use("/api/reviews", reviewRoutes);
+app.use("/api/billing", billingRoutes);
+app.use("/api/authorizations", authorizationRoutes);
+app.use("/api/client-links", clientLinksRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {

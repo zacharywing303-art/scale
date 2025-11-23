@@ -49,14 +49,14 @@ export const dashboardNavigation = [
         label: "Create Invoice",
         href: "/dashboard/billing/create-invoice",
       },
-      {
-        label: "Submit Invoice",
-        href: "/dashboard/billing/submit-invoice",
-      },
-      {
-        label: "Submitted",
-        href: "/dashboard/billing/submitted",
-      },
+      // {
+      //   label: "Submit Invoice",
+      //   href: "/dashboard/billing/submit-invoice",
+      // },
+      // {
+      //   label: "Submitted",
+      //   href: "/dashboard/billing/submitted",
+      // },
       {
         label: "Payers",
         href: "/dashboard/billing/payers",

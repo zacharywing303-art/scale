@@ -134,6 +134,7 @@ export default function EmployeeReviewPage() {
             periodEnd: period.type === "ALL_TIME" ? undefined : period.to,
             frequency: period.type,
             createdById: user.id,
+            unityTaskId: taskId ?? undefined,
           }),
         }
       );

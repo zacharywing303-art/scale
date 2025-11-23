@@ -639,6 +639,8 @@ model Authorization {
   totalAuthorizedHours Float?
   totalAuthorizedUnits Int?
   totalBillableAmount  Float?
+  ratePerUnit          Float?
+  ratePerHour          Float?
   payer                Payer?       @relation(fields: [payerID], references: [id])
   service              Service?     @relation(fields: [serviceID], references: [id])
   limitations          Limitation[]

@@ -30,7 +30,7 @@ const automatedTasks = [
   "Review Visits",
   "Conduct Client Review",
   "Conduct Employee Review",
-  "Submit Billing",
+  "Review Billing",
   "Review Mileage",
   "Review Employee Requests",
 ];
