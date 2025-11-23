@@ -70,3 +70,8 @@ Icon?
 
 # Deploy script
 deploy.sh
+
+# Prisma generated client (backend)
+backend/src/prisma/generated
+backend/dist/prisma
+
