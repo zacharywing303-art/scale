@@ -39,7 +39,8 @@ import clientLinksRoutes from "./routes/client-links.route";
 import "./workers";
 
 // Load env variables
-dotenv.config();
+// dotenv.config();
+dotenv.config({ path: __dirname + "/../.env" });
 
 const app = express();
 
