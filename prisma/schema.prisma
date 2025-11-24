@@ -779,19 +779,29 @@ model VisitMileage {
 }
 
 model Task {
-  id                    String                  @id @default(uuid())
-  name                  String
-  description           String?
-  agencyId              String
-  createdAt             DateTime                @default(now())
-  assignedDate          DateTime?               @default(now())
-  dueDate               DateTime
-  isDone                Boolean                 @default(false)
-  isActive              Boolean                 @default(true)
-  recurring             Boolean                 @default(false)
-  frequency             Frequency?
-  unityTask             Boolean                 @default(false)
-  completedAt           DateTime?
+  id           String    @id @default(uuid())
+  name         String
+  description  String?
+  agencyId     String
+  createdAt    DateTime  @default(now())
+  assignedDate DateTime? @default(now())
+  dueDate      DateTime
+  isDone       Boolean   @default(false)
+  isActive     Boolean   @default(true)
+
+  recurring       Boolean @default(false)
+  repeatCount     Int? // how many times total
+  repeatRemaining Int? // countdown
+  repeatForever   Boolean @default(false)
+
+  frequency   Frequency?
+  unityTask   Boolean    @default(false)
+  completedAt DateTime?
+
+  taskType String? // "BILLING", "PAYROLL", "EXCEPTIONS", etc.
+  icon     String? // lucide icon name e.g. "ClipboardCheck", "Calendar", etc.
+  color    String? // tailwind color class e.g. "text-blue-600"
+
   agency                Agency                  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   assignedRoles         TaskRole[]
   TimelyAudit           TimelyAudit[]
