@@ -1,6 +1,14 @@
 import prisma from "../lib/db";
 import { differenceInMinutes } from "date-fns";
-import { VisitStatus } from "../prisma/generated";
+// import { VisitStatus } from "../prisma/generated";
+
+type VisitStatus =
+  | "Incomplete"
+  | "InProcess"
+  | "Verified"
+  | "Scheduled"
+  | "Processed"
+  | "Omitted";
 
 /**
  * Compute exception flags. Visit is denormalized (clientName/serviceName/etc.)

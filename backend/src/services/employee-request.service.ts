@@ -1,5 +1,4 @@
 import prisma from "../lib/db";
-import { Prisma } from "@prisma/client";
 
 export type TimeOffType = "PTO" | "Sick" | "Vacation" | "Personal" | "Unpaid";
 

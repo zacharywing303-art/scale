@@ -2,7 +2,24 @@ import * as visitService from "../services/visit.service";
 import { Request, Response } from "express";
 import prisma from "../lib/db";
 import { startOfDay, startOfWeek } from "date-fns";
-import type { Address } from "../prisma/generated";
+// import type { Address } from "../prisma/generated";
+
+type Address = {
+  id: string;
+  addressLabel: string;
+  addressLine1: string;
+  addressLine2: string | null;
+  addressLine3: string | null;
+  addressType: string;
+  zipcode: string;
+  state: string;
+  county: string | null;
+  employeeID: string | null;
+  clientID: string | null;
+  city: string;
+  latitude: number | null;
+  longitude: number | null;
+};
 
 export const getVisitsByAgency = async (req: Request, res: Response) => {
   try {
