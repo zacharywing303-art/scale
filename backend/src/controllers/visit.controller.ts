@@ -2,6 +2,7 @@ import * as visitService from "../services/visit.service";
 import { Request, Response } from "express";
 import prisma from "../lib/db";
 import { startOfDay, startOfWeek } from "date-fns";
+import type { Address } from "../prisma/generated";
 
 export const getVisitsByAgency = async (req: Request, res: Response) => {
   try {
@@ -176,7 +177,10 @@ export const getGpsExceptions = async (req: Request, res: Response) => {
         })
       : [];
 
-    const addressByClientId = new Map(addresses.map((a) => [a.clientID, a]));
+    // const addressByClientId = new Map(addresses.map((a) => [a.clientID, a]));
+    const addressByClientId: Map<string, Address> = new Map(
+      addresses.map((a: Address) => [a.clientID!, a])
+    );
 
     const result = items.map(
       (ex: {
@@ -191,8 +195,8 @@ export const getGpsExceptions = async (req: Request, res: Response) => {
         reviewedBy: any;
       }) => {
         const addr = ex.visit.clientID
-          ? addressByClientId.get(ex.visit.clientID)
-          : null;
+          ? (addressByClientId.get(ex.visit.clientID) as Address | undefined)
+          : undefined;
 
         return {
           id: ex.id,
