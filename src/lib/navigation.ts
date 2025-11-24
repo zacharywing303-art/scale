@@ -46,8 +46,8 @@ export const dashboardNavigation = [
     icon: DollarSign,
     children: [
       {
-        label: "Create Invoice",
-        href: "/dashboard/billing/create-invoice",
+        label: "Review",
+        href: "/dashboard/billing/review",
       },
       // {
       //   label: "Submit Invoice",

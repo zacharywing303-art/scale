@@ -36,6 +36,7 @@ import billingRoutes from "./routes/billing.route";
 import programRoutes from "./routes/programs.route";
 import authorizationRoutes from "./routes/authorizations.route";
 import clientLinksRoutes from "./routes/client-links.route";
+import mileageRoutes from "./routes/mileage-review.route";
 import "./workers";
 
 // Load env variables
@@ -88,6 +89,7 @@ app.use("/api/reviews", reviewRoutes);
 app.use("/api/billing", billingRoutes);
 app.use("/api/authorizations", authorizationRoutes);
 app.use("/api/client-links", clientLinksRoutes);
+app.use("/api/mileage", mileageRoutes);
 
 const server = http.createServer(app);
 const io = new Server(server, {

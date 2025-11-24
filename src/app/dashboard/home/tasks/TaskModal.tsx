@@ -564,6 +564,80 @@ export default function TaskModal({
       return;
     }
 
+    // ⭐ REVIEW BILLING
+    if (task.name === "Review Billing") {
+      const due = new Date(task.dueDate ?? new Date());
+      let dateFrom: string;
+      let dateTo: string;
+
+      switch (task.frequency) {
+        case "DAILY": {
+          const assigned = new Date(task.assignedDate ?? due);
+          const end = new Date(due);
+          end.setDate(end.getDate() - 1);
+          dateFrom = assigned.toISOString().split("T")[0];
+          dateTo = end.toISOString().split("T")[0];
+          break;
+        }
+
+        case "WEEKLY": {
+          const prev = subWeeks(due, 1);
+          dateFrom = startOfWeek(prev, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfWeek(prev, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          break;
+        }
+
+        case "MONTHLY": {
+          const prev = subMonths(due, 1);
+          dateFrom = startOfMonth(prev).toISOString().split("T")[0];
+          dateTo = endOfMonth(prev).toISOString().split("T")[0];
+          break;
+        }
+
+        case "QUARTERLY": {
+          const prev = subQuarters(due, 1);
+          dateFrom = startOfQuarter(prev).toISOString().split("T")[0];
+          dateTo = endOfQuarter(prev).toISOString().split("T")[0];
+          break;
+        }
+
+        case "YEARLY": {
+          const prev = subYears(due, 1);
+          dateFrom = startOfYear(prev).toISOString().split("T")[0];
+          dateTo = endOfYear(prev).toISOString().split("T")[0];
+          break;
+        }
+
+        case "SPECIFIC_DATE": {
+          const assigned = new Date(task.assignedDate ?? due);
+          const end = new Date(due);
+          end.setDate(end.getDate() - 1);
+          dateFrom = assigned.toISOString().split("T")[0];
+          dateTo = end.toISOString().split("T")[0];
+          break;
+        }
+
+        default: {
+          const prev = subWeeks(due, 1);
+          dateFrom = startOfWeek(prev, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+          dateTo = endOfWeek(prev, { weekStartsOn: 0 })
+            .toISOString()
+            .split("T")[0];
+        }
+      }
+
+      router.push(
+        `/dashboard/billing/review?from=${dateFrom}&to=${dateTo}&taskId=${task.id}`
+      );
+      return;
+    }
+
     if (task.name === "Conduct/Review Timely Audits") {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/timely-audits/for-task/${task.id}`

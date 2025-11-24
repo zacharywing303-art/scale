@@ -23,6 +23,8 @@ import {
   TimeOffType,
 } from "@/app/types/requests";
 import { Checkbox } from "@/components/ui/checkbox";
+import TaskHeader from "@/components/tasks/TaskHeader";
+import { useSearchParams } from "next/navigation";
 
 const weekdayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -47,6 +49,11 @@ export default function RequestsPage() {
   const [applyMode, setApplyMode] = useState<ApplyMode>("all");
   const [employeeList, setEmployeeList] = useState<EmployeeOption[]>([]);
   const [selectedEmployees, setSelectedEmployees] = useState<string[]>([]);
+
+  const params = useSearchParams();
+  const taskId = params.get("taskId");
+  const from = params.get("from");
+  const to = params.get("to");
 
   useEffect(() => {
     const fetchRequests = async () => {
@@ -310,6 +317,18 @@ export default function RequestsPage() {
 
   return (
     <div className="flex flex-col gap-4">
+      {/* 🔥 Task Header */}
+      {taskId && (
+        <>
+          <TaskHeader
+            taskId={taskId}
+            warning="Review all pending employee requests. Mark complete when finished."
+          />
+          <div className="text-xs text-muted-foreground mb-2">
+            Review all pending requests below, then click “Mark Complete” above.
+          </div>
+        </>
+      )}
       {/* Header row */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <h1 className="text-2xl font-semibold">Employee Requests</h1>

@@ -15,6 +15,8 @@ import { Card } from "@/components/ui/card";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
+import TaskHeader from "@/components/tasks/TaskHeader";
 
 type BillingRow = {
   visitId: number;
@@ -33,9 +35,13 @@ type BillingRow = {
   reason?: string | null;
 };
 
-export default function CreateInvoicePage() {
+export default function BillingReviewPage() {
   const user = getLoggedInUser();
   const agencyId = user?.agency?.id;
+  const params = useSearchParams();
+  const taskId = params.get("taskId");
+  const from = params.get("from");
+  const to = params.get("to");
 
   const [filters, setFilters] = useState({
     dateFrom: "",
@@ -100,6 +106,26 @@ export default function CreateInvoicePage() {
       setPayers(uniquePayers);
     })();
   }, [agencyId]);
+
+  useEffect(() => {
+    if (from || to) {
+      // wait a tick so filters update fully
+      setTimeout(() => {
+        handleSearch();
+      }, 150);
+    }
+    if (from) setFilters((f) => ({ ...f, dateFrom: from }));
+    if (to) setFilters((f) => ({ ...f, dateTo: to }));
+  }, [from, to]);
+
+  useEffect(() => {
+    if (clients.length === 1 && !filters.clientId) {
+      setFilters((f) => ({ ...f, clientId: clients[0].id }));
+    }
+    if (services.length === 1 && !filters.serviceId) {
+      setFilters((f) => ({ ...f, serviceId: services[0].id }));
+    }
+  }, [clients, services]);
 
   const handleSearch = async () => {
     if (!agencyId) return;
@@ -199,6 +225,19 @@ export default function CreateInvoicePage() {
 
   return (
     <div className="p-6 space-y-6">
+      {/* 🔥 Task Header */}
+      {taskId && (
+        <TaskHeader
+          taskId={taskId}
+          warning="Billing review must be completed before invoice generation."
+        />
+      )}
+      {taskId && (
+        <div className="text-xs text-muted-foreground mb-2">
+          Complete the billing review below, then click “Mark Complete” above
+        </div>
+      )}
+
       {/* Title */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Review Billing</h1>
@@ -356,6 +395,13 @@ export default function CreateInvoicePage() {
       )}
 
       {/* Table */}
+      {/* Empty State */}
+      {!loading && allRows.length === 0 && searchedAt && (
+        <Card className="p-6 text-center text-muted-foreground">
+          No visits found to bill for this period.
+        </Card>
+      )}
+
       {allRows.length > 0 && (
         <div className="overflow-x-auto border rounded-md">
           <table className="min-w-full text-sm">
