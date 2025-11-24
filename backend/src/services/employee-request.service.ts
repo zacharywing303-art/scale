@@ -56,8 +56,7 @@ export async function createAvailabilityChangeRequest(
     data: {
       type: "AvailabilityChange",
       employeeId: data.employeeId,
-      availabilityChanges:
-        data.availabilityChanges as unknown as Prisma.JsonArray,
+      availabilityChanges: data.availabilityChanges as unknown as any[],
       reason: data.reason ?? null,
     },
   });

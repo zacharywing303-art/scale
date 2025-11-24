@@ -1,6 +1,6 @@
 import prisma from "../lib/db";
 import { differenceInMinutes } from "date-fns";
-import { VisitStatus } from "@prisma/client";
+import { VisitStatus } from "../prisma/generated";
 
 /**
  * Compute exception flags. Visit is denormalized (clientName/serviceName/etc.)
