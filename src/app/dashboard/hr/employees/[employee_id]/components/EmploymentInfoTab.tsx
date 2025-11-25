@@ -60,11 +60,42 @@ const emptyForm: EmploymentInfoForm = {
   mileagePayRate: "",
 };
 
+// const toDateInput = (value?: string | Date | null) => {
+//   if (!value) return "";
+//   const d = typeof value === "string" ? new Date(value) : value;
+//   if (Number.isNaN(d.getTime())) return "";
+//   return d.toISOString().slice(0, 10); // "YYYY-MM-DD"
+// };
+// Converts backend date --> input[type="date"] safe format
 const toDateInput = (value?: string | Date | null) => {
-  if (!value) return "";
-  const d = typeof value === "string" ? new Date(value) : value;
+  if (!value) return ""; // DO NOT return today's date
+
+  const d = new Date(value);
   if (Number.isNaN(d.getTime())) return "";
-  return d.toISOString().slice(0, 10); // "YYYY-MM-DD"
+
+  // ALWAYS output YYYY-MM-DD (ignoring time zone)
+  return d.toISOString().split("T")[0];
+};
+
+const getDateStatus = (dateString: string) => {
+  if (!dateString) return "none";
+
+  const today = new Date();
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return "none";
+
+  if (date < today) return "expired";
+
+  const days = Math.floor((date.getTime() - today.getTime()) / 86400000);
+  if (days < 31) return "soon";
+
+  return "valid";
+};
+
+const dateInputClass = (status: string) => {
+  if (status === "expired") return "border-red-500 bg-red-50";
+  if (status === "soon") return "border-yellow-500 bg-yellow-50";
+  return "";
 };
 
 export default function EmploymentInfoTab({ employee }: { employee: any }) {

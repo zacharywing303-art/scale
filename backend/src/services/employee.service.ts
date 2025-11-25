@@ -196,8 +196,10 @@ export const deleteEmployee = async (id: string) => {
 
 export const upsertEmploymentInfo = async (employeeId: string, data: any) => {
   // Convert date strings from the frontend into Date objects
+  // const toDateOrNull = (value?: string | null) =>
+  //   value ? new Date(value) : null;
   const toDateOrNull = (value?: string | null) =>
-    value ? new Date(value) : null;
+    value && value.trim() !== "" ? new Date(value) : null;
 
   // Convert numeric strings to numbers or null
   const toNumberOrNull = (value?: string | null) => {
