@@ -19,7 +19,9 @@ export default function HRAlertsPage() {
       const user = await getLoggedInUser();
       if (!user?.agency?.id) return;
 
-      const res = await fetch(`/api/hr-alerts/${user.agency.id}`);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/hr/alerts/${user.agency.id}`
+      );
       setAlerts(await res.json());
     }
     load();
@@ -27,11 +29,14 @@ export default function HRAlertsPage() {
 
   const dismissAlert = async (alert: HRAlert) => {
     const user = await getLoggedInUser();
-    await fetch(`/api/hr-alerts/${user?.agency?.id}/dismiss`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ alertType: alert.alertType }),
-    });
+    await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/hr/alerts/${user?.agency?.id}/dismiss`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ alertType: alert.alertType }),
+      }
+    );
     setAlerts((prev) => prev.filter((a) => a.alertType !== alert.alertType));
   };
 

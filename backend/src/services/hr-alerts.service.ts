@@ -248,12 +248,8 @@ export async function dismissAlert(
   userId: string
 ) {
   return prisma.hRAlert.upsert({
-    where: { alertType_agencyId: { alertType, agencyId } },
-    update: {
-      dismissed: true,
-      dismissedAt: new Date(),
-      dismissedBy: userId,
-    },
+    where: { agencyId_alertType: { agencyId, alertType } },
+    update: { dismissed: true, dismissedAt: new Date(), dismissedBy: userId },
     create: {
       agencyId,
       alertType,

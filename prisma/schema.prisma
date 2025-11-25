@@ -890,6 +890,7 @@ model HRAlert {
 
   agency Agency @relation(fields: [agencyId], references: [id])
 
+  @@unique([agencyId, alertType])
   @@index([agencyId, alertType])
 }
 

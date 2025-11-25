@@ -14,6 +14,13 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
 import { toast } from "sonner"; // or use shadcn toast if preferred
+import {
+  Select,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { SelectContent } from "@radix-ui/react-select";
 
 interface HRAlert {
   id: string;
@@ -61,7 +68,9 @@ export default function HRAlertModal({
 
     async function load() {
       const user = await getLoggedInUser();
-      const res = await fetch(`/api/hr-alerts/${user?.agency?.id}`);
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/hr/alerts/${user?.agency?.id}`
+      );
       const data = await res.json();
 
       setAlerts(data);
@@ -87,11 +96,14 @@ export default function HRAlertModal({
   const dismissAlert = async (alert: HRAlert) => {
     const user = await getLoggedInUser();
 
-    await fetch(`/api/hr-alerts/${user?.agency?.id}/dismiss`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ alertType: alert.alertType }),
-    });
+    await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/hr/alerts/${user?.agency?.id}/dismiss`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ alertType: alert.alertType }),
+      }
+    );
 
     toast.success("Alert dismissed");
 
@@ -107,11 +119,14 @@ export default function HRAlertModal({
 
     await Promise.all(
       alerts.map((a) =>
-        fetch(`/api/hr-alerts/${user?.agency?.id}/dismiss`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ alertType: a.alertType }),
-        })
+        fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/hr/alerts/${user?.agency?.id}/dismiss`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ alertType: a.alertType }),
+          }
+        )
       )
     );
 
@@ -124,14 +139,17 @@ export default function HRAlertModal({
   const doNotShowAgain = async (alert: HRAlert) => {
     const user = await getLoggedInUser();
 
-    await fetch(`/api/hr-alerts/${user?.agency?.id}/dismiss`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        alertType: alert.alertType,
-        doNotShow: true,
-      }),
-    });
+    await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/hr/alerts/${user?.agency?.id}/dismiss`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          alertType: alert.alertType,
+          doNotShow: true,
+        }),
+      }
+    );
 
     toast.success("Alert hidden permanently");
 
@@ -159,16 +177,20 @@ export default function HRAlertModal({
 
           <div className="flex gap-2">
             {/* FILTER DROPDOWN */}
-            <select
+            <Select
               value={filter}
-              onChange={(e) => applyFilter(e.target.value as any)}
-              className="border rounded px-2 py-1 text-sm"
+              onValueChange={(value) => applyFilter(value as typeof filter)}
             >
-              <option value="all">All Alerts</option>
-              <option value="error">Errors</option>
-              <option value="warning">Warnings</option>
-              <option value="info">Info</option>
-            </select>
+              <SelectTrigger className="w-[170px]">
+                <SelectValue placeholder="Filter" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Alerts</SelectItem>
+                <SelectItem value="error">Errors</SelectItem>
+                <SelectItem value="warning">Warnings</SelectItem>
+                <SelectItem value="info">Info</SelectItem>
+              </SelectContent>
+            </Select>
 
             {/* DISMISS ALL */}
             {alerts.length > 0 && (
