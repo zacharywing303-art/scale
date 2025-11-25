@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import HRAlertModal from "@/app/dashboard/home/hr-alerts/HRAlertModal";
+import { getLoggedInUser } from "@/lib/auth/authHelpers";
 
 interface Alert {
   id: string;
@@ -20,7 +21,17 @@ const sampleAlerts: Alert[] = [
 ];
 
 export default function HRAlerts() {
-  const [showAlerts, setAlerts] = useState(false);
+  const [alerts, setAlerts] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      const user = await getLoggedInUser();
+      const res = await fetch(`/api/hr-alerts/${user?.agency?.id}`);
+      const data = await res.json();
+      setAlerts(data);
+    }
+    load();
+  }, []);
 
   const handleViewAll = () => {
     setAlerts(true); // or your actual route

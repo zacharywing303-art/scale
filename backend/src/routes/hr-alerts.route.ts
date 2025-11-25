@@ -1,8 +1,9 @@
 import { Router } from "express";
-import * as hrAlertController from "../controllers/hr-alerts.controller";
+import * as ctrl from "../controllers/hr-alerts.controller";
 
 const router = Router();
 
-router.get("/:agencyId", hrAlertController.getHRAlerts);
+router.get("/:agencyId", ctrl.getAlerts);
+router.post("/:agencyId/dismiss", ctrl.dismiss);
 
 export default router;

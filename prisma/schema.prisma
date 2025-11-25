@@ -48,6 +48,7 @@ model Agency {
   PayrollSettings       PayrollSettings?
   EmployeeReviewHistory EmployeeReviewHistory[]
   ClientReviewHistory   ClientReviewHistory[]
+  HRAlert               HRAlert[]
 }
 
 model User {
@@ -873,6 +874,23 @@ model PayrollHistory {
   agency Agency @relation(fields: [agencyId], references: [id])
 
   @@index([agencyId, periodFrom, periodTo])
+}
+
+model HRAlert {
+  id          String    @id @default(cuid())
+  agencyId    String
+  alertType   String // unique alert key: "evv-2025", "license-expiring-EMPID"
+  message     String
+  severity    String
+  link        String?
+  createdAt   DateTime  @default(now())
+  dismissed   Boolean   @default(false)
+  dismissedAt DateTime?
+  dismissedBy String?
+
+  agency Agency @relation(fields: [agencyId], references: [id])
+
+  @@index([agencyId, alertType])
 }
 
 enum Frequency {
