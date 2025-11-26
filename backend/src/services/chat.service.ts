@@ -114,3 +114,32 @@ export async function markThreadRead(threadId: string, userId: string) {
     create: { threadId, participantId: userId, lastReadAt: new Date() },
   });
 }
+
+/**
+ * Unread count (cheap SQL)
+ */
+export async function getUnreadCountForUser(userId: string) {
+  const receipts = await prisma.chatReadReceipt.findMany({
+    where: { participantId: userId },
+  });
+
+  const threads = await prisma.chatThread.findMany({
+    where: {
+      participants: { some: { participantId: userId } },
+    },
+    include: { messages: true },
+  });
+
+  let count = 0;
+
+  for (const thread of threads) {
+    const r = receipts.find((x) => x.threadId === thread.id);
+    const lastRead = r?.lastReadAt ? new Date(r.lastReadAt) : null;
+
+    count += thread.messages.filter((m) =>
+      lastRead ? new Date(m.createdAt) > lastRead : true
+    ).length;
+  }
+
+  return count;
+}
