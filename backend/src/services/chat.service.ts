@@ -1,7 +1,9 @@
 import prisma from "../lib/db";
 
 /**
- * Normalize participants (User or MobileEmployee)
+ * Unified participant identity:
+ *  - USER → participantId = user.id
+ *  - MOBILE_EMPLOYEE → participantId = employee.id (NOT mobileEmployee.id)
  */
 export async function getParticipants(agencyCode: string, excludeId: string) {
   const users = await prisma.user.findMany({
@@ -9,31 +11,48 @@ export async function getParticipants(agencyCode: string, excludeId: string) {
   });
 
   const employees = await prisma.mobileEmployee.findMany({
-    where: { agencyCode, id: { not: excludeId } },
+    where: { agencyCode },
     include: { employee: true },
   });
 
-  return [
-    ...users.map((u) => ({
+  // create a set to avoid double identities (user + mobile employee)
+  const identityMap = new Map<string, any>();
+
+  // add users first (they override mobile identity)
+  users.forEach((u) => {
+    identityMap.set(u.id, {
       id: u.id,
       participantId: u.id,
       participantType: "USER",
       displayName: u.name,
       userId: u.id,
-    })),
+      mobileEmployeeId: null,
+    });
+  });
 
-    ...employees.map((e) => ({
-      id: e.id,
-      participantId: e.id,
-      participantType: "MOBILE_EMPLOYEE",
-      displayName: e.employee.name,
-      mobileEmployeeId: e.id,
-    })),
-  ];
+  // now append employees who do NOT have a user counterpart
+  employees.forEach((e) => {
+    const pid = e.employeeID; // unified identity
+
+    if (pid === excludeId) return;
+
+    if (!identityMap.has(pid)) {
+      identityMap.set(pid, {
+        id: pid,
+        participantId: pid,
+        participantType: "MOBILE_EMPLOYEE",
+        displayName: e.employee.name,
+        userId: null,
+        mobileEmployeeId: e.id,
+      });
+    }
+  });
+
+  return Array.from(identityMap.values());
 }
 
 /**
- * Return all threads user is part of + unread count
+ * List threads + computed unread count.
  */
 export async function getThreads(agencyCode: string, me: string) {
   const threads = await prisma.chatThread.findMany({
@@ -62,7 +81,7 @@ export async function getThreads(agencyCode: string, me: string) {
 }
 
 /**
- * Get one thread
+ * Get full thread + auto mark read.
  */
 export async function getThreadDetail(id: string, me: string) {
   const thread = await prisma.chatThread.findUnique({
@@ -76,64 +95,22 @@ export async function getThreadDetail(id: string, me: string) {
 
   if (!thread) return null;
 
-  // Mark as read automatically
   await prisma.chatReadReceipt.upsert({
-    where: {
-      threadId_participantId: { threadId: id, participantId: me },
-    },
+    where: { threadId_participantId: { threadId: id, participantId: me } },
     update: { lastReadAt: new Date() },
-    create: {
-      threadId: id,
-      participantId: me,
-      lastReadAt: new Date(),
-    },
+    create: { threadId: id, participantId: me, lastReadAt: new Date() },
   });
 
   return thread;
 }
 
 /**
- * Mark thread as read manually (PATCH)
+ * Manual marking read.
  */
 export async function markThreadRead(threadId: string, userId: string) {
   return prisma.chatReadReceipt.upsert({
-    where: {
-      threadId_participantId: { threadId, participantId: userId },
-    },
+    where: { threadId_participantId: { threadId, participantId: userId } },
     update: { lastReadAt: new Date() },
-    create: {
-      threadId,
-      participantId: userId,
-      lastReadAt: new Date(),
-    },
+    create: { threadId, participantId: userId, lastReadAt: new Date() },
   });
-}
-
-/**
- * Unread count (cheap SQL)
- */
-export async function getUnreadCountForUser(userId: string) {
-  const receipts = await prisma.chatReadReceipt.findMany({
-    where: { participantId: userId },
-  });
-
-  const threads = await prisma.chatThread.findMany({
-    where: {
-      participants: { some: { participantId: userId } },
-    },
-    include: { messages: true },
-  });
-
-  let count = 0;
-
-  for (const thread of threads) {
-    const r = receipts.find((x) => x.threadId === thread.id);
-    const lastRead = r?.lastReadAt ? new Date(r.lastReadAt) : null;
-
-    count += thread.messages.filter((m) =>
-      lastRead ? new Date(m.createdAt) > lastRead : true
-    ).length;
-  }
-
-  return count;
 }

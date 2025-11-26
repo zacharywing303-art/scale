@@ -112,21 +112,6 @@ export default function InboxPage() {
     [user]
   );
 
-  // Normalize thread data safely
-  // const normalizeThread = (t: any, me: typeof ME): ThreadListItem => {
-  //   const others = Array.isArray(t.participants)
-  //     ? t.participants.filter((p: any) => p.participantId !== me.id)
-  //     : [];
-  //   return {
-  //     id: t.id,
-  //     title: others.map((p: any) => p.displayName).join(", ") || "Unknown",
-  //     lastMessage: t.messages?.[t.messages.length - 1]?.content ?? "",
-  //     lastTime:
-  //       t.messages?.[t.messages.length - 1]?.createdAt ??
-  //       t.startedAt ??
-  //       new Date().toISOString(),
-  //   };
-  // };
   const normalizeThread = (t: any, me: typeof ME): ThreadListItem => {
     const others = (t.participants || []).filter(
       (p: any) => p.participantId !== me.id
@@ -147,11 +132,9 @@ export default function InboxPage() {
       const res = await fetch(
         `${
           process.env.NEXT_PUBLIC_API_URL
-        }/api/chat/threads?agencyCode=${encodeURIComponent(
-          ME.agencyCode
-        )}&me=${encodeURIComponent(ME.id)}&meType=${encodeURIComponent(
-          ME.participantType
-        )}`
+        }/api/chat/threads?agencyCode=${encodeURIComponent(ME.agencyCode)}&me=${
+          ME.id
+        }`
       );
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
@@ -165,7 +148,7 @@ export default function InboxPage() {
   const loadThreadDetail = async (id: string) => {
     try {
       const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/chat/threads/${id}`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/chat/threads/${id}?me=${ME.id}`
       );
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
@@ -178,6 +161,11 @@ export default function InboxPage() {
 
   const markThreadAsRead = async (threadId: string) => {
     try {
+      socketRef.current?.emit("readThread", {
+        threadId,
+        userId: ME.id,
+      });
+
       await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/chat/threads/${threadId}/read`,
         {
@@ -186,13 +174,11 @@ export default function InboxPage() {
           body: JSON.stringify({ participantId: ME.id }),
         }
       );
-      // Update UI immediately
+
       setThreads((prev) =>
         prev.map((t) => (t.id === threadId ? { ...t, unreadCount: 0 } : t))
       );
-    } catch (err) {
-      console.error("Failed to mark as read:", err);
-    }
+    } catch {}
   };
 
   // Load participants
@@ -200,13 +186,7 @@ export default function InboxPage() {
     setLoadingParticipants(true);
     try {
       const res = await fetch(
-        `${
-          process.env.NEXT_PUBLIC_API_URL
-        }/api/chat/participants?agencyCode=${encodeURIComponent(
-          me.agencyCode
-        )}&excludeId=${encodeURIComponent(
-          me.id
-        )}&participantType=MOBILE_EMPLOYEE`
+        `${process.env.NEXT_PUBLIC_API_URL}/api/chat/participants?agencyCode=${me.agencyCode}&excludeId=${me.id}`
       );
       if (!res.ok) throw new Error(await res.text());
       setParticipants(await res.json());
@@ -323,6 +303,11 @@ export default function InboxPage() {
   useEffect(() => {
     if (selectedThread?.id && socketRef.current) {
       socketRef.current.emit("joinThread", { threadId: selectedThread.id });
+
+      socketRef.current.emit("readThread", {
+        threadId: selectedThread.id,
+        userId: ME.id,
+      });
     }
   }, [selectedThread?.id]);
 
@@ -658,55 +643,71 @@ export default function InboxPage() {
                 setStartChatLoading(true);
 
                 try {
-                  await new Promise<void>((resolve, reject) => {
-                    socketRef.current!.emit(
-                      "startChat",
-                      { me: ME, other: pendingChat },
-                      (resp: any) => {
-                        if (resp?.error) {
-                          reject(new Error(resp.error));
-                        } else if (resp?.thread) {
-                          setSelectedThread(resp.thread);
-                          setThreads((prev) => {
-                            const exists = prev.some(
-                              (t) => t.id === resp.thread.id
-                            );
-                            return exists
-                              ? prev.map((t) =>
-                                  t.id === resp.thread.id
-                                    ? normalizeThread(resp.thread, ME)
-                                    : t
-                                )
-                              : [normalizeThread(resp.thread, ME), ...prev];
-                          });
-                          resolve();
-                        } else {
-                          const handleStarted = (thread: ThreadDetail) => {
-                            if (thread.id === resp?.threadId || thread.id) {
-                              setSelectedThread(thread);
-                              setThreads((prev) => {
-                                const exists = prev.some(
-                                  (t) => t.id === thread.id
-                                );
-                                return exists
-                                  ? prev.map((t) =>
-                                      t.id === thread.id
-                                        ? normalizeThread(thread, ME)
-                                        : t
-                                    )
-                                  : [normalizeThread(thread, ME), ...prev];
-                              });
-                              socketRef.current?.off(
-                                "chatStarted",
-                                handleStarted
-                              );
-                              resolve();
+                  const result = await new Promise<ThreadDetail>(
+                    (resolve, reject) => {
+                      let resolved = false;
+
+                      const cleanup = () => {
+                        socketRef.current?.off("chatStarted", onChatStarted);
+                      };
+
+                      const onChatStarted = (thread: ThreadDetail) => {
+                        if (resolved) return;
+                        resolved = true;
+                        cleanup();
+                        resolve(thread);
+                      };
+
+                      socketRef.current!.on("chatStarted", onChatStarted);
+
+                      socketRef.current!.emit(
+                        "startChat",
+                        { me: ME, other: pendingChat },
+                        (resp: any) => {
+                          // ACK ERROR
+                          if (resp?.error) {
+                            cleanup();
+                            return reject(new Error(resp.error));
+                          }
+
+                          // ACK includes the full thread immediately
+                          if (resp?.thread) {
+                            if (!resolved) {
+                              resolved = true;
+                              cleanup();
+                              return resolve(resp.thread);
                             }
-                          };
-                          socketRef.current?.on("chatStarted", handleStarted);
+                          }
+
+                          // ACK includes only threadId (new thread)
+                          if (resp?.threadId) {
+                            // wait for chatStarted event
+                            return;
+                          }
+
+                          // No thread returned? Fallback to waiting
                         }
-                      }
-                    );
+                      );
+
+                      // Safety timeout (10s)
+                      setTimeout(() => {
+                        if (!resolved) {
+                          cleanup();
+                          reject(new Error("Chat did not initialize in time"));
+                        }
+                      }, 10000);
+                    }
+                  );
+
+                  // SUCCESS
+                  setSelectedThread(result);
+                  setThreads((prev) => {
+                    const exists = prev.some((t) => t.id === result.id);
+                    return exists
+                      ? prev.map((t) =>
+                          t.id === result.id ? normalizeThread(result, ME) : t
+                        )
+                      : [normalizeThread(result, ME), ...prev];
                   });
 
                   setPendingChat(null);

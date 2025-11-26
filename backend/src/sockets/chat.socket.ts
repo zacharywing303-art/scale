@@ -6,7 +6,7 @@ export function registerChatNamespace(io: Server) {
 
   chat.on("connection", (socket: Socket) => {
     const auth = socket.handshake.auth;
-    const meId = auth.userId;
+    const meId = auth.userId; // unified ID (EmployeeID or UserID)
     const meType = auth.participantType;
     const agencyCode = auth.agencyCode;
 
@@ -15,38 +15,39 @@ export function registerChatNamespace(io: Server) {
     });
 
     /**
-     * START CHAT
-     * Supports 1-on-1 or group (array of participants)
+     * START CHAT:
+     * - Supports 1-on-1 or group chat
+     * - participantId is NOW unified across mobile + web identities
      */
     socket.on("startChat", async ({ me, other, group }, ack) => {
       try {
         let participants = [];
 
-        if (group?.length > 0) {
+        if (Array.isArray(group) && group.length > 0) {
           participants = group;
         } else {
           participants = [me, other];
         }
 
-        // Sort participant set deterministically
-        const participantIds = participants
-          .map((p) => `${p.participantType}:${p.id}`)
+        // Convert to deterministic group identity keys
+        const participantKeys = participants
+          .map((p) => `${p.participantType}:${p.participantId}`)
           .sort();
 
-        // Try to find existing identical participant group thread
-        const threads = await prisma.chatThread.findMany({
+        // Look for existing identical thread
+        const existingThreads = await prisma.chatThread.findMany({
           where: {
             agencyCode,
-            participants: { some: { participantId: me.id } },
+            participants: { some: { participantId: me.participantId } },
           },
           include: { participants: true },
         });
 
-        let existing = threads.find((t) => {
+        let existing = existingThreads.find((t) => {
           const ids = t.participants
             .map((p) => `${p.participantType}:${p.participantId}`)
             .sort();
-          return JSON.stringify(ids) === JSON.stringify(participantIds);
+          return JSON.stringify(ids) === JSON.stringify(participantKeys);
         });
 
         let thread;
@@ -60,7 +61,6 @@ export function registerChatNamespace(io: Server) {
             },
           });
         } else {
-          // Create new thread
           thread = await prisma.chatThread.create({
             data: {
               title:
@@ -70,12 +70,14 @@ export function registerChatNamespace(io: Server) {
               agencyCode,
               participants: {
                 create: participants.map((p) => ({
-                  participantId: p.id,
+                  participantId: p.participantId,
                   participantType: p.participantType,
-                  displayName: p.name ?? p.displayName,
-                  userId: p.participantType === "USER" ? p.id : null,
+                  displayName: p.displayName,
+                  userId: p.participantType === "USER" ? p.participantId : null,
                   mobileEmployeeId:
-                    p.participantType === "MOBILE_EMPLOYEE" ? p.id : null,
+                    p.participantType === "MOBILE_EMPLOYEE"
+                      ? p.mobileEmployeeId
+                      : null,
                 })),
               },
             },
@@ -88,8 +90,13 @@ export function registerChatNamespace(io: Server) {
 
         socket.join(thread.id);
 
+        // send immediate ACK
         ack?.({ success: true, thread });
 
+        // 🔥 IMPORTANT: notify others so frontend resolves properly
+        chat.to(thread.id).emit("chatStarted", thread);
+
+        // update ordering for participants
         chat.to(thread.id).emit("threadUpdated", {
           threadId: thread.id,
           lastMessage: thread.messages[thread.messages.length - 1] ?? null,
@@ -125,12 +132,11 @@ export function registerChatNamespace(io: Server) {
       }
     );
 
-    /**
-     * READ RECEIPT
-     */
     socket.on("readThread", async ({ threadId, userId }) => {
       await prisma.chatReadReceipt.upsert({
-        where: { threadId_participantId: { threadId, participantId: userId } },
+        where: {
+          threadId_participantId: { threadId, participantId: userId },
+        },
         update: { lastReadAt: new Date() },
         create: {
           threadId,
