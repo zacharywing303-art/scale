@@ -12,9 +12,12 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useEffect, useMemo, useState } from "react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { getLoggedInUser } from "@/lib/auth/authHelpers";
+
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 type Props = {
   onClose: () => void;
@@ -182,7 +185,8 @@ export default function CreateTaskModal({ onClose, onBack }: Props) {
   const [taskName, setTaskName] = useState("");
   const [taskDescription, setTaskDescription] = useState("");
 
-  const [dueDate, setDueDate] = useState<string>("");
+  // const [dueDate, setDueDate] = useState<string>("");
+  const [dueDate, setDueDate] = useState<Date | null>(new Date());
 
   // Recurrence
   const [isRecurring, setIsRecurring] = useState(false);
@@ -213,6 +217,20 @@ export default function CreateTaskModal({ onClose, onBack }: Props) {
     }
   }, [selectedFreq]);
 
+  // const validateDueDate = () => {
+  //   if (!dueDate) return true;
+  //   const selected = new Date(dueDate);
+  //   selected.setHours(0, 0, 0, 0);
+
+  //   const today = new Date();
+  //   today.setHours(0, 0, 0, 0);
+
+  //   if (selected < today) {
+  //     alert("❌ Due date cannot be before today.");
+  //     return false;
+  //   }
+  //   return true;
+  // };
   const validateDueDate = () => {
     if (!dueDate) return true;
     const selected = new Date(dueDate);
@@ -272,9 +290,7 @@ export default function CreateTaskModal({ onClose, onBack }: Props) {
                 description: "",
                 agencyId,
                 assignedRoleIds: assignedRoles,
-                dueDate: dueDate
-                  ? new Date(dueDate).toISOString()
-                  : new Date().toISOString(),
+                dueDate: (dueDate ?? new Date()).toISOString(),
                 recurring: finalRecurring,
                 repeatCount: finalRepeatCount,
                 repeatRemaining: finalRepeatCount,
@@ -293,9 +309,7 @@ export default function CreateTaskModal({ onClose, onBack }: Props) {
                 description: taskDescription,
                 agencyId,
                 assignedRoleIds: assignedRoles,
-                dueDate: dueDate
-                  ? new Date(dueDate).toISOString()
-                  : new Date().toISOString(),
+                dueDate: (dueDate ?? new Date()).toISOString(),
                 recurring: finalRecurring,
                 repeatCount: finalRepeatCount,
                 repeatRemaining: finalRepeatCount,
@@ -418,11 +432,12 @@ export default function CreateTaskModal({ onClose, onBack }: Props) {
 
             <div>
               <Label className="mb-1">Due Date</Label>
-              <Input
-                type="date"
-                min={new Date().toISOString().split("T")[0]}
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
+              <DatePicker
+                selected={dueDate}
+                onChange={(date) => setDueDate(date)}
+                minDate={new Date()}
+                className="w-full border rounded-md px-3 py-2 text-sm"
+                dateFormat="MM/dd/yyyy"
               />
             </div>
 
@@ -540,11 +555,12 @@ export default function CreateTaskModal({ onClose, onBack }: Props) {
 
             <div>
               <Label className="mb-1">Due Date</Label>
-              <Input
-                type="date"
-                min={new Date().toISOString().split("T")[0]}
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
+              <DatePicker
+                selected={dueDate}
+                onChange={(date) => setDueDate(date)}
+                minDate={new Date()}
+                className="w-full border rounded-md px-3 py-2 text-sm"
+                dateFormat="MM/dd/yyyy"
               />
             </div>
 
