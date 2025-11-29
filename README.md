@@ -1,36 +1,112 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# UnityCare Home Care Agency Management Platform  
+A full-scale Next.js web application designed for home care agencies, with a focus on **Pennsylvania EVV compliance**, operational efficiency, and streamlined agency management workflows.
 
-## Getting Started
+## 🏥 Overview
+This platform provides agency administrators and staff with all tools needed to manage daily operations—including scheduling, visits, employees, clients, billing, EVV compliance dashboards, alerts, and automated workflow tasks.
 
-First, run the development server:
+It is tightly integrated with the UnityCare EVV mobile app for caregivers.
 
-```bash
+---
+
+## 🚀 Tech Stack
+- **Next.js (App Router)**
+- **TypeScript**
+- **React / ShadCN UI**
+- **Prisma ORM**
+- **PostgreSQL**
+- **Node.js / Express backend**
+- **DigitalOcean Deployment**
+- **Socket.IO (messaging & real-time updates)**
+
+---
+
+## 📌 Key Features
+
+### **1. Scheduling & Visit Management**
+- Create, update, or cancel visits  
+- Weekly and monthly schedule overviews  
+- Auto-filtering based on employee availability  
+- Exception-based alerts for missing EVV data  
+
+### **2. Employee Management**
+- Role-based access control (Agency Admin, Agency User, System Admin)  
+- Onboarding workflows  
+- Certification & compliance tracking  
+- HR Alerting system (expiring docs, missing compliance, PTO requests)
+
+### **3. Client Management**
+- Demographics  
+- Authorized hours & service plans  
+- Visit history  
+- Billing and audit logs  
+
+### **4. EVV Compliance Tools**
+- Timely Audits  
+- GPS Exceptions  
+- Visit Exceptions  
+- Auto/manual visit detection  
+- Mileage review modules  
+- Compliance thresholds (85% auto-verified required)
+
+### **5. Agency Billing**
+- Subscription plans  
+- Usage tracking (# of clients, employees, storage)  
+- Payment methods & statuses  
+- Invoices dashboard  
+
+### **6. Automated Task System**
+- Weekly/Monthly/Quarterly tasks  
+- Task engine with due-date logic  
+- Tasks for Billing Review, Visit Exceptions, Timely Audits, GPS Exceptions, and more  
+
+### **7. Fully Integrated Authentication**
+- Secure login  
+- 15-minute session expiration  
+- Role-based routing  
+- Protected dashboards  
+
+---
+
+## 📂 Project Structure (Core)
+/app
+/dashboard
+/visits
+/clients
+/employees
+/system_admin
+/billing
+/api
+/components
+/lib
+/prisma
+/backend (Express server)
+
+---
+
+## 🛠️ Development
+
+### Install Dependencies
+npm install
+
+### Strat Dev Sever
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Apply Prisma Migrations
+npx prisma migrate dev
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment Variables
+DATABASE_URL=
+NEXTAUTH_SECRET=
+NEXT_PUBLIC_API_BASE_URL=
+SOCKET_SERVER_URL=
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📦 Deployment
+- Deployed on DigitalOcean Droplet
+- Reverse-proxy via NGINX
+- SSL via Certbot
+- Backend + frontend run as PM2 services
 
-## Learn More
+## 📄 License
+Private proprietary system (do not redistribute without permission).
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
